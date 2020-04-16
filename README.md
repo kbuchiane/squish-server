@@ -1,7 +1,5 @@
 # topclips
 
-Prepare environments - (Assignee: Team)
-
 - IDE
   - https://code.visualstudio.com/Download
 - Discord
