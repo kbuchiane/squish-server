@@ -1,4 +1,4 @@
-# topclips-server
+# topclips
 
 Prepare environments - (Assignee: Team)
 
