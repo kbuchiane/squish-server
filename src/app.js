@@ -1,13 +1,13 @@
 var http = require('http');
 var express = require("express");
+var buttonHandler = require('./routes/buttonHandler');
 
 var app = new express();
+var port = 8080;
 
-http.createServer(function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.write('Hello World!');
-  res.end();
-}).listen(8080);
+buttonHandler(app);
+
+app.listen(port);
 
 // Console will print the message
-console.log('Server running at http://127.0.0.1:8080/');
+console.log('Server running at http://127.0.0.1:' + port + '/');
