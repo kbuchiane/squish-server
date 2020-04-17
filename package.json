@@ -1,0 +1,14 @@
+{
+  "name": "topclips",
+  "version": "1.0.0",
+  "description": "Gaming clips application",
+  "main": "app.js",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "engines": {
+    "node": ">= 12.16.2",
+    "npm": ">= 6.14.4"
+  }
+}
