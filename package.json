@@ -2,10 +2,10 @@
   "name": "topclips",
   "version": "1.0.0",
   "description": "Gaming clips application",
-  "main": "app.js",
+  "main": "src/app.js",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "start": "node src/app.js"
   },
   "engines": {
     "node": ">= 12.16.2",
