@@ -6,7 +6,8 @@
   - https://discordapp.com/
 - Git
   - https://git-scm.com/downloads
-  - Git keys
-- Cygwin
-  - https://www.cygwin.com/
-- NPM/Javascript/Node.js/Express.js
+- Nodejs
+  - https://nodejs.org/en/download/current/
+  - 13.13.0
+- NPM
+  - 6.14.4
