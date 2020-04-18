@@ -5,13 +5,16 @@
   "main": "src/app.js",
   "private": true,
   "scripts": {
-    "start": "node src/app.js"
+    "start": "node --use-strict src/app.js"
   },
   "engines": {
-    "node": ">= 12.16.2",
+    "node": ">= 13.13.0",
     "npm": ">= 6.14.4"
   },
   "dependencies": {
     "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "webpack": "^4.42.1"
   }
 }
