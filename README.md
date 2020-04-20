@@ -1,12 +1,11 @@
-# topclips-server
+# topclips server
 
-- IDE
-  - https://code.visualstudio.com/Download
-- Discord
-  - https://discordapp.com/
-- Git
-  - https://git-scm.com/downloads
-  - Git keys
-- Cygwin
-  - https://www.cygwin.com/
-- NPM/Javascript/Node.js/Express.js
+## Project setup
+```
+npm install
+```
+
+### Compiles and hot-reloads for development
+```
+npm start
+```

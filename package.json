@@ -1,20 +1,17 @@
 {
-  "name": "topclips",
-  "version": "1.0.0",
-  "description": "Gaming clips application",
-  "main": "src/app.js",
+  "name": "express-example",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node --use-strict src/app.js"
-  },
-  "engines": {
-    "node": ">= 13.13.0",
-    "npm": ">= 6.14.4"
+    "start": "node ./bin/www"
   },
   "dependencies": {
-    "express": "^4.17.1"
-  },
-  "devDependencies": {
-    "webpack": "^4.42.1"
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "jade": "^1.11.0",
+    "morgan": "~1.9.1",
+    "stylus": "0.54.5"
   }
 }
