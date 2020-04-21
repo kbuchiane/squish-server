@@ -4,9 +4,11 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var stylus = require('stylus');
+var cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var connectionCheckRouter = require('./routes/connectionCheck');
 
 var app = express();
 
@@ -21,8 +23,22 @@ app.use(cookieParser());
 app.use(stylus.middleware(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Cors configuration
+var clientUrl = 'http://localhost:8080';
+var whitelist = [clientUrl];
+var corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+};
+
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/users', cors(corsOptions), usersRouter);
+app.use('/connectionCheck', cors(corsOptions), connectionCheckRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
