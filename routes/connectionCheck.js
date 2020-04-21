@@ -3,8 +3,9 @@ var router = express.Router();
 
 /* GET call from client. */
 router.get('/', function(req, res, next) {
-  console.log('connection hit');
-  res.send('Server response!');
+  var msg = 'Hello ' + req.headers.referer + ', from: http://localhost:3000';
+  console.log('sending: ' + msg);
+  res.send(msg);
 });
 
 module.exports = router;
