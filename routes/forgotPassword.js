@@ -7,7 +7,7 @@ router.get('/', function(req, res, next) {
 
     var response = {
         success: true,
-        emailForgot: 'user ID: ' + req.query.userIdForgot
+        emailForgot: 'user: ' + req.query.userIdForgot
     };
 
     res.send(response);
