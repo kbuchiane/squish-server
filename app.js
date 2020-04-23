@@ -7,8 +7,7 @@ var stylus = require('stylus');
 var cors = require('cors');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var connectionCheckRouter = require('./routes/connectionCheck');
+var loginRouter = require('./routes/login');
 
 var app = express();
 
@@ -28,6 +27,7 @@ var clientUrl = 'http://localhost:8080';
 var whitelist = [clientUrl];
 var corsOptions = {
   origin: function (origin, callback) {
+    console.log("origin: " + origin);
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -37,8 +37,7 @@ var corsOptions = {
 };
 
 app.use('/', indexRouter);
-app.use('/users', cors(corsOptions), usersRouter);
-app.use('/connectionCheck', cors(corsOptions), connectionCheckRouter);
+app.use('/login', cors(corsOptions), loginRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
