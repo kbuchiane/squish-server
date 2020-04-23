@@ -27,8 +27,9 @@ var clientUrl = 'http://localhost:8080';
 var whitelist = [clientUrl];
 var corsOptions = {
   origin: function (origin, callback) {
-    console.log("origin: " + origin);
-    if (whitelist.indexOf(origin) !== -1) {
+    if (origin === undefined) {
+      callback(null, true);
+    } else if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
