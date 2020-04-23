@@ -7,8 +7,9 @@ var stylus = require('stylus');
 var cors = require('cors');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var connectionCheckRouter = require('./routes/connectionCheck');
+var loginRouter = require('./routes/login');
+var signupRouter = require('./routes/signup');
+var forgotPasswordRouter = require('./routes/forgotPassword');
 
 var app = express();
 
@@ -28,7 +29,9 @@ var clientUrl = 'http://localhost:8080';
 var whitelist = [clientUrl];
 var corsOptions = {
   origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
+    if (origin === undefined) {
+      callback(null, true);
+    } else if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -37,8 +40,9 @@ var corsOptions = {
 };
 
 app.use('/', indexRouter);
-app.use('/users', cors(corsOptions), usersRouter);
-app.use('/connectionCheck', cors(corsOptions), connectionCheckRouter);
+app.use('/login', cors(corsOptions), loginRouter);
+app.use('/signup', cors(corsOptions), signupRouter);
+app.use('/forgotPassword', cors(corsOptions), forgotPasswordRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
