@@ -3,8 +3,9 @@ var router = express.Router();
 
 /* GET call from client. */
 router.get('/', function(req, res, next) {
-    console.log('login username: ' + req.query.username);
-    console.log('login password: ' + req.query.password);
+    console.log('signup username: ' + req.query.username);
+    console.log('signup email: ' + req.query.email);
+    console.log('signup password: ' + req.query.password);
 
     var response = {
         success: true,
