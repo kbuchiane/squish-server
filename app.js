@@ -9,6 +9,7 @@ var cors = require('cors');
 var indexRouter = require('./routes/index');
 var loginRouter = require('./routes/login');
 var signupRouter = require('./routes/signup');
+var logoutRouter = require('./routes/logout');
 var forgotPasswordRouter = require('./routes/forgotPassword');
 
 var app = express();
@@ -42,15 +43,16 @@ var corsOptions = {
 app.use('/', indexRouter);
 app.use('/login', cors(corsOptions), loginRouter);
 app.use('/signup', cors(corsOptions), signupRouter);
+app.use('/logout', cors(corsOptions), logoutRouter);
 app.use('/forgotPassword', cors(corsOptions), forgotPasswordRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

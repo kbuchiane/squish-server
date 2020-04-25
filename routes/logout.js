@@ -3,11 +3,10 @@ var router = express.Router();
 
 /* GET call from client. */
 router.get('/', function (req, res, next) {
-    console.log('forgot password: ' + req.query.userIdForgot);
+    console.log('logout username: ' + req.query.username);
 
     var response = {
-        success: true,
-        emailForgot: 'user: ' + req.query.userIdForgot
+        success: true
     };
 
     res.send(response);
