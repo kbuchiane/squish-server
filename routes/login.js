@@ -8,7 +8,7 @@ router.get('/', function (req, res, next) {
 
     var response = {
         success: true,
-        userData: {
+        user: {
             username: req.query.username,
             email: ''
         }
