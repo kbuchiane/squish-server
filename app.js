@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var stylus = require('stylus');
 var cors = require('cors');
+var mysql = require('mysql');
 
 var indexRouter = require('./routes/index');
 var loginRouter = require('./routes/login');
@@ -24,6 +25,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(stylus.middleware(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// MySQL connector
+var dbConn = mysql.createConnection({
+  host: "localhost",
+  user: process.env.db_username,
+  password: process.env.db_password,
+  database: "squish"
+});
+
+dbConn.connect(function(err) {
+  if (err) throw err;
+  console.log("connected to database");
+});
 
 // Cors configuration
 var clientUrl = 'http://localhost:8080';
