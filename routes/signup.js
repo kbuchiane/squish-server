@@ -1,21 +1,28 @@
 var express = require('express');
+var db = require('../utils/db');
+var User = require('../models/user');
+
 var router = express.Router();
 
 /* GET call from client. */
 router.get('/', function (req, res, next) {
-    console.log('signup username: ' + req.query.username);
-    console.log('signup email: ' + req.query.email);
-    console.log('signup password: ' + req.query.password);
+    var username = req.query.username;
+    var emailAddr = req.query.email;
+    var password = req.query.password;
 
-    var response = {
-        success: true,
-        user: {
-            username: req.query.username,
-            email: req.query.email
-        }
-    };
+    console.log(username);
 
-    res.send(response);
+    // Check if user is valid and send confirmation email if so
+    var user = new User();
+    var ret = user.signup(username, emailAddr, password);
+
+    res.send(ret);
 });
+
+/*
+router.get('/confirmUser', function (req, res, next) {
+    
+});
+*/
 
 module.exports = router;
