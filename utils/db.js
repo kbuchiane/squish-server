@@ -5,7 +5,7 @@ var dbConn = mysql.createConnection({
     host: "localhost",
     user: process.env.db_username,
     password: process.env.db_password,
-    database: "squish"
+    database: "squish_schema"
 });
 
 dbConn.connect(function (err) {

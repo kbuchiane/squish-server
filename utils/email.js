@@ -4,12 +4,16 @@ class Email {
     };
 
     sendConfirmation(email) {
-        var ret = {
-            success: true,
-            error: ""
-        }
+        return new Promise(function(resolve, rejct) {
+            console.log("sending confirmation email");
 
-        return ret;
+            var ret = {
+                success: true,
+                message: ""
+            }
+
+            resolve(ret);
+        });
     }
 }
 

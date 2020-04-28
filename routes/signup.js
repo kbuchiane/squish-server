@@ -10,13 +10,13 @@ router.get('/', function (req, res, next) {
     var emailAddr = req.query.email;
     var password = req.query.password;
 
-    console.log(username);
-
     // Check if user is valid and send confirmation email if so
     var user = new User();
-    var ret = user.signup(username, emailAddr, password);
+    user.signup(username, emailAddr, password).then(function(ret) {
+        console.log("sending final response: " + JSON.stringify(ret));
 
-    res.send(ret);
+        res.send(ret);
+    });
 });
 
 /*
