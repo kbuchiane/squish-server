@@ -3,7 +3,7 @@ class Email {
         // Empty
     };
 
-    sendConfirmation(email) {
+    async sendConfirmation(email) {
         return new Promise(function(resolve, rejct) {
             console.log("sending confirmation email");
 
