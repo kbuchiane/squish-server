@@ -7,7 +7,7 @@ class User {
         // Empty
     };
 
-    signup(username, emailAddr, password) {
+    async signup(username, emailAddr, password) {
         return new Promise(function(resolve, reject) {
             var ret = {
                 success: true,
@@ -17,7 +17,7 @@ class User {
             var email = new Email();
 
             // Functions
-            function checkStringEntries(username, emailAddr, password) {
+            async function checkStringEntries(username, emailAddr, password) {
                 return new Promise(function(resolve, reject) {
                     console.log("checking string entries");
 
@@ -47,57 +47,7 @@ class User {
                 });
             };
 
-            function checkUsernameExists(username) {
-                return new Promise(function(resolve, reject) {
-                    console.log("checking username duplicate");
-
-                    var checkUsernameRet = {
-                        success: true,
-                        exists: false,
-                        error: ""
-                    }
-            
-                    var sql = "SELECT username FROM user WHERE username = ?";
-                    db.query(sql, [username], function (err, result) {
-                        if (err) {
-                            console.log(err);
-                            checkUsernameRet.success = false;
-                            checkUsernameRet.error = "An error occurred while checking for duplicate usernames, please try again later";
-                        } else if (result.length > 0) {
-                            checkUsernameRet.exists = true;
-                        }
-
-                        resolve(checkUsernameRet);
-                    });
-                });
-            };
-
-            function checkEmailExists(emailAddr) {
-                return new Promise(function(resolve, reject) {
-                    console.log("checking email duplicate");
-
-                    var checkEmailRet = {
-                        success: true,
-                        exists: false,
-                        error: ""
-                    }
-            
-                    var sql = "SELECT email FROM user WHERE email = ?";
-                    db.query(sql, [emailAddr], function (err, result) {
-                        if (err) {
-                            console.log(err);
-                            checkEmailRet.success = false;
-                            checkEmailRet.error = "An error occurred while checking for duplicate emails, please try again later";
-                        } else if (result.length > 0) {
-                            checkEmailRet.exists = true;
-                        }
-                    });
-            
-                    resolve(checkEmailRet);
-                });
-            };
-
-            function createUser(username, emailAddr, password) {
+            async function createUser(username, emailAddr, password) {
                 return new Promise(function(resolve, rejct) {
                     console.log("creating new user");
 
@@ -123,48 +73,46 @@ class User {
             
                     db.query(sql, [values], function (err, result) {
                         if (err) {
-                            console.log(err);
                             createUserRet.success = false;
-                            createUserRet.message = "An error occurred while creating a new user, please try again later";
+                            var unkError = "An error occurred while creating a new user, please try again later";
+                            if (err.errno === 1062) {
+                                if (err.sqlMessage === "Duplicate entry '" 
+                                    + username + "' for key 'user.username_UNIQUE'") {
+                                    createUserRet.message = "An account already exists with that username";
+                                } else if (err.sqlMessage === "Duplicate entry '" 
+                                    + emailAddr + "' for key 'user.email_UNIQUE'") {
+                                        createUserRet.message = "An account already exists with that email";
+                                } else {
+                                    createUserRet.message = unkError;
+                                }
+                            } else {
+                                createUserRet.message = unkError;
+                            }
                         }
+
+                        resolve(createUserRet);
                     });
-            
-                    resolve(createUserRet);
                 });
             };
 
             // Processes
             checkStringEntries(username, emailAddr, password).then(function(checkStringRet) {
+                console.log("string entry check results: " + JSON.stringify(checkStringRet));
+                
                 if (!checkStringRet.success) {
                     resolve(checkStringRet);
                 }
-            }).then(checkUsernameExists(username).then(function(checkUsernameRet) {
-                if (!checkUsernameRet.success) {
-                    ret.success = false;
-                    ret.message = checkUsernameRet.error;
-                    resolve(ret);
-                } else if (checkUsernameRet.exists) {
-                    ret.success = false;
-                    ret.message = "An account already exists with that username";
-                    resolve(ret);
-                }
-            })).then(checkEmailExists(emailAddr).then(function(checkEmailRet) {
-                if (!checkEmailRet.success) {
-                    ret.success = false;
-                    ret.message = checkEmailRet.error;
-                    resolve(ret);
-                } else if (checkEmailRet.exists) {
-                    ret.success = false;
-                    ret.message = "An account already exists with that email";
-                    resolve(ret);
-                }
-            })).then(createUser(username, emailAddr, password).then(function(createUserRet) {
+            }).then(createUser(username, emailAddr, password).then(function(createUserRet) {
+                console.log("create user results: " + JSON.stringify(createUserRet));
+                
                 if (!createUserRet.success) {
                     ret.success = false;
                     ret.message = createUserRet.message;
                     resolve(ret);
                 }
             })).then(email.sendConfirmation(emailAddr).then(function(emailConfirmRet) {
+                console.log("email confirmation results: " + JSON.stringify(emailConfirmRet));
+                
                 if (!emailConfirmRet.success) {
                     resolve(emailConfirmRet);
                 } else {
