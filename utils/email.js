@@ -1,3 +1,5 @@
+var nodemailer = require('nodemailer');
+
 class Email {
     constructor() {
         // Empty
@@ -5,8 +7,6 @@ class Email {
 
     async sendConfirmation(email) {
         return new Promise(function(resolve, rejct) {
-            console.log("sending confirmation email");
-
             var ret = {
                 success: true,
                 message: ""

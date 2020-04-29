@@ -11,8 +11,6 @@ class User {
         // Functions
         async function checkStringEntries(username, emailAddr, password) {
             return new Promise(function(resolve, reject) {
-                console.log("checking string entries");
-
                 var checkStringRet = {
                     success: true,
                     message: ""
@@ -41,8 +39,6 @@ class User {
 
         async function createUser(username, emailAddr, password) {
             return new Promise(function(resolve, rejct) {
-                console.log("creating new user");
-
                 var createUserRet = {
                     success: true,
                     message: ""
@@ -94,26 +90,17 @@ class User {
         };
 
         var checkStringRet = await checkStringEntries(username, emailAddr, password);
-        
-        console.log("checkStringRet: " + JSON.stringify(checkStringRet));
-
         if (!checkStringRet.success) {
             return checkStringRet;
         }
 
         var createUserRet = await createUser(username, emailAddr, password);
-        
-        console.log("createUserRet: " + JSON.stringify(createUserRet));
-        
         if (!createUserRet.success) {
             return createUserRet;
         }
 
         var email = new Email();
         var emailConfirmRet = await email.sendConfirmation(emailAddr);
-
-        console.log("emailConfirmRet: " + JSON.stringify(emailConfirmRet));
-
         if (!emailConfirmRet.success) {
             return emailConfirmRet;
         } else {
