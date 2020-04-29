@@ -9,9 +9,8 @@ router.get('/', function (req, res, next) {
     var emailAddr = req.query.email;
     var password = req.query.password;
 
-    // Check if user is valid and send confirmation email if so
     var user = new User();
-    user.signup(username, emailAddr, password).then(function(ret) {
+    user.signup(username, emailAddr, password).then(function (ret) {
         res.send(ret);
     });
 });
@@ -20,7 +19,7 @@ router.get('/confirmUser', function (req, res, next) {
     var confirmId = req.query.confirmId;
 
     var user = new User();
-    user.confirmUser(confirmId).then(function(ret) {
+    user.confirmUser(confirmId).then(function (ret) {
         res.send(ret);
     })
 });
