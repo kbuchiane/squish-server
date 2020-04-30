@@ -139,6 +139,17 @@ class User {
             return ret;
         }
     };
+
+    async signup(confirmId) {
+        var ret = {
+            success: true,
+            message: ""
+        };
+
+        // Query for where user has confirmId and active is false
+
+        return ret;
+    };
 }
 
 module.exports = User;

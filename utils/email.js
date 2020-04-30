@@ -20,12 +20,16 @@ class Email {
                 }
             });
 
+            var confirmUrl = process.env.squish_client_url
+                + "/signup/confirmUser?confirmId="
+                + confirmId;
+
             var mailOptions = {
                 from: process.env.confirm_email_host,
                 to: emailAddr,
                 subject: "Squish Sign Up Confirmation",
                 html: "<a style='font-weight: 700' href='"
-                    + process.env.squish_client_url
+                    + confirmUrl
                     + "'>Please click here to confirm your email account</a>"
             };
 
