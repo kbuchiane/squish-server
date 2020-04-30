@@ -20,17 +20,11 @@ class Email {
                 }
             });
 
-            var confirmUrl = process.env.squish_server_url
-                + "signup/confirmUser?confirmId="
-                + confirmId;
-
             var mailOptions = {
                 from: process.env.confirm_email_host,
                 to: emailAddr,
                 subject: "Squish Sign Up Confirmation",
-                html: "<a style='font-weight: 700' href='"
-                    + confirmUrl
-                    + "'>Please click here to confirm your email account</a>"
+                html: "<b style='font-weight:700'=>Verification Code: " + confirmId + "</b>"
             };
 
             transporter.sendMail(mailOptions, function (error, info) {
