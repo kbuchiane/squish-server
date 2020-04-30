@@ -140,7 +140,7 @@ class User {
         }
     };
 
-    async signup(confirmId) {
+    async confirmUser(confirmId) {
         var ret = {
             success: true,
             message: ""

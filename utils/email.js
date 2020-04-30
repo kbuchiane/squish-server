@@ -20,8 +20,8 @@ class Email {
                 }
             });
 
-            var confirmUrl = process.env.squish_client_url
-                + "/signup/confirmUser?confirmId="
+            var confirmUrl = process.env.squish_server_url
+                + "signup/confirmUser?confirmId="
                 + confirmId;
 
             var mailOptions = {

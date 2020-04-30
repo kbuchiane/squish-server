@@ -18,6 +18,8 @@ router.get('/', function (req, res, next) {
 router.get('/confirmUser', function (req, res, next) {
     var confirmId = req.query.confirmId;
 
+    console.log("confirmId: " + confirmId);
+
     var user = new User();
     user.confirmUser(confirmId).then(function (ret) {
         res.send(ret);
