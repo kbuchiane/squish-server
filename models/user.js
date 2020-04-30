@@ -125,15 +125,12 @@ class User {
 
         var email = new Email();
         var emailConfirmRet = await email.sendConfirmation(emailAddr, createUserRet.confirmId);
-
-        console.log("emailConfirmRet: " + JSON.stringify(emailConfirmRet));
-
         if (!emailConfirmRet.success) {
             var deleteUserRet = await deleteNewUser(username);
             if (!deleteUserRet.success) {
                 return deleteUserRet;
             }
-            
+
             return emailConfirmRet;
         } else {
             ret.message = "A confirmation email has been sent to "

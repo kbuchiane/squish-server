@@ -10,7 +10,6 @@ var dbConn = mysql.createConnection({
 
 dbConn.connect(function (err) {
     if (err) throw err;
-    console.log("connected to database");
 });
 
 module.exports = dbConn;

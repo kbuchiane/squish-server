@@ -6,52 +6,38 @@ class Email {
     };
 
     async sendConfirmation(emailAddr, confirmId) {
-        var ret = {
-            success: true,
-            message: ""
-        }
-
-        /*
-        var transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            auth: {
-                type: "OAuth2",
-                user: process.env.confirm_email_host
+        return new Promise(function (resolve, rejct) {
+            var ret = {
+                success: true,
+                message: ""
             }
+
+            var transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                    user: process.env.confirm_email_host,
+                    pass: process.env.confirm_email_pass
+                }
+            });
+
+            var mailOptions = {
+                from: process.env.confirm_email_host,
+                to: emailAddr,
+                subject: "Squish Sign Up Confirmation",
+                html: "<a style='font-weight: 700' href='"
+                    + process.env.squish_client_url
+                    + "'>Please click here to confirm your email account</a>"
+            };
+
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    ret.success = false;
+                    ret.message = "There was an issue sending a confirmation email, please try again later";
+                }
+
+                resolve(ret);
+            });
         });
-
-        transporter.set("oauth2_provision_cb", (user, renew, callback) => {
-            var accessToken = userTokens[user];
-            if (!accessToken) {
-                ret.success = false;
-                message = "Unable to send confirmation email, please try again later";
-                return callback(new Error("Unknown user"));
-            } else {
-                return callback(null, accessToken);
-            }
-        });
-
-        console.log("sending email to: " + emailAddr);
-        console.log("sending email from: " + process.env.confirm_email_host);
-        console.log("email pass: " + process.env.confirm_email_pass);
-
-        var info = await transporter.sendMail({
-            from: "Squish <" + process.env.confirm_email_host + ">",
-            to: emailAddr,
-            subject: "Squish Email Confirmation",
-            html: "<b>Click link below to confirm email account</b>"
-                + "<a href='" + process.env.squish_client_url + "'></a>"
-        });
-
-        console.log("confirm email info: " + JSON.stringify(info));
-        */
-
-        ret.success = false;
-        ret.message = "test fail email confirm";
-
-        return ret;
     };
 }
 
