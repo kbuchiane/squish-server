@@ -349,7 +349,7 @@ class User {
             if (verifyUserRet.resendCode) {
 
                 console.log("updating verification code");
-                
+
                 var updateCodeRet = await updateVerificationCode(emailAddr);
 
                 console.log("verifyUserRet: " + JSON.stringify(updateCodeRet));
@@ -366,7 +366,7 @@ class User {
             } else if (verifyUserRet.incrementAttempt) {
 
                 console.log("incrementing verification attempts");
-                
+
                 await addVerifyAttempt(emailAddr);
 
                 console.log("verification attempts incremented");
@@ -376,7 +376,7 @@ class User {
             ret.message = verifyUserRet.message;
 
             console.log("returning verify fail: " + JSON.stringify(ret));
-            
+
             return ret;
         } else {
 
