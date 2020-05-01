@@ -21,8 +21,6 @@ router.get('/confirmUser', function (req, res, next) {
 
     var user = new User();
     user.confirmUser(emailAddr, confirmId).then(function (ret) {
-        console.log("confirmUser returning: " + JSON.stringify(ret));
-
         res.send(ret);
     })
 });

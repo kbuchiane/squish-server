@@ -173,32 +173,16 @@ class User {
             var nowTime = new Date().getTime();
             var codeTime = new Date(datetime).getTime();
 
-            console.log("code expired check nowTime: " + nowTime);
-            console.log("code expired check codeTime: " + codeTime);
-
             if (!isNaN(codeTime)) {
                 var milliDiff = nowTime - codeTime;
-
-                console.log("code expired check milliDiff: " + milliDiff);
-
                 var dateDiff = new Date(milliDiff);
-
-                console.log("code expired check dateDiff: " + dateDiff);
-
                 var minutesDiff = dateDiff.getMinutes();
-
-                console.log("code expired check minutesDiff: " + minutesDiff);
-
                 var maxMinutes = 4;
+
                 if (minutesDiff < maxMinutes) {
-
-                    console.log("code expired check returning false");
-
                     return false;
                 }
             }
-
-            console.log("code expired check returning true");
 
             return true;
         };
@@ -218,13 +202,8 @@ class User {
                 newUserConfirmId = newUserConfirmId.substring(0, 8);
 
                 // Upate db code
-                var sql = "UPDATE user SET user_confirm_id = ?, confirm_id_date_created = ?, verify_attempt_count = 0 WHERE email = '" + emailAddr + "'";
-                var values = [
-                    newUserConfirmId,
-                    newDateCreated
-                ];
-
-                db.query(sql, [values], function (err, result) {
+                var sql = "UPDATE user SET user_confirm_id = ?, confirm_id_date_created = '" + newDateCreated + "', verify_attempt_count = 0 WHERE email = '" + emailAddr + "'";
+                db.query(sql, newUserConfirmId, function (err, result) {
                     if (err) {
                         updateCodeRet.success = false;
                         updateCodeRet.message = "There was an issue sending a new verification code, please try again later";
@@ -262,20 +241,16 @@ class User {
                     success: true,
                     message: "",
                     resendCode: false,
-                    incrementAttempt: false
+                    incrementAttempt: false,
+                    username: ""
                 };
-
-                console.log("verifying user confirmId: " + confirmId);
 
                 var sql = "SELECT * FROM user WHERE email = ? AND active = false";
                 db.query(sql, emailAddr, function (err, result) {
                     if (err) {
-                        console.log(err);
                         verifyUserRet.success = false;
                         verifyUserRet.message = "There was an issue verifying your account, please try again later";
                     }
-
-                    console.log("verifyUser result: " + JSON.stringify(result));
 
                     if (result.length === 0) {
                         verifyUserRet.success = false;
@@ -288,10 +263,12 @@ class User {
                         verifyUserRet.success = false;
                         verifyUserRet.message = "Verification code has expired, a new code has been sent to " + emailAddr;
                         verifyUserRet.resendCode = true;
-                    } else if (result[0].userConfirmId != confirmId) {
+                    } else if (result[0].user_confirm_id != confirmId) {
                         verifyUserRet.success = false;
                         verifyUserRet.message = "Entered verification code is incorrect";
                         verifyUserRet.incrementAttempt = true;
+                    } else {
+                        verifyUserRet.username = result[0].username;
                     }
 
                     resolve(verifyUserRet);
@@ -311,10 +288,6 @@ class User {
                     if (err) {
                         updateVerifiedUserRet.success = false;
                         updateVerifiedUserRet.message = "There was an issue verifying your account, please try again later";
-                    } else {
-                        if (result.length > 0) {
-                            updateVerifiedUserRet.message = result[0].username;
-                        }
                     }
 
                     resolve(updateVerifiedUserRet);
@@ -329,62 +302,30 @@ class User {
             username: ""
         };
 
-        console.log("checking strings");
-
         var checkStringRet = await checkStringEntries(emailAddr, confirmId);
-
-        console.log("checkStringRet: " + JSON.stringify(checkStringRet));
-
         if (!checkStringRet.success) {
             return checkStringRet;
         }
 
-        console.log("verifying user");
-
         var verifyUserRet = await verifyUser(emailAddr, confirmId);
-
-        console.log("verifyUserRet: " + JSON.stringify(verifyUserRet));
-
         if (!verifyUserRet.success) {
             if (verifyUserRet.resendCode) {
-
-                console.log("updating verification code");
-
                 var updateCodeRet = await updateVerificationCode(emailAddr);
 
-                console.log("verifyUserRet: " + JSON.stringify(updateCodeRet));
-
                 if (updateCodeRet.success) {
-
-                    console.log("sending new confirmation code email");
-
                     var email = new Email();
                     await email.sendConfirmation(emailAddr, updateCodeRet.message);
-
-                    console.log("sent new confirmation code email");
                 }
             } else if (verifyUserRet.incrementAttempt) {
-
-                console.log("incrementing verification attempts");
-
                 await addVerifyAttempt(emailAddr);
-
-                console.log("verification attempts incremented");
             }
 
             ret.success = false;
             ret.message = verifyUserRet.message;
-
-            console.log("returning verify fail: " + JSON.stringify(ret));
-
             return ret;
         } else {
-
-            console.log("updating user to active");
-
             var updateVerifiedUserRet = await updateVerifiedUser(emailAddr);
-
-            console.log("returning updateVerifiedUserRet: " + JSON.stringify(updateVerifiedUserRet));
+            updateVerifiedUserRet.message = verifyUserRet.username;
 
             return updateVerifiedUserRet;
         }
