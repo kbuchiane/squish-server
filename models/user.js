@@ -186,18 +186,37 @@ class User {
             return true;
         };
 
-        async function resendVerificationCode(emailAddr) {
+        async function updateVerificationCode(emailAddr) {
             return new Promise(function (resolve, reject) {
-                var resendCodeRet = {
+                var updateCodeRet = {
                     success: true,
                     message: ""
                 };
 
                 // Generate new code
+                var newDateCreated = new Date().toISOString()
+                    .slice(0, 19).replace("T", " ");
+
+                var newUserConfirmId = uuidv4();
+                newUserConfirmId = newUserConfirmId.substring(0, 8);
 
                 // Upate db code
+                var sql = "UPDATE user SET user_confirm_id = ?, confirm_id_date_created = ?, verify_attempt_count = 0 WHERE email = '" + emailAddr + "'";
+                var values = [
+                    newUserConfirmId,
+                    newDateCreated
+                ];
 
-                // Send email
+                db.query(sql, [values], function (err, result) {
+                    if (err) {
+                        updateCodeRet.success = false;
+                        updateCodeRet.message = "There was an issue sending a new verification code, please try again later";
+                    } else {
+                        updateCodeRet.message = newUserConfirmId;
+                    }
+
+                    resolve(updateCodeRet);
+                });
             });
         };
 
@@ -209,7 +228,6 @@ class User {
                 };
 
                 var sql = "UPDATE user SET verify_attempt_count = verify_attempt_count + 1 WHERE email = ?";
-
                 db.query(sql, emailAddr, function (err, result) {
                     if (err) {
                         addVerifyAttemptRet.success = false;
@@ -231,7 +249,6 @@ class User {
                 };
 
                 var sql = "SELECT * FROM user WHERE email = ? AND active = false";
-
                 db.query(sql, emailAddr, function (err, result) {
                     if (err) {
                         console.log(err);
@@ -271,7 +288,6 @@ class User {
                 };
 
                 var sql = "UPDATE user SET user_confirm_id = null, confirm_id_date_created = null, verify_attempt_count = 0, active = true WHERE email = ?";
-
                 db.query(sql, emailAddr, function (err, result) {
                     if (err) {
                         updateVerifiedUserRet.success = false;
@@ -308,7 +324,12 @@ class User {
 
         if (!verifyUserRet.success) {
             if (verifyUserRet.resendCode) {
-                await resendVerificationCode(emailAddr);
+                var updateCodeRet = await updateVerificationCode(emailAddr);
+
+                if (updateCodeRet.success) {
+                    var email = new Email();
+                    await email.sendConfirmation(emailAddr, updateCodeRet.message);
+                }
             } else if (verifyUserRet.incrementAttempt) {
                 await addVerifyAttempt(emailAddr);
             }
