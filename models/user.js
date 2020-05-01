@@ -169,36 +169,35 @@ class User {
             });
         };
 
-        async function verifyUser(emailAddr, confirmId) {
-            return new Promise(function (resolve, rejct) {
-                var verifyUserRet = {
+        function codeExpired(datetime) {
+            var nowTime = new Date().getTime();
+            var codeTime = new Date(datetime).getTime();
+
+            if (!isNaN(codeTime)) {
+                var milliDiff = nowTime - codeTime;
+                var dateDiff = new Date(milliDiff);
+                var minutesDiff = dateDiff.getMinutes();
+                var maxMinutes = 4;
+                if (minutesDiff < maxMinutes) {
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        async function resendVerificationCode(emailAddr) {
+            return new Promise(function (resolve, reject) {
+                var resendCodeRet = {
                     success: true,
                     message: ""
                 };
 
-                var sql = "SELECT * FROM user WHERE email = ? AND active = false";
+                // Generate new code
 
-                db.query(sql, emailAddr, function (err, result) {
-                    if (err) {
-                        console.log(err);
-                        verifyUserRet.success = false;
-                        verifyUserRet.message = "There was an issue verifying your account, please try again later";
-                    }
+                // Upate db code
 
-                    console.log("verifyUser result: " + JSON.stringify(result));
-
-                    // if nothing, error
-
-                    // if verify attempts = 3, error, send new code, set attempts back to 0
-
-                    // if confirmId does not equal db value, error
-
-                    // if confirmId time created older than 4 min, error, send new code
-
-                    // if success, call function to set active to true and clear confirmId fields
-
-                    resolve(verifyUserRet);
-                });
+                // Send email
             });
         };
 
@@ -222,6 +221,48 @@ class User {
             });
         };
 
+        async function verifyUser(emailAddr, confirmId) {
+            return new Promise(function (resolve, rejct) {
+                var verifyUserRet = {
+                    success: true,
+                    message: "",
+                    resendCode: false,
+                    incrementAttempt: false
+                };
+
+                var sql = "SELECT * FROM user WHERE email = ? AND active = false";
+
+                db.query(sql, emailAddr, function (err, result) {
+                    if (err) {
+                        console.log(err);
+                        verifyUserRet.success = false;
+                        verifyUserRet.message = "There was an issue verifying your account, please try again later";
+                    }
+
+                    console.log("verifyUser result: " + JSON.stringify(result));
+
+                    if (result.length === 0) {
+                        verifyUserRet.success = false;
+                        verifyUserRet.message = "Email entered was not found, or has already been verified";
+                    } else if (result[0].verify_attempt_count == 3) {
+                        verifyUserRet.success = false;
+                        verifyUserRet.message = "Maximum attempts reached, a new verification code has been sent to " + emailAddr;
+                        verifyUserRet.resendCode = true;
+                    } else if (codeExpired(result[0].confirm_id_date_created)) {
+                        verifyUserRet.success = false;
+                        verifyUserRet.message = "Verification code has expired, a new code has been sent to " + emailAddr;
+                        verifyUserRet.resendCode = true;
+                    } else if (result[0].userConfirmId != confirmId) {
+                        verifyUserRet.success = false;
+                        verifyUserRet.message = "Entered verification code is incorrect";
+                        verifyUserRet.incrementAttempt = true;
+                    }
+
+                    resolve(verifyUserRet);
+                });
+            });
+        };
+
         async function updateVerifiedUser(emailAddr) {
             return new Promise(function (resolve, rejct) {
                 var updateVerifiedUserRet = {
@@ -236,7 +277,9 @@ class User {
                         updateVerifiedUserRet.success = false;
                         updateVerifiedUserRet.message = "There was an issue verifying your account, please try again later";
                     } else {
-                        // set message to username
+                        if (result.length > 0) {
+                            updateVerifiedUserRet.message = result[0].username;
+                        }
                     }
 
                     resolve(updateVerifiedUserRet);
@@ -264,18 +307,22 @@ class User {
         console.log("verifyUserRet: " + JSON.stringify(verifyUserRet));
 
         if (!verifyUserRet.success) {
-            var addVerifyAttemptRet = await addVerifyAttempt(emailAddr);
+            if (verifyUserRet.resendCode) {
+                await resendVerificationCode(emailAddr);
+            } else if (verifyUserRet.incrementAttempt) {
+                await addVerifyAttempt(emailAddr);
+            }
 
             ret.success = false;
             ret.message = verifyUserRet.message;
             return ret;
+        } else {
+            var updateVerifiedUserRet = await updateVerifiedUser(emailAddr);
+
+            console.log("updateVerifiedUserRet: " + JSON.stringify(updateVerifiedUserRet));
+
+            return updateVerifiedUserRet;
         }
-
-        var updateVerifiedUserRet = await updateVerifiedUser(emailAddr);
-
-        console.log("updateVerifiedUserRet: " + JSON.stringify(updateVerifiedUserRet));
-
-        return updateVerifiedUserRet;
     };
 }
 
