@@ -173,15 +173,32 @@ class User {
             var nowTime = new Date().getTime();
             var codeTime = new Date(datetime).getTime();
 
+            console.log("code expired check nowTime: " + nowTime);
+            console.log("code expired check codeTime: " + codeTime);
+
             if (!isNaN(codeTime)) {
                 var milliDiff = nowTime - codeTime;
+
+                console.log("code expired check milliDiff: " + milliDiff);
+
                 var dateDiff = new Date(milliDiff);
+
+                console.log("code expired check dateDiff: " + dateDiff);
+
                 var minutesDiff = dateDiff.getMinutes();
+
+                console.log("code expired check minutesDiff: " + minutesDiff);
+
                 var maxMinutes = 4;
                 if (minutesDiff < maxMinutes) {
+
+                    console.log("code expired check returning false");
+
                     return false;
                 }
             }
+
+            console.log("code expired check returning true");
 
             return true;
         };
@@ -248,6 +265,8 @@ class User {
                     incrementAttempt: false
                 };
 
+                console.log("verifying user confirmId: " + confirmId);
+
                 var sql = "SELECT * FROM user WHERE email = ? AND active = false";
                 db.query(sql, emailAddr, function (err, result) {
                     if (err) {
@@ -310,6 +329,8 @@ class User {
             username: ""
         };
 
+        console.log("checking strings");
+
         var checkStringRet = await checkStringEntries(emailAddr, confirmId);
 
         console.log("checkStringRet: " + JSON.stringify(checkStringRet));
@@ -318,29 +339,52 @@ class User {
             return checkStringRet;
         }
 
+        console.log("verifying user");
+
         var verifyUserRet = await verifyUser(emailAddr, confirmId);
 
         console.log("verifyUserRet: " + JSON.stringify(verifyUserRet));
 
         if (!verifyUserRet.success) {
             if (verifyUserRet.resendCode) {
+
+                console.log("updating verification code");
+                
                 var updateCodeRet = await updateVerificationCode(emailAddr);
 
+                console.log("verifyUserRet: " + JSON.stringify(updateCodeRet));
+
                 if (updateCodeRet.success) {
+
+                    console.log("sending new confirmation code email");
+
                     var email = new Email();
                     await email.sendConfirmation(emailAddr, updateCodeRet.message);
+
+                    console.log("sent new confirmation code email");
                 }
             } else if (verifyUserRet.incrementAttempt) {
+
+                console.log("incrementing verification attempts");
+                
                 await addVerifyAttempt(emailAddr);
+
+                console.log("verification attempts incremented");
             }
 
             ret.success = false;
             ret.message = verifyUserRet.message;
+
+            console.log("returning verify fail: " + JSON.stringify(ret));
+            
             return ret;
         } else {
+
+            console.log("updating user to active");
+
             var updateVerifiedUserRet = await updateVerifiedUser(emailAddr);
 
-            console.log("updateVerifiedUserRet: " + JSON.stringify(updateVerifiedUserRet));
+            console.log("returning updateVerifiedUserRet: " + JSON.stringify(updateVerifiedUserRet));
 
             return updateVerifiedUserRet;
         }
