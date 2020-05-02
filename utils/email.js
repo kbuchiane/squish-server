@@ -6,7 +6,7 @@ class Email {
     };
 
     async sendConfirmation(emailAddr, confirmId) {
-        return new Promise(function (resolve, rejct) {
+        return new Promise(function (resolve, reject) {
             var ret = {
                 success: true,
                 message: ""

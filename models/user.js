@@ -38,7 +38,7 @@ class User {
         };
 
         async function createUser(username, emailAddr, password) {
-            return new Promise(function (resolve, rejct) {
+            return new Promise(function (resolve, reject) {
                 var createUserRet = {
                     success: true,
                     message: "",
@@ -91,7 +91,7 @@ class User {
         };
 
         async function deleteNewUser(username) {
-            return new Promise(function (resolve, rejct) {
+            return new Promise(function (resolve, reject) {
                 var deleteUserRet = {
                     success: true,
                     message: ""
@@ -217,7 +217,7 @@ class User {
         };
 
         async function addVerifyAttempt(emailAddr) {
-            return new Promise(function (resolve, rejct) {
+            return new Promise(function (resolve, reject) {
                 var addVerifyAttemptRet = {
                     success: true,
                     message: ""
@@ -236,7 +236,7 @@ class User {
         };
 
         async function verifyUser(emailAddr, confirmId) {
-            return new Promise(function (resolve, rejct) {
+            return new Promise(function (resolve, reject) {
                 var verifyUserRet = {
                     success: true,
                     message: "",
@@ -277,7 +277,7 @@ class User {
         };
 
         async function updateVerifiedUser(emailAddr) {
-            return new Promise(function (resolve, rejct) {
+            return new Promise(function (resolve, reject) {
                 var updateVerifiedUserRet = {
                     success: true,
                     message: ""
