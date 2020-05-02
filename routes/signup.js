@@ -25,4 +25,13 @@ router.get('/confirmUser', function (req, res, next) {
     })
 });
 
+router.get('/resendCode', function (req, res, next) {
+    var emailAddr = req.query.email;
+
+    var user = new User();
+    user.resendCode(emailAddr).then(function (ret) {
+        res.send(ret);
+    })
+});
+
 module.exports = router;
