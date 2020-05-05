@@ -2,11 +2,10 @@ var express = require('express');
 var router = express.Router();
 
 router.get('/', function (req, res, next) {
-    console.log('forgot password: ' + req.query.userIdForgot);
+    console.log('logout username: ' + req.query.username);
 
     var response = {
-        success: true,
-        emailForgot: req.query.userIdForgot
+        success: true
     };
 
     res.send(response);

@@ -1,18 +1,37 @@
 var express = require('express');
+var db = require('../utils/db');
+var User = require('../models/user');
+
 var router = express.Router();
 
-/* GET call from client. */
-router.get('/', function(req, res, next) {
-    console.log('signup username: ' + req.query.username);
-    console.log('signup email: ' + req.query.email);
-    console.log('signup password: ' + req.query.password);
+router.get('/', function (req, res, next) {
+    var username = req.query.username;
+    var emailAddr = req.query.email;
+    var password = req.query.password;
 
-    var response = {
-        success: true,
-        userData: req.query.username + ' logged in'
-    };
+    var user = new User();
+    user.signup(username, emailAddr, password).then(function (ret) {
+        res.send(ret);
+    });
+});
 
-    res.send(response);
+router.get('/confirmUser', function (req, res, next) {
+    var emailAddr = req.query.email;
+    var confirmId = req.query.confirmId;
+
+    var user = new User();
+    user.confirmUser(emailAddr, confirmId).then(function (ret) {
+        res.send(ret);
+    })
+});
+
+router.get('/resendCode', function (req, res, next) {
+    var emailAddr = req.query.email;
+
+    var user = new User();
+    user.resendCode(emailAddr).then(function (ret) {
+        res.send(ret);
+    })
 });
 
 module.exports = router;
