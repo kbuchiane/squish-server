@@ -298,8 +298,7 @@ class User {
         // Processes
         var ret = {
             success: true,
-            message: "",
-            username: ""
+            message: ""
         };
 
         var checkStringRet = await checkStringEntries(emailAddr, confirmId);
