@@ -22,6 +22,9 @@ class User {
                 } else if (/\s/.test(username)) { // Username spaces
                     checkStringRet.success = false;
                     checkStringRet.message = "Username can not include spaces";
+                } else if (!(/^[a-z0-9]+$/i.test(username))) { // Username special characters
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Username can not include special characters";
                 } else if (emailAddr.length <= 0) { // Email length
                     checkStringRet.success = false;
                     checkStringRet.message = "Please enter an email";
