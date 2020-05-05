@@ -24,7 +24,8 @@ class Email {
                 from: process.env.confirm_email_host,
                 to: emailAddr,
                 subject: "Squish Sign Up Confirmation",
-                html: "<b style='font-weight:700'=>Verification Code: " + confirmId + "</b>"
+                html: "<b style='font-weight:700'>Verification Code: " + confirmId 
+                    + "<br><br><a href='http://localhost:8080/verifyemail'>Verify Email</a></b>"
             };
 
             transporter.sendMail(mailOptions, function (error, info) {
