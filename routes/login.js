@@ -1,19 +1,16 @@
 var express = require('express');
+var User = require('../models/user');
+
 var router = express.Router();
 
 router.get('/', function (req, res, next) {
-    console.log('login username: ' + req.query.username);
-    console.log('login password: ' + req.query.password);
+    var userId = req.query.userId;
+    var password = req.query.password;
 
-    var response = {
-        success: true,
-        user: {
-            username: req.query.username,
-            email: ''
-        }
-    };
-
-    res.send(response);
+    var user = new User();
+    user.login(userId, password).then(function (ret) {
+        res.send(ret);
+    });
 });
 
 module.exports = router;

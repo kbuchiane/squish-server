@@ -398,7 +398,6 @@ class User {
         }
 
         var updateCodeRet = await updateVerificationCode(emailAddr);
-
         if (!updateCodeRet.success) {
             return updateCodeRet;
         }
@@ -413,6 +412,66 @@ class User {
                 ", please enter the verification code to finish signing up";
             return ret;
         }
+    };
+
+    async login(userId, password) {
+        // Functions
+        async function checkStringEntries(userId, password) {
+            return new Promise(function (resolve, reject) {
+                var checkStringRet = {
+                    success: true,
+                    message: ""
+                };
+
+                if (userId.length <= 0) { // User ID length
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Please enter a username or email";
+                } else if (/\s/.test(userId)) { // User Id spaces
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Username or email can not include spaces"
+                } else if (password.length <= 6) { // Password length
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Password must be more than 6 characters";
+                }
+
+                resolve(checkStringRet);
+            });
+        };
+
+        async function checkLoginCreds(userId) {
+            return new Promise(function (resolve, reject) {
+                var checkLoginRet = {
+                    success: true,
+                    message: ""
+                };
+
+                var sql = "SELECT * FROM user WHERE ? IN(username, email) AND active = true";
+                db.query(sql, userId, function (err, result) {
+                    if (err) {
+                        checkLoginRet.success = false;
+                        checkLoginRet.message = "There was an issue logging you in, please try again later";
+                    }
+
+                    if (result.length === 0) {
+                        checkLoginRet.success = false;
+                        checkLoginRet.message = "Credentials entered were incorrect, or account has not been verified";
+                    } else {
+                        checkLoginRet.message = result[0].username;
+                    }
+
+                    resolve(checkLoginRet);
+                });
+            });
+        };
+
+        // Processes
+        var checkStringRet = await checkStringEntries(userId, password);
+        if (!checkStringRet.success) {
+            return checkStringRet;
+        }
+
+        var checkLoginRet = await checkLoginCreds(userId, password);
+        return checkLoginRet;
     };
 }
 
