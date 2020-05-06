@@ -1,29 +1,16 @@
-
-const winston = require('winston');
-
-//
-// Grab your preconfigured loggers
-//
-const logger1 = winston.loggers.get('squish-server');
-const logger2 = winston.loggers.get('squish-console');
-
-
 var express = require('express');
+var User = require('../models/user');
+
 var router = express.Router();
 
-router.get('/', function (req, res, next) {
-    logger1.info('User ' + req.query.username + ' logged in');
-    logger2.info('User ' + req.query.username + ' logged in');
-   
-    var response = {
-        success: true,
-        user: {
-            username: req.query.username,
-            email: ''
-        }
-    };
+router.post('/', function (req, res, next) {
+    var userId = req.body.auth.userId;
+    var password = req.body.auth.password;
 
-    res.send(response);
+    var user = new User();
+    user.login(userId, password).then(function (ret) {
+        res.send(ret);
+    });
 });
 
 module.exports = router;
