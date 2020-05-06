@@ -3,10 +3,10 @@ var User = require('../models/user');
 
 var router = express.Router();
 
-router.get('/', function (req, res, next) {
-    var username = req.query.username;
-    var emailAddr = req.query.email;
-    var password = req.query.password;
+router.post('/', function (req, res, next) {
+    var username = req.body.auth.username;
+    var emailAddr = req.body.auth.email;
+    var password = req.body.auth.password;
 
     var user = new User();
     user.signup(username, emailAddr, password).then(function (ret) {
@@ -14,9 +14,9 @@ router.get('/', function (req, res, next) {
     });
 });
 
-router.get('/confirmUser', function (req, res, next) {
-    var emailAddr = req.query.email;
-    var confirmId = req.query.confirmId;
+router.post('/confirmUser', function (req, res, next) {
+    var emailAddr = req.body.auth.email;
+    var confirmId = req.body.auth.confirmId;
 
     var user = new User();
     user.confirmUser(emailAddr, confirmId).then(function (ret) {
@@ -24,8 +24,8 @@ router.get('/confirmUser', function (req, res, next) {
     })
 });
 
-router.get('/resendCode', function (req, res, next) {
-    var emailAddr = req.query.email;
+router.post('/resendCode', function (req, res, next) {
+    var emailAddr = req.body.auth.email;
 
     var user = new User();
     user.resendCode(emailAddr).then(function (ret) {
