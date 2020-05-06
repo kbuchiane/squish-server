@@ -2,6 +2,7 @@ var Email = require('../utils/email');
 var db = require('../utils/db');
 const { v4: uuidv4 } = require('uuid');
 var bcrypt = require('bcryptjs');
+var moment = require('moment');
 
 class User {
     constructor() {
@@ -56,8 +57,7 @@ class User {
                 };
 
                 var sql = "INSERT INTO user (user_id, username, email, password, date_created, active, user_confirm_id, confirm_id_date_created, verify_attempt_count, admin) VALUES (?)";
-                var dateCreated = new Date().toISOString()
-                    .slice(0, 19).replace("T", " ");
+                var dateCreated = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
                 var userConfirmId = uuidv4();
                 userConfirmId = userConfirmId.substring(0, 8);
@@ -65,8 +65,6 @@ class User {
                 // Encrypt password
                 var salt = bcrypt.genSaltSync(10);
                 var passwordHash = bcrypt.hashSync(password, salt);
-
-                console.log("hash length: " + passwordHash.length);
 
                 var values = [
                     null,
@@ -190,18 +188,13 @@ class User {
         };
 
         function codeExpired(datetime) {
-            var nowTime = new Date().getTime();
-            var codeTime = new Date(datetime).getTime();
+            var nowTime = moment();
+            var codeTime = moment(datetime);
+            var minuteDiff = nowTime.diff(codeTime, 'minutes');
+            var maxMinutes = 4;
 
-            if (!isNaN(codeTime)) {
-                var milliDiff = nowTime - codeTime;
-                var dateDiff = new Date(milliDiff);
-                var minutesDiff = dateDiff.getMinutes();
-                var maxMinutes = 4;
-
-                if (minutesDiff < maxMinutes) {
-                    return false;
-                }
+            if (minuteDiff < maxMinutes) {
+                return false;
             }
 
             return true;
@@ -214,15 +207,16 @@ class User {
                     message: ""
                 };
 
-                // Generate new code
-                var newDateCreated = new Date().toISOString()
-                    .slice(0, 19).replace("T", " ");
+                // Generate new code and date
+                var newDateCreated = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
                 var newUserConfirmId = uuidv4();
                 newUserConfirmId = newUserConfirmId.substring(0, 8);
 
                 // Upate db code
-                var sql = "UPDATE user SET user_confirm_id = ?, confirm_id_date_created = '" + newDateCreated + "', verify_attempt_count = 0 WHERE email = '" + emailAddr + "'";
+                var sql = "UPDATE user SET user_confirm_id = ?, confirm_id_date_created = '"
+                    + newDateCreated + "', verify_attempt_count = 0 WHERE active = false AND email = '"
+                    + emailAddr + "'";
                 db.query(sql, newUserConfirmId, function (err, result) {
                     if (err) {
                         updateCodeRet.success = false;
@@ -382,8 +376,7 @@ class User {
                 };
 
                 // Generate new code
-                var newDateCreated = new Date().toISOString()
-                    .slice(0, 19).replace("T", " ");
+                var newDateCreated = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
                 var newUserConfirmId = uuidv4();
                 newUserConfirmId = newUserConfirmId.substring(0, 8);
@@ -475,7 +468,6 @@ class User {
                 var sql = "SELECT * FROM user WHERE ? IN(username, email) AND active = true";
                 db.query(sql, userId, function (err, result) {
                     if (err) {
-                        console.log(err);
                         checkLoginRet.success = false;
                         checkLoginRet.message = "There was an issue logging you in, please try again later";
                     } else if (result.length === 0) {
