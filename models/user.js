@@ -25,12 +25,18 @@ class User {
                 } else if (!(/^[a-z0-9]+$/i.test(username))) { // Username special characters
                     checkStringRet.success = false;
                     checkStringRet.message = "Username can not include special characters";
+                } else if (username.length > 45) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Username can not exceed 45 characters";
                 } else if (emailAddr.length <= 0) { // Email length
                     checkStringRet.success = false;
                     checkStringRet.message = "Please enter an email";
                 } else if (/\s/.test(emailAddr)) { // Email spaces
                     checkStringRet.success = false;
-                    checkStringRet.message = "Email can not include spaces"
+                    checkStringRet.message = "Email can not include spaces";
+                } else if (emailAddr.length > 255) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Email can not exceed 255 characters";
                 } else if (password.length <= 6) { // Password length
                     checkStringRet.success = false;
                     checkStringRet.message = "Password must be more than 6 characters";
@@ -162,8 +168,12 @@ class User {
                     checkStringRet.message = "Please enter an email";
                 } else if (/\s/.test(emailAddr)) { // Email spaces
                     checkStringRet.success = false;
-                    checkStringRet.message = "Email can not include spaces"
-                } else if (confirmId.length != 8) {
+                    checkStringRet.message = "Email can not include spaces";
+                } else if (emailAddr.length > 255) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Email can not exceed 255 characters";
+                }
+                else if (confirmId.length != 8) {
                     checkStringRet.success = false;
                     checkStringRet.message = "Verification code should be 8 characters";
                 }
@@ -347,7 +357,10 @@ class User {
                     checkStringRet.message = "Please enter an email";
                 } else if (/\s/.test(emailAddr)) { // Email spaces
                     checkStringRet.success = false;
-                    checkStringRet.message = "Email can not include spaces"
+                    checkStringRet.message = "Email can not include spaces";
+                } else if (emailAddr.length > 255) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Email can not exceed 255 characters";
                 }
 
                 resolve(checkStringRet);
@@ -431,8 +444,12 @@ class User {
                     checkStringRet.message = "Please enter a username or email";
                 } else if (/\s/.test(userId)) { // User Id spaces
                     checkStringRet.success = false;
-                    checkStringRet.message = "Username or email can not include spaces"
-                } else if (password.length <= 6) { // Password length
+                    checkStringRet.message = "Username or email can not include spaces";
+                } else if (userId.length > 255) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Email can not exceed 255 characters";
+                }
+                else if (password.length <= 6) { // Password length
                     checkStringRet.success = false;
                     checkStringRet.message = "Password must be more than 6 characters";
                 }
