@@ -1,6 +1,7 @@
 var Email = require('../utils/email');
 var db = require('../utils/db');
 const { v4: uuidv4 } = require('uuid');
+var bcrypt = require('bcryptjs');
 
 class User {
     constructor() {
@@ -61,11 +62,17 @@ class User {
                 var userConfirmId = uuidv4();
                 userConfirmId = userConfirmId.substring(0, 8);
 
+                // Encrypt password
+                var salt = bcrypt.genSaltSync(10);
+                var passwordHash = bcrypt.hashSync(password, salt);
+
+                console.log("hash length: " + passwordHash.length);
+
                 var values = [
                     null,
                     username,
                     emailAddr,
-                    password,
+                    passwordHash,
                     dateCreated,
                     false,
                     userConfirmId,
@@ -458,7 +465,7 @@ class User {
             });
         };
 
-        async function checkLoginCreds(userId) {
+        async function checkLoginCreds(userId, password) {
             return new Promise(function (resolve, reject) {
                 var checkLoginRet = {
                     success: true,
@@ -468,14 +475,17 @@ class User {
                 var sql = "SELECT * FROM user WHERE ? IN(username, email) AND active = true";
                 db.query(sql, userId, function (err, result) {
                     if (err) {
+                        console.log(err);
                         checkLoginRet.success = false;
                         checkLoginRet.message = "There was an issue logging you in, please try again later";
-                    }
-
-                    if (result.length === 0) {
+                    } else if (result.length === 0) {
                         checkLoginRet.success = false;
                         checkLoginRet.message = "Credentials entered were incorrect, or account has not been verified";
-                    } else {
+                    } else if (!bcrypt.compareSync(password, result[0].password)) {
+                        checkLoginRet.success = false;
+                        checkLoginRet.message = "Credentials entered were incorrect, or account has not been verified";
+                    }
+                    else {
                         checkLoginRet.message = result[0].username;
                     }
 
