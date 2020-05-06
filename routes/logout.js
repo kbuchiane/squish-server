@@ -8,6 +8,7 @@ var router = express.Router();
 router.post('/', function (req, res, next) {
     logger1.info('User ' + req.body.auth.username + ' logged out');
     logger2.info('User ' + req.body.auth.username + ' logged out');
+    console.log('logout username: ' + req.body.auth.username);
 
     var response = {
         success: true

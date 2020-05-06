@@ -1,6 +1,8 @@
 var Email = require('../utils/email');
 var db = require('../utils/db');
 const { v4: uuidv4 } = require('uuid');
+var bcrypt = require('bcryptjs');
+var moment = require('moment');
 
 class User {
     constructor() {
@@ -22,12 +24,21 @@ class User {
                 } else if (/\s/.test(username)) { // Username spaces
                     checkStringRet.success = false;
                     checkStringRet.message = "Username can not include spaces";
+                } else if (!(/^[a-z0-9]+$/i.test(username))) { // Username special characters
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Username can not include special characters";
+                } else if (username.length > 45) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Username can not exceed 45 characters";
                 } else if (emailAddr.length <= 0) { // Email length
                     checkStringRet.success = false;
                     checkStringRet.message = "Please enter an email";
                 } else if (/\s/.test(emailAddr)) { // Email spaces
                     checkStringRet.success = false;
-                    checkStringRet.message = "Email can not include spaces"
+                    checkStringRet.message = "Email can not include spaces";
+                } else if (emailAddr.length > 255) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Email can not exceed 255 characters";
                 } else if (password.length <= 6) { // Password length
                     checkStringRet.success = false;
                     checkStringRet.message = "Password must be more than 6 characters";
@@ -46,17 +57,20 @@ class User {
                 };
 
                 var sql = "INSERT INTO user (user_id, username, email, password, date_created, active, user_confirm_id, confirm_id_date_created, verify_attempt_count, admin) VALUES (?)";
-                var dateCreated = new Date().toISOString()
-                    .slice(0, 19).replace("T", " ");
+                var dateCreated = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
                 var userConfirmId = uuidv4();
                 userConfirmId = userConfirmId.substring(0, 8);
+
+                // Encrypt password
+                var salt = bcrypt.genSaltSync(10);
+                var passwordHash = bcrypt.hashSync(password, salt);
 
                 var values = [
                     null,
                     username,
                     emailAddr,
-                    password,
+                    passwordHash,
                     dateCreated,
                     false,
                     userConfirmId,
@@ -159,8 +173,12 @@ class User {
                     checkStringRet.message = "Please enter an email";
                 } else if (/\s/.test(emailAddr)) { // Email spaces
                     checkStringRet.success = false;
-                    checkStringRet.message = "Email can not include spaces"
-                } else if (confirmId.length != 8) {
+                    checkStringRet.message = "Email can not include spaces";
+                } else if (emailAddr.length > 255) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Email can not exceed 255 characters";
+                }
+                else if (confirmId.length != 8) {
                     checkStringRet.success = false;
                     checkStringRet.message = "Verification code should be 8 characters";
                 }
@@ -170,18 +188,13 @@ class User {
         };
 
         function codeExpired(datetime) {
-            var nowTime = new Date().getTime();
-            var codeTime = new Date(datetime).getTime();
+            var nowTime = moment();
+            var codeTime = moment(datetime);
+            var minuteDiff = nowTime.diff(codeTime, 'minutes');
+            var maxMinutes = 4;
 
-            if (!isNaN(codeTime)) {
-                var milliDiff = nowTime - codeTime;
-                var dateDiff = new Date(milliDiff);
-                var minutesDiff = dateDiff.getMinutes();
-                var maxMinutes = 4;
-
-                if (minutesDiff < maxMinutes) {
-                    return false;
-                }
+            if (minuteDiff < maxMinutes) {
+                return false;
             }
 
             return true;
@@ -194,15 +207,16 @@ class User {
                     message: ""
                 };
 
-                // Generate new code
-                var newDateCreated = new Date().toISOString()
-                    .slice(0, 19).replace("T", " ");
+                // Generate new code and date
+                var newDateCreated = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
                 var newUserConfirmId = uuidv4();
                 newUserConfirmId = newUserConfirmId.substring(0, 8);
 
                 // Upate db code
-                var sql = "UPDATE user SET user_confirm_id = ?, confirm_id_date_created = '" + newDateCreated + "', verify_attempt_count = 0 WHERE email = '" + emailAddr + "'";
+                var sql = "UPDATE user SET user_confirm_id = ?, confirm_id_date_created = '"
+                    + newDateCreated + "', verify_attempt_count = 0 WHERE active = false AND email = '"
+                    + emailAddr + "'";
                 db.query(sql, newUserConfirmId, function (err, result) {
                     if (err) {
                         updateCodeRet.success = false;
@@ -344,7 +358,10 @@ class User {
                     checkStringRet.message = "Please enter an email";
                 } else if (/\s/.test(emailAddr)) { // Email spaces
                     checkStringRet.success = false;
-                    checkStringRet.message = "Email can not include spaces"
+                    checkStringRet.message = "Email can not include spaces";
+                } else if (emailAddr.length > 255) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Email can not exceed 255 characters";
                 }
 
                 resolve(checkStringRet);
@@ -359,8 +376,7 @@ class User {
                 };
 
                 // Generate new code
-                var newDateCreated = new Date().toISOString()
-                    .slice(0, 19).replace("T", " ");
+                var newDateCreated = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
                 var newUserConfirmId = uuidv4();
                 newUserConfirmId = newUserConfirmId.substring(0, 8);
@@ -398,7 +414,6 @@ class User {
         }
 
         var updateCodeRet = await updateVerificationCode(emailAddr);
-
         if (!updateCodeRet.success) {
             return updateCodeRet;
         }
@@ -413,6 +428,72 @@ class User {
                 ", please enter the verification code to finish signing up";
             return ret;
         }
+    };
+
+    async login(userId, password) {
+        // Functions
+        async function checkStringEntries(userId, password) {
+            return new Promise(function (resolve, reject) {
+                var checkStringRet = {
+                    success: true,
+                    message: ""
+                };
+
+                if (userId.length <= 0) { // User ID length
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Please enter a username or email";
+                } else if (/\s/.test(userId)) { // User Id spaces
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Username or email can not include spaces";
+                } else if (userId.length > 255) {
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Email can not exceed 255 characters";
+                }
+                else if (password.length <= 6) { // Password length
+                    checkStringRet.success = false;
+                    checkStringRet.message = "Password must be more than 6 characters";
+                }
+
+                resolve(checkStringRet);
+            });
+        };
+
+        async function checkLoginCreds(userId, password) {
+            return new Promise(function (resolve, reject) {
+                var checkLoginRet = {
+                    success: true,
+                    message: ""
+                };
+
+                var sql = "SELECT * FROM user WHERE ? IN(username, email) AND active = true";
+                db.query(sql, userId, function (err, result) {
+                    if (err) {
+                        checkLoginRet.success = false;
+                        checkLoginRet.message = "There was an issue logging you in, please try again later";
+                    } else if (result.length === 0) {
+                        checkLoginRet.success = false;
+                        checkLoginRet.message = "Credentials entered were incorrect, or account has not been verified";
+                    } else if (!bcrypt.compareSync(password, result[0].password)) {
+                        checkLoginRet.success = false;
+                        checkLoginRet.message = "Credentials entered were incorrect, or account has not been verified";
+                    }
+                    else {
+                        checkLoginRet.message = result[0].username;
+                    }
+
+                    resolve(checkLoginRet);
+                });
+            });
+        };
+
+        // Processes
+        var checkStringRet = await checkStringEntries(userId, password);
+        if (!checkStringRet.success) {
+            return checkStringRet;
+        }
+
+        var checkLoginRet = await checkLoginCreds(userId, password);
+        return checkLoginRet;
     };
 }
 
