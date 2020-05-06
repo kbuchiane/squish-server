@@ -11,7 +11,7 @@ const myFormat = printf(({ level, message, label, timestamp }) => {
 // Configure file logging
 winston.loggers.add('squish-server', {
   format: combine(
-   // format.colorize(),
+    // format.colorize(),
     timestamp(),
     label({ label: 'squish-server' }),
     json()
@@ -26,17 +26,17 @@ winston.loggers.add('squish-server', {
 
 // Configure console logging, only log when not in production
 if (process.env.NODE_ENV !== 'production') {
-winston.loggers.add('squish-console', {
-  format: combine(
-    format.colorize(),
-    timestamp(),
-    label({ label: 'squish-console' }),
-    myFormat
-  ),
-  transports: [
-   new winston.transports.Console({ level: 'info' })
-  ]
-});
+  winston.loggers.add('squish-console', {
+    format: combine(
+      format.colorize(),
+      timestamp(),
+      label({ label: 'squish-console' }),
+      myFormat
+    ),
+    transports: [
+      new winston.transports.Console({ level: 'info' })
+    ]
+  });
 }
 
 const fileLogger = winston.loggers.get('squish-server');

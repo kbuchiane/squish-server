@@ -1,14 +1,13 @@
 const winston = require('winston');
-const logger1 = winston.loggers.get('squish-server');
-const logger2 = winston.loggers.get('squish-console');
+const loggerServer = winston.loggers.get('squish-server');
+const loggerConsole = winston.loggers.get('squish-console');
 
 var express = require('express');
 var router = express.Router();
 
 router.post('/', function (req, res, next) {
-    logger1.info('User ' + req.body.auth.username + ' logged out');
-    logger2.info('User ' + req.body.auth.username + ' logged out');
-    console.log('logout username: ' + req.body.auth.username);
+    loggerServer.info('User ' + req.body.auth.username + ' logged out');
+    loggerConsole.info('User ' + req.body.auth.username + ' logged out');
 
     var response = {
         success: true
