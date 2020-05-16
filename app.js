@@ -7,7 +7,7 @@ var cookieParser = require("cookie-parser");
 
 var stylus = require("stylus");
 var cors = require("cors");
-const appConfig = require("../config/app.config");
+const appConfig = require("./config/app.config");
 
 var indexRouter = require("./routes/index.route");
 var loginRouter = require("./routes/login.route");
