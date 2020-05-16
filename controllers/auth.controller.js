@@ -225,9 +225,15 @@ exports.confirmUser = (req, res) => {
             });
         }
 
+        var token = jwt.sign(
+            { id: user.user_id },
+            authConfig.AUTH_SECRET,
+            { expiresIn: 86400 } // 24 hours
+        );
+
         res.status(200).send({
-            message: "A verification code has been sent to "
-                + user.email
+            username: user.username,
+            accessToken: token
         });
     }).catch(err => {
         res.status(500).send({
