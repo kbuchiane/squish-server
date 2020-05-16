@@ -1,14 +1,11 @@
 checkEntries = (req, res, next) => {
     var username = req.body.auth.username;
-    var usernameRequired = req.body.auth.usernameRequired;
-
     var emailAddr = req.body.auth.email;
-    var emailRequired = req.body.auth.emailRequired;
-
     var password = req.body.auth.password;
-    var passwordRequired = req.body.auth.passwordRequired;
+    var confirmId = req.body.auth.confirmId;
+    var userId = req.body.auth.userId;
 
-    if (usernameRequired) {
+    if (username) {
         if (username.length <= 0) {
             return res.status(400).send({
                 message: "Please enter a username"
@@ -26,7 +23,9 @@ checkEntries = (req, res, next) => {
                 message: "Username can not exceed 45 characters"
             });
         }
-    } else if (emailRequired) {
+    }
+
+    if (emailAddr) {
         if (emailAddr.length <= 0) {
             return res.status(400).send({
                 message: "Please enter an email"
@@ -40,10 +39,36 @@ checkEntries = (req, res, next) => {
                 message: "Email can not exceed 255 characters"
             });
         }
-    } else if (passwordRequired) {
+    }
+
+    if (password) {
         if (password.length <= 6) {
             return res.status(400).send({
                 message: "Password must be more than 6 characters"
+            });
+        }
+    }
+
+    if (confirmId) {
+        if (confirmId.length != 8) {
+            return res.status(400).send({
+                message: "Verification code must be 8 characters"
+            });
+        }
+    }
+
+    if (userId) {
+        if (userId.length <= 0) {
+            return res.status(400).send({
+                message: "Please enter an email or username"
+            });
+        } else if (/\s/.test(userId)) {
+            return res.status(400).send({
+                message: "Email or username can not include spaces"
+            });
+        } else if (userId.length > 255) {
+            return res.status(400).send({
+                message: "Email or username can not exceed 255 characters"
             });
         }
     }
