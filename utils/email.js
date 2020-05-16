@@ -1,4 +1,5 @@
-var nodemailer = require('nodemailer');
+var nodemailer = require("nodemailer");
+var appConfig = require("../config/app.config");
 
 class Email {
     constructor() {
@@ -7,11 +8,6 @@ class Email {
 
     async sendConfirmation(emailAddr, confirmId) {
         return new Promise(function (resolve, reject) {
-            var ret = {
-                success: true,
-                message: ""
-            }
-
             var transporter = nodemailer.createTransport({
                 service: "gmail",
                 auth: {
@@ -24,17 +20,19 @@ class Email {
                 from: process.env.confirm_email_host,
                 to: emailAddr,
                 subject: "Squish Sign Up Confirmation",
-                html: "<b style='font-weight:700'>Verification Code (expires in 4 minutes): " + confirmId 
-                    + "<br><br><a href='http://localhost:8080/verifyemail'>Verify Email</a></b>"
+                html: "<b style='font-weight:700'>Verification Code (expires in 4 minutes): "
+                    + confirmId
+                    + "<br><br><a href='"
+                    + appConfig.VERIFY_EMAIL_URL
+                    + "'>Verify Email</a></b>"
             };
 
             transporter.sendMail(mailOptions, function (error, info) {
                 if (error) {
-                    ret.success = false;
-                    ret.message = "There was an issue sending a confirmation email, please try again later";
+                    resolve(false);
                 }
 
-                resolve(ret);
+                resolve(true);
             });
         });
     };
