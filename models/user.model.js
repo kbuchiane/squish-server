@@ -1,7 +1,8 @@
 module.exports = (sequelize, Sequelize) => {
     const User = sequelize.define("user", {
         user_id: {
-            type: Sequelize.STRING
+            type: Sequelize.STRING,
+            primaryKey: true
         },
         username: {
             type: Sequelize.STRING
@@ -15,7 +16,7 @@ module.exports = (sequelize, Sequelize) => {
         date_created: {
             type: Sequelize.STRING
         },
-        user_icon_file: {
+        user_icon_filepath: {
             type: Sequelize.STRING
         },
         active: {
@@ -33,6 +34,11 @@ module.exports = (sequelize, Sequelize) => {
         admin: {
             type: Sequelize.STRING
         }
+    }, {
+        timestamps: false,
+        underscored: true,
+        freezeTableName: true,
+        freezeTableName: true
     });
 
     return User;

@@ -30,8 +30,8 @@ app.use(stylus.middleware(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname, "public")));
 
 // DB sync
-// const db = require("./models");
-// db.sequelize.sync();
+const db = require("./models");
+db.sequelize.sync();
 
 // Cors configuration
 var clientUrl = appConfig.CLIENT_URL;

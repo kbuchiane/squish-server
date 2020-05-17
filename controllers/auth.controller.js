@@ -4,8 +4,8 @@ const Email = require("../utils/email");
 const winston = require("winston");
 const loggerServer = winston.loggers.get("squish-server");
 
-const user = db.user;
-const op = db.Sequelize.Op;
+const User = db.user;
+const Op = db.Sequelize.Op;
 
 const { v4: uuidv4 } = require("uuid");
 var jwt = require("jsonwebtoken");
@@ -14,7 +14,7 @@ var moment = require("moment");
 
 async function deleteNewUser(username) {
     return new Promise(function (resolve, reject) {
-        user.destroy({
+        User.destroy({
             where: {
                 username: username
             }
@@ -36,7 +36,7 @@ exports.signup = (req, res) => {
     var salt = bcrypt.genSaltSync(10);
     var passwordHash = bcrypt.hashSync(req.body.auth.password, salt);
 
-    user.create({
+    User.create({
         username: req.body.auth.username,
         email: req.body.auth.email,
         password: passwordHash,
@@ -83,7 +83,8 @@ exports.signup = (req, res) => {
 function codeExpired(datetime) {
     var nowTime = moment();
     var codeTime = moment(datetime);
-    var minuteDiff = nowTime.diff(codeTime, 'minutes');
+    var diff = moment.duration(nowTime.diff(codeTime));
+    var minuteDiff = diff.minutes();
     var maxMinutes = 4;
 
     if (minuteDiff < maxMinutes) {
@@ -101,7 +102,7 @@ async function updateVerificationCode(emailAddr) {
         var uuid = uuidv4();
         var newCode = uuid.substring(0, 8);
 
-        user.update({
+        User.update({
             user_confirm_id: newCode,
             confirm_id_date_created: newDateCreated,
             verify_attempt_count: 0
@@ -114,11 +115,16 @@ async function updateVerificationCode(emailAddr) {
                     ]
                 }
             }).then(user => {
-                if (err) {
+                if (!user) {
                     loggerServer.warn("User email: "
-                        + emailAddr + ": " + err);
+                        + emailAddr
+                        + " not found and could not be updated");
                     resolve(false);
                 }
+            }).catch(err => {
+                loggerServer.warn("User email: "
+                    + emailAddr + ": " + err);
+                resolve(false);
             });
 
         resolve(newCode);
@@ -156,9 +162,8 @@ async function updateAndEmailCode(emailAddr) {
 
 async function addVerifyAttempt(emailAddr) {
     return new Promise(function (resolve, reject) {
-        user.update({
-            verify_attempt_count: verify_attempt_count + 1
-        },
+        User.increment(
+            "verify_attempt_count",
             {
                 where: {
                     [Op.and]: [
@@ -167,18 +172,24 @@ async function addVerifyAttempt(emailAddr) {
                     ]
                 }
             }).then(user => {
-                if (err) {
+                if (!user) {
                     loggerServer.warn("User email: "
-                        + emailAddr + ": " + err);
+                        + emailAddr
+                        + " not found and could not be updated");
+                    resolve(false);
                 }
-            });
+            }).catch(err => {
+                loggerServer.warn("User email: "
+                    + emailAddr + ": " + err);
+                resolve(false);
+            });;
 
         resolve(true);
     });
 };
 
 exports.confirmUser = (req, res) => {
-    user.findOne({
+    User.findOne({
         where: {
             [Op.and]: [
                 { email: req.body.auth.email },
@@ -190,7 +201,7 @@ exports.confirmUser = (req, res) => {
             return res.status(404).send({
                 message: "Email entered was not found, or has already been activated"
             });
-        } else if (user.verify_attempt_count == 3) {
+        } else if (user.verify_attempt_count === 3) {
             var updateAndEmailCodeRet =
                 (async () => await updateAndEmailCode(user.email))();
 
@@ -246,7 +257,7 @@ exports.confirmUser = (req, res) => {
 };
 
 exports.resendCode = (req, res) => {
-    user.findOne({
+    User.findOne({
         where: {
             [Op.and]: [
                 { email: req.body.auth.email },
@@ -281,7 +292,7 @@ exports.resendCode = (req, res) => {
 };
 
 exports.login = (req, res) => {
-    user.findOne({
+    User.findOne({
         where: {
             [Op.or]: [
                 { username: req.body.auth.userId },
