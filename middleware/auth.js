@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const authConfig = require("../config/auth.config");
 const db = require("../models");
-const user = require(db.user);
+const user = db.user;
+const winston = require("winston");
 const loggerServer = winston.loggers.get("squish-server");
 const loggerConsole = winston.loggers.get("squish-console");
 

@@ -1,6 +1,7 @@
 const db = require("../models");
 const authConfig = require("../config/auth.config");
 const Email = require("../utils/email");
+const winston = require("winston");
 const loggerServer = winston.loggers.get("squish-server");
 
 const user = db.user;
@@ -48,14 +49,15 @@ exports.signup = (req, res) => {
     }).then(user => {
         // Send confirmation email
         var email = new Email();
-        var emailSuccess = await email.sendConfirmation(
+        var emailSuccess = (async () => await email.sendConfirmation(
             user.email,
             user.user_confirm_id
-        );
+        ))();
 
         if (!emailSuccess) {
             // Delete user
-            var deleteSuccess = await deleteNewUser(user.username);
+            var deleteSuccess =
+                (async () => await deleteNewUser(user.username))();
             if (!deleteSuccess) {
                 return res.status(500).send({
                     message: "A rare error occurred (whoops), you may have to try again later using a different username/email or please contact customer service for assistance"
@@ -130,16 +132,17 @@ async function updateAndEmailCode(emailAddr) {
             message: ""
         };
 
-        var updateCode = await updateVerificationCode(emailAddr);
+        var updateCode
+            = (async () => await updateVerificationCode(emailAddr))();
         if (!updateCode) {
             ret.status = 500;
             ret.message = "There was an issue creating a new verification code, please try again later";
         } else {
             var email = new Email();
-            var emailSuccess = await email.sendConfirmation(
+            var emailSuccess = (async () => await email.sendConfirmation(
                 emailAddr,
                 updateCode
-            );
+            ))();
 
             if (!emailSuccess) {
                 ret.status = 500;
@@ -189,7 +192,7 @@ exports.confirmUser = (req, res) => {
             });
         } else if (user.verify_attempt_count == 3) {
             var updateAndEmailCodeRet =
-                await updateAndEmailCode(user.email);
+                (async () => await updateAndEmailCode(user.email))();
 
             if (updateAndEmailCodeRet.status === 500) {
                 return res.status(500).send({
@@ -204,7 +207,7 @@ exports.confirmUser = (req, res) => {
             });
         } else if (codeExpired(user.confirm_id_date_created)) {
             var updateAndEmailCodeRet =
-                await updateAndEmailCode(user.email);
+                (async () => await updateAndEmailCode(user.email))();
 
             if (updateAndEmailCodeRet.status === 500) {
                 return res.status(500).send({
@@ -218,7 +221,7 @@ exports.confirmUser = (req, res) => {
                     + user.email
             });
         } else if (user.user_confirm_id != req.body.auth.confirmId) {
-            await addVerifyAttempt(user.email);
+            (async () => await addVerifyAttempt(user.email))();
 
             return res.status(400).send({
                 message: "Verification code is incorrect"
@@ -258,7 +261,7 @@ exports.resendCode = (req, res) => {
         }
 
         var updateAndEmailCodeRet =
-            await updateAndEmailCode(user.email);
+            (async () => await updateAndEmailCode(user.email))();
 
         if (updateAndEmailCodeRet.status === 500) {
             return res.status(500).send({
