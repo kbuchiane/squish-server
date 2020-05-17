@@ -30,8 +30,8 @@ app.use(stylus.middleware(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname, "public")));
 
 // DB sync
-const db = require("./models");
-db.sequelize.sync();
+// const db = require("./models");
+// db.sequelize.sync();
 
 // Cors configuration
 var clientUrl = appConfig.CLIENT_URL;
@@ -46,7 +46,7 @@ var corsOptions = {
   }
 };
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header(
     "Access-Control-Allow-Headers",
     "x-access-token, Origin, Content-Type, Accept"
