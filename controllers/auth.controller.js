@@ -1,6 +1,6 @@
 const db = require("../models");
 const authConfig = require("../config/auth.config");
-const Email = require("../utils/email");
+const email = require("../utils/email");
 const winston = require("winston");
 const loggerServer = winston.loggers.get("squish-server");
 
@@ -12,7 +12,7 @@ var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 var moment = require("moment");
 
-async function deleteNewUser(username) {
+function deleteNewUser(username) {
     return new Promise(function (resolve, reject) {
         User.destroy({
             where: {
@@ -47,34 +47,31 @@ exports.signup = (req, res) => {
         verify_attempt_count: 0,
         admin: false
     }).then(user => {
-        // Send confirmation email
-        var email = new Email();
-        var emailSuccess = (async () => await email.sendConfirmation(
+        email.sendConfirmation(
             user.email,
             user.user_confirm_id
-        ))();
-
-        if (!emailSuccess) {
-            // Delete user
-            var deleteSuccess =
-                (async () => await deleteNewUser(user.username))();
-            if (!deleteSuccess) {
-                return res.status(500).send({
-                    message: "A rare error occurred (whoops), you may have to try again later using a different username/email or please contact customer service for assistance"
+        ).then(emailSuccess => {
+            if (!emailSuccess) {
+                deleteNewUser(user.username).then(deleteSuccess => {
+                    if (!deleteSuccess) {
+                        return res.status(500).send({
+                            message: "A rare error occurred (whoops), you may have to try again later using a different username/email or please contact customer service for assistance"
+                        });
+                    } else {
+                        return res.status(500).send({
+                            message: "There was an issue sending a confirmation email, please try again later"
+                        })
+                    }
+                });
+            } else {
+                return res.status(200).send({
+                    message: "A verification code has been sent to "
+                        + user.email
                 });
             }
-
-            return res.status(500).send({
-                message: "There was an issue sending a confirmation email, please try again later"
-            })
-        }
-
-        res.status(200).send({
-            message: "A verification code has been sent to "
-                + user.email
         });
     }).catch(err => {
-        res.status(500).send({
+        return res.status(500).send({
             message: err.message
         });
     });
@@ -94,7 +91,7 @@ function codeExpired(datetime) {
     return true;
 };
 
-async function updateVerificationCode(emailAddr) {
+function updateVerificationCode(emailAddr) {
     return new Promise(function (resolve, reject) {
         var newDateCreated =
             moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
@@ -120,47 +117,47 @@ async function updateVerificationCode(emailAddr) {
                         + emailAddr
                         + " not found and could not be updated");
                     resolve(false);
+                } else {
+                    resolve(newCode);
                 }
             }).catch(err => {
                 loggerServer.warn("User email: "
                     + emailAddr + ": " + err);
                 resolve(false);
             });
-
-        resolve(newCode);
     });
 };
 
-async function updateAndEmailCode(emailAddr) {
+function updateAndEmailCode(emailAddr) {
     return new Promise(function (resolve, reject) {
         var ret = {
             status: 200,
             message: ""
         };
 
-        var updateCode
-            = (async () => await updateVerificationCode(emailAddr))();
-        if (!updateCode) {
-            ret.status = 500;
-            ret.message = "There was an issue creating a new verification code, please try again later";
-        } else {
-            var email = new Email();
-            var emailSuccess = (async () => await email.sendConfirmation(
-                emailAddr,
-                updateCode
-            ))();
-
-            if (!emailSuccess) {
+        updateVerificationCode(emailAddr).then(updateCode => {
+            if (!updateCode) {
                 ret.status = 500;
-                ret.message = "There was an issue sending a confirmation email, please try again later";
+                ret.message = "There was an issue creating a new verification code, please try again later";
+                resolve(ret);
+            } else {
+                email.sendConfirmation(
+                    emailAddr,
+                    updateCode
+                ).then(emailSuccess => {
+                    if (!emailSuccess) {
+                        ret.status = 500;
+                        ret.message = "There was an issue sending a confirmation email, please try again later";
+                    } else {
+                        resolve(ret);
+                    }
+                });
             }
-        }
-
-        resolve(ret);
+        });
     });
 };
 
-async function addVerifyAttempt(emailAddr) {
+function addVerifyAttempt(emailAddr) {
     return new Promise(function (resolve, reject) {
         User.increment(
             "verify_attempt_count",
@@ -177,14 +174,46 @@ async function addVerifyAttempt(emailAddr) {
                         + emailAddr
                         + " not found and could not be updated");
                     resolve(false);
+                } else {
+                    resolve(true);
                 }
             }).catch(err => {
                 loggerServer.warn("User email: "
                     + emailAddr + ": " + err);
                 resolve(false);
-            });;
+            });
+    });
+};
 
-        resolve(true);
+function updateVerifiedUser(emailAddr) {
+    return new Promise(function (resolve, reject) {
+        User.update({
+            user_confirm_id: null,
+            confirm_id_date_created: null,
+            verify_attempt_count: 0,
+            active: true
+        },
+            {
+                where: {
+                    [Op.and]: [
+                        { email: emailAddr },
+                        { active: false }
+                    ]
+                }
+            }).then(user => {
+                if (!user) {
+                    loggerServer.warn("User email: "
+                        + emailAddr
+                        + " could not be verified");
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            }).catch(err => {
+                loggerServer.warn("User email: "
+                    + emailAddr + ": " + err);
+                resolve(false);
+            });
     });
 };
 
@@ -202,55 +231,61 @@ exports.confirmUser = (req, res) => {
                 message: "Email entered was not found, or has already been activated"
             });
         } else if (user.verify_attempt_count === 3) {
-            var updateAndEmailCodeRet =
-                (async () => await updateAndEmailCode(user.email))();
-
-            if (updateAndEmailCodeRet.status === 500) {
-                return res.status(500).send({
-                    message: "Maximum attempts reached<br />"
-                        + updateAndEmailCodeRet.message
-                });
-            }
-
-            return res.status(400).send({
-                message: "Maximum attempts reached, a new verification code has been sent to "
-                    + user.email
+            updateAndEmailCode(user.email).then(updateAndEmailCodeRet => {
+                if (updateAndEmailCodeRet.status === 500) {
+                    return res.status(500).send({
+                        message: "Maximum attempts reached<br />"
+                            + updateAndEmailCodeRet.message
+                    });
+                } else {
+                    return res.status(400).send({
+                        message: "Maximum attempts reached, a new verification code has been sent to "
+                            + user.email
+                    });
+                }
             });
         } else if (codeExpired(user.confirm_id_date_created)) {
-            var updateAndEmailCodeRet =
-                (async () => await updateAndEmailCode(user.email))();
-
-            if (updateAndEmailCodeRet.status === 500) {
-                return res.status(500).send({
-                    message: "Verification code has expired<br />"
-                        + updateAndEmailCodeRet.message
-                });
-            }
-
-            return res.status(400).send({
-                message: "Verification code has expired, a new code has been sent to "
-                    + user.email
+            updateAndEmailCode(user.email).then(updateAndEmailCodeRet => {
+                if (updateAndEmailCodeRet.status === 500) {
+                    return res.status(500).send({
+                        message: "Verification code has expired<br />"
+                            + updateAndEmailCodeRet.message
+                    });
+                } else {
+                    return res.status(400).send({
+                        message: "Verification code has expired, a new code has been sent to "
+                            + user.email
+                    });
+                }
             });
         } else if (user.user_confirm_id != req.body.auth.confirmId) {
-            (async () => await addVerifyAttempt(user.email))();
+            addVerifyAttempt(user.email).then(addVerifyAttemptRet => {
+                return res.status(400).send({
+                    message: "Verification code is incorrect"
+                });
+            });
+        } else {
+            updateVerifiedUser(user.email).then(updateUserRet => {
+                if (!updateUserRet) {
+                    return res.status(500).send({
+                        message: "There was an issue activating your account, please try again later"
+                    });
+                } else {
+                    var token = jwt.sign(
+                        { id: user.user_id },
+                        authConfig.AUTH_SECRET,
+                        { expiresIn: 86400 } // 24 hours
+                    );
 
-            return res.status(400).send({
-                message: "Verification code is incorrect"
+                    return res.status(200).send({
+                        username: user.username,
+                        accessToken: token
+                    });
+                }
             });
         }
-
-        var token = jwt.sign(
-            { id: user.user_id },
-            authConfig.AUTH_SECRET,
-            { expiresIn: 86400 } // 24 hours
-        );
-
-        res.status(200).send({
-            username: user.username,
-            accessToken: token
-        });
     }).catch(err => {
-        res.status(500).send({
+        return res.status(500).send({
             message: err.message
         });
     });
@@ -269,23 +304,22 @@ exports.resendCode = (req, res) => {
             return res.status(404).send({
                 message: "Email entered was not found, or has already been activated"
             });
-        }
-
-        var updateAndEmailCodeRet =
-            (async () => await updateAndEmailCode(user.email))();
-
-        if (updateAndEmailCodeRet.status === 500) {
-            return res.status(500).send({
-                message: updateAndEmailCodeRet.message
+        } else {
+            updateAndEmailCode(user.email).then(updateAndEmailCodeRet => {
+                if (updateAndEmailCodeRet.status === 500) {
+                    return res.status(500).send({
+                        message: updateAndEmailCodeRet.message
+                    });
+                } else {
+                    return res.status(200).send({
+                        message: "A verification code has been sent to "
+                            + user.email
+                    });
+                }
             });
         }
-
-        res.status(200).send({
-            message: "A verification code has been sent to "
-                + user.email
-        });
     }).catch(err => {
-        res.status(500).send({
+        return res.status(500).send({
             message: err.message
         });
     });
@@ -307,32 +341,32 @@ exports.login = (req, res) => {
             return res.status(404).send({
                 message: "User was not found"
             });
+        } else {
+            var validPassword = bcrypt.compareSync(
+                req.body.auth.password,
+                user.password
+            );
+
+            if (!validPassword) {
+                return res.status(401).send({
+                    accessToken: null,
+                    message: "Password was invalid"
+                });
+            } else {
+                var token = jwt.sign(
+                    { id: user.user_id },
+                    authConfig.AUTH_SECRET,
+                    { expiresIn: 86400 } // 24 hours
+                );
+
+                return res.status(200).send({
+                    username: user.username,
+                    accessToken: token
+                });
+            }
         }
-
-        var validPassword = bcrypt.compareSync(
-            req.body.auth.password,
-            user.password
-        );
-
-        if (!validPassword) {
-            return res.status(401).send({
-                accessToken: null,
-                message: "Password was invalid"
-            });
-        }
-
-        var token = jwt.sign(
-            { id: user.user_id },
-            authConfig.AUTH_SECRET,
-            { expiresIn: 86400 } // 24 hours
-        );
-
-        res.status(200).send({
-            username: user.username,
-            accessToken: token
-        });
     }).catch(err => {
-        res.status(500).send({
+        return res.status(500).send({
             message: err.message
         });
     });
