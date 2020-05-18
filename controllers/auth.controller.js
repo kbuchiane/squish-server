@@ -3,6 +3,7 @@ const authConfig = require("../config/auth.config");
 const email = require("../utils/email");
 const winston = require("winston");
 const loggerServer = winston.loggers.get("squish-server");
+const loggerConsole = winston.loggers.get("squish-console");
 
 const User = db.user;
 const Op = db.Sequelize.Op;
@@ -277,6 +278,9 @@ exports.confirmUser = (req, res) => {
                         { expiresIn: 86400 } // 24 hours
                     );
 
+                    loggerServer.info("User: " + user.username + " logged in");
+                    loggerConsole.info("User: " + user.username + " logged in");
+
                     return res.status(200).send({
                         username: user.username,
                         accessToken: token
@@ -358,6 +362,9 @@ exports.login = (req, res) => {
                     authConfig.AUTH_SECRET,
                     { expiresIn: 86400 } // 24 hours
                 );
+
+                loggerServer.info("User: " + user.username + " logged in");
+                loggerConsole.info("User: " + user.username + " logged in");
 
                 return res.status(200).send({
                     username: user.username,
