@@ -6,7 +6,8 @@ var express = require("express");
 var router = express.Router();
 
 router.post("/", function (req, res, next) {
-    loggerConsole.info("req: " + req.body);
+    loggerConsole.info("req headers: " + JSON.stringify(req.headers));
+    loggerConsole.info("req body: " + JSON.stringify(req.body));
 
     loggerServer.info("User: " + req.body.auth.username + " logged out");
     loggerConsole.info("User: " + req.body.auth.username + " logged out");
