@@ -6,17 +6,17 @@ var express = require("express");
 var router = express.Router();
 
 router.post("/", function (req, res, next) {
-    loggerConsole.info("req headers: " + JSON.stringify(req.headers));
-    loggerConsole.info("req body: " + JSON.stringify(req.body));
+    var bearerJwt = req.headers.authorization.split(" ");
+    var jwt = bearerJwt[1];
+
+    loggerConsole.info("jwt: " + jwt);
 
     loggerServer.info("User: " + req.body.auth.username + " logged out");
     loggerConsole.info("User: " + req.body.auth.username + " logged out");
 
-    var response = {
-        success: true
-    };
-
-    res.send(response);
+    return res.status(200).send({
+        message: "Logout success"
+    });
 });
 
 module.exports = router;
