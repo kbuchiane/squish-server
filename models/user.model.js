@@ -22,6 +22,12 @@ module.exports = (sequelize, Sequelize) => {
         active: {
             type: Sequelize.STRING
         },
+        refresh_token: {
+            type: Sequelize.STRING
+        },
+        refresh_token_expiration: {
+            type: Sequelize.STRING
+        },
         user_confirm_id: {
             type: Sequelize.STRING
         },

@@ -218,6 +218,40 @@ function updateVerifiedUser(emailAddr) {
     });
 };
 
+function getRefreshToken(emailAddr) {
+    return new Promise(function (resolve, reject) {
+        var refreshToken = uuidv4();
+        var refreshTokenExpiration =
+            moment(Date.now()).add(1, "days").format("YYYY-MM-DD HH:mm:ss");
+
+        User.update({
+            refresh_token: refreshToken,
+            refresh_token_expiration: refreshTokenExpiration
+        },
+            {
+                where: {
+                    [Op.and]: [
+                        { email: emailAddr },
+                        { active: true }
+                    ]
+                }
+            }).then(user => {
+                if (!user) {
+                    loggerServer.warn("User email: "
+                        + emailAddr
+                        + ": could not be given a refresh token");
+                    resolve(false);
+                } else {
+                    resolve(refreshToken);
+                }
+            }).catch(err => {
+                loggerServer.warn("User email: "
+                    + emailAddr + ": " + err);
+                resolve(false);
+            });
+    });
+};
+
 exports.confirmUser = (req, res) => {
     User.findOne({
         where: {
@@ -272,18 +306,27 @@ exports.confirmUser = (req, res) => {
                         message: "There was an issue activating your account, please try again later"
                     });
                 } else {
-                    var token = jwt.sign(
+                    var accessToken = jwt.sign(
                         { id: user.user_id },
                         authConfig.AUTH_SECRET,
                         { expiresIn: authConfig.JWT_EXPIRE_TIME }
                     );
 
-                    loggerServer.info("User: " + user.username + " logged in");
-                    loggerConsole.info("User: " + user.username + " logged in");
+                    getRefreshToken(user.email).then(refreshToken => {
+                        if (!refreshToken) {
+                            return res.status(500).send({
+                                message: "Account activated, but there was an issue logging in, please try again"
+                            });
+                        } else {
+                            loggerServer.info("User: " + user.username + " logged in");
+                            loggerConsole.info("User: " + user.username + " logged in");
 
-                    return res.status(200).send({
-                        username: user.username,
-                        accessToken: token
+                            return res.status(200).send({
+                                username: user.username,
+                                accessToken: accessToken,
+                                refreshToken: refreshToken
+                            });
+                        }
                     });
                 }
             });
@@ -353,22 +396,30 @@ exports.login = (req, res) => {
 
             if (!validPassword) {
                 return res.status(401).send({
-                    accessToken: null,
                     message: "Password was invalid"
                 });
             } else {
-                var token = jwt.sign(
+                var accessToken = jwt.sign(
                     { id: user.user_id },
                     authConfig.AUTH_SECRET,
                     { expiresIn: authConfig.JWT_EXPIRE_TIME }
                 );
 
-                loggerServer.info("User: " + user.username + " logged in");
-                loggerConsole.info("User: " + user.username + " logged in");
+                getRefreshToken(user.email).then(refreshToken => {
+                    if (!refreshToken) {
+                        return res.status(500).send({
+                            message: "There was an issue logging in, please try again"
+                        });
+                    } else {
+                        loggerServer.info("User: " + user.username + " logged in");
+                        loggerConsole.info("User: " + user.username + " logged in");
 
-                return res.status(200).send({
-                    username: user.username,
-                    accessToken: token
+                        return res.status(200).send({
+                            username: user.username,
+                            accessToken: accessToken,
+                            refreshToken: refreshToken
+                        });
+                    }
                 });
             }
         }
