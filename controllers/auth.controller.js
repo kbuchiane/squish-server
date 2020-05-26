@@ -275,7 +275,7 @@ exports.confirmUser = (req, res) => {
                     var token = jwt.sign(
                         { id: user.user_id },
                         authConfig.AUTH_SECRET,
-                        { expiresIn: 86400 } // 24 hours
+                        { expiresIn: authConfig.JWT_EXPIRE_TIME }
                     );
 
                     loggerServer.info("User: " + user.username + " logged in");
@@ -360,7 +360,7 @@ exports.login = (req, res) => {
                 var token = jwt.sign(
                     { id: user.user_id },
                     authConfig.AUTH_SECRET,
-                    { expiresIn: 86400 } // 24 hours
+                    { expiresIn: authConfig.JWT_EXPIRE_TIME }
                 );
 
                 loggerServer.info("User: " + user.username + " logged in");
