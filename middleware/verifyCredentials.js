@@ -1,9 +1,40 @@
 checkEntries = (req, res, next) => {
-    var username = req.body.auth.username;
-    var emailAddr = req.body.auth.email;
-    var password = req.body.auth.password;
-    var confirmId = req.body.auth.confirmId;
-    var userId = req.body.auth.userId;
+    var username = null;
+    var email = req.body.email;
+    var password = null;
+    var confirmId = req.body.confirmId;
+    var refreshToken = null;
+
+    var authorization = req.headers.authorization;
+    if (authorization) {
+        if (!authorization.startsWith("Basic")) {
+            return res.satatus(401).send({
+                message: "Invalid authorization method"
+            });
+        } else {
+            var encoded = authorization.substring("Basic ".length).trim();
+            var decoded = Buffer.from(encoded, "base64").toString();
+            var creds = decoded.split(":");
+
+            if (creds.length > 0) {
+                userId = creds[0];
+
+                if (userId.includes("@")) {
+                    email = userId;
+                } else {
+                    username = userId;
+
+                    if (!email) {
+                        req.email = null;
+                    }
+                }
+            }
+
+            if (creds.length > 1) {
+                password = creds[1];
+            }
+        }
+    }
 
     if (username) {
         if (username.length <= 0) {
@@ -23,22 +54,34 @@ checkEntries = (req, res, next) => {
                 message: "Username can not exceed 45 characters"
             });
         }
+
+        req.username = username;
     }
 
-    if (emailAddr) {
-        if (emailAddr.length <= 0) {
+    if (email) {
+        if (email.length <= 0) {
             return res.status(400).send({
                 message: "Please enter an email"
             });
-        } else if (/\s/.test(emailAddr)) {
+        } else if (/\s/.test(email)) {
             return res.status(400).send({
                 message: "Email can not include spaces"
             });
-        } else if (emailAddr.length > 255) {
+        } else if (email.length > 255) {
             return res.status(400).send({
                 message: "Email can not exceed 255 characters"
             });
+        } else if (email.includes(":")) {
+            return res.status(400).send({
+                message: "Email can not include ':'"
+            });
+        } else if (!email.includes("@")) {
+            return res.status(400).send({
+                message: "Email must include '@'"
+            });
         }
+
+        req.email = email;
     }
 
     if (password) {
@@ -46,7 +89,13 @@ checkEntries = (req, res, next) => {
             return res.status(400).send({
                 message: "Password must be more than 6 characters"
             });
+        } else if (password.includes(":")) {
+            return res.status(400).send({
+                message: "Password can not include ':'"
+            });
         }
+
+        req.password = password;
     }
 
     if (confirmId) {
@@ -55,22 +104,22 @@ checkEntries = (req, res, next) => {
                 message: "Verification code must be 8 characters"
             });
         }
+
+        req.confirmId = confirmId;
+    } else {
+        req.confirmId = null;
     }
 
-    if (userId) {
-        if (userId.length <= 0) {
-            return res.status(400).send({
-                message: "Please enter an email or username"
-            });
-        } else if (/\s/.test(userId)) {
-            return res.status(400).send({
-                message: "Email or username can not include spaces"
-            });
-        } else if (userId.length > 255) {
-            return res.status(400).send({
-                message: "Email or username can not exceed 255 characters"
+    if (refreshToken) {
+        if (refreshToken.length <= 0) {
+            return res.status(401).send({
+                message: "Could not refresh session"
             });
         }
+
+        console.log("setting refreshToken to " + refreshToken);
+
+        req.refreshToken = refreshToken;
     }
 
     next();

@@ -14,6 +14,12 @@ router.post("/", function (req, res, next) {
     loggerServer.info("User: " + req.body.auth.username + " logged out");
     loggerConsole.info("User: " + req.body.auth.username + " logged out");
 
+    // temp as an example for later calls:
+    // make sure jwt is legit
+    // if jwt is not legit return unauthorized
+    // if jwt is legit but expired return to get refresh token
+    // if refresh token is legit send new jwt and original request response
+
     return res.status(200).send({
         message: "Logout success"
     });

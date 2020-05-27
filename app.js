@@ -14,6 +14,7 @@ var loginRouter = require("./routes/login.route");
 var signupRouter = require("./routes/signup.route");
 var logoutRouter = require("./routes/logout.route");
 var forgotPasswordRouter = require("./routes/forgotPassword.route");
+var refreshTokenRouter = require("./routes/refreshToken.route");
 
 var app = express();
 
@@ -49,7 +50,7 @@ var corsOptions = {
 app.use(function (req, res, next) {
   res.header(
     "Access-Control-Allow-Headers",
-    "x-access-token, Origin, Content-Type, Accept"
+    "x-access-token, Origin, Content-Type, Accept, Authorization"
   );
 
   next();
@@ -60,6 +61,7 @@ app.use("/login", cors(corsOptions), loginRouter);
 app.use("/signup", cors(corsOptions), signupRouter);
 app.use("/logout", cors(corsOptions), logoutRouter);
 app.use("/forgotPassword", cors(corsOptions), forgotPasswordRouter);
+app.use("/refreshToken", cors(corsOptions), refreshTokenRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
