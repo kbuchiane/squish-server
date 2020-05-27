@@ -8,6 +8,7 @@ var cookieParser = require("cookie-parser");
 var stylus = require("stylus");
 var cors = require("cors");
 const appConfig = require("./config/app.config");
+const authConfig = require("./config/auth.config");
 
 var indexRouter = require("./routes/index.route");
 var loginRouter = require("./routes/login.route");
@@ -26,7 +27,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieParser(authConfig.COOKIE_SECRET));
 app.use(stylus.middleware(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -51,6 +52,11 @@ app.use(function (req, res, next) {
   res.header(
     "Access-Control-Allow-Headers",
     "x-access-token, Origin, Content-Type, Accept, Authorization"
+  );
+
+  res.header(
+    "Access-Control-Allow-Credentials",
+    true
   );
 
   next();

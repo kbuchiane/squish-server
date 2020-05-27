@@ -330,7 +330,12 @@ exports.confirmUser = (req, res) => {
                                     message: "Account activated, but there was an issue logging in, please try again"
                                 });
                             } else {
-                                res.set("Refresh-Token", refreshToken);
+                                res.cookie("refresh-token", refreshToken, {
+                                    httpOnly: true,
+                                    secure: true,
+                                    signed: true
+                                });
+
                                 return res.status(200).send({
                                     username: user.username,
                                     accessToken: accessToken
@@ -432,7 +437,12 @@ exports.login = (req, res) => {
                                 message: "There was an issue logging in, please try again"
                             });
                         } else {
-                            res.set("Refresh-Token", refreshToken);
+                            res.cookie("refresh-token", refreshToken, {
+                                httpOnly: true,
+                                secure: true,
+                                signed: true
+                            });
+
                             return res.status(200).send({
                                 username: user.username,
                                 accessToken: accessToken
@@ -496,7 +506,12 @@ exports.refreshToken = (req, res) => {
                                 message: "There was an issue renewing the session"
                             });
                         } else {
-                            res.set("Refresh-Token", refreshToken);
+                            res.cookie("refresh-token", refreshToken, {
+                                httpOnly: true,
+                                secure: true,
+                                signed: true
+                            });
+
                             return res.status(200).send({
                                 username: user.username,
                                 accessToken: accessToken
