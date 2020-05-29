@@ -3,7 +3,7 @@ checkEntries = (req, res, next) => {
     var email = req.body.email;
     var password = null;
     var confirmId = req.body.confirmId;
-    var refreshToken = null;
+    var refreshToken = req.cookies["refresh-token"];
 
     var authorization = req.headers.authorization;
     if (authorization) {
@@ -116,8 +116,6 @@ checkEntries = (req, res, next) => {
                 message: "Could not refresh session"
             });
         }
-
-        console.log("setting refreshToken to " + refreshToken);
 
         req.refreshToken = refreshToken;
     }

@@ -6,13 +6,12 @@ var express = require("express");
 var router = express.Router();
 
 router.post("/", function (req, res, next) {
+    var refreshToken = req.cookies["refresh-token"];
+    loggerConsole.info("logout refreshToken: " + refreshToken);
+
     var bearerJwt = req.headers.authorization.split(" ");
     var jwt = bearerJwt[1];
-
     loggerConsole.info("jwt: " + jwt);
-
-    loggerServer.info("User: " + req.body.auth.username + " logged out");
-    loggerConsole.info("User: " + req.body.auth.username + " logged out");
 
     // temp as an example for later calls:
     // make sure jwt is legit

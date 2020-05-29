@@ -330,11 +330,7 @@ exports.confirmUser = (req, res) => {
                                     message: "Account activated, but there was an issue logging in, please try again"
                                 });
                             } else {
-                                res.cookie("refresh-token", refreshToken, {
-                                    httpOnly: true,
-                                    secure: true,
-                                    signed: true
-                                });
+                                res.cookie("refresh-token", refreshToken);
 
                                 return res.status(200).send({
                                     username: user.username,
@@ -437,11 +433,7 @@ exports.login = (req, res) => {
                                 message: "There was an issue logging in, please try again"
                             });
                         } else {
-                            res.cookie("refresh-token", refreshToken, {
-                                httpOnly: true,
-                                secure: true,
-                                signed: true
-                            });
+                            res.cookie("refresh-token", refreshToken);
 
                             return res.status(200).send({
                                 username: user.username,
@@ -506,11 +498,7 @@ exports.refreshToken = (req, res) => {
                                 message: "There was an issue renewing the session"
                             });
                         } else {
-                            res.cookie("refresh-token", refreshToken, {
-                                httpOnly: true,
-                                secure: true,
-                                signed: true
-                            });
+                            res.cookie("refresh-token", refreshToken);
 
                             return res.status(200).send({
                                 username: user.username,
