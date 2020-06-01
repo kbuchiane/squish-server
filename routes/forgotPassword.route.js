@@ -1,8 +1,8 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
 
-router.post('/', function (req, res, next) {
-    console.log('forgot password: ' + req.body.auth.userIdForgot);
+router.post("/", function (req, res, next) {
+    console.log("forgot password: " + req.body.auth.userIdForgot);
 
     var response = {
         success: true,

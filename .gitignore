@@ -1,3 +1,5 @@
 node_modules
 .vs
 logs
+config/auth.config.js
+config/db.config.js
