@@ -1,0 +1,134 @@
+checkEntries = (req, res, next) => {
+    var username = null;
+    var email = req.body.email;
+    var password = null;
+    var confirmId = req.body.confirmId;
+    var refreshToken = req.cookies["refresh-token"];
+
+    var authorization = req.headers.authorization;
+    if (authorization) {
+        if (authorization.startsWith("Basic")) {
+            var encoded = authorization.substring("Basic ".length).trim();
+            var decoded = Buffer.from(encoded, "base64").toString();
+            var creds = decoded.split(":");
+
+            if (creds.length > 0) {
+                userId = creds[0];
+
+                if (userId.includes("@")) {
+                    email = userId;
+                } else {
+                    username = userId;
+
+                    if (!email) {
+                        req.email = null;
+                    }
+                }
+            }
+
+            if (creds.length > 1) {
+                password = creds[1];
+            }
+        } else if (authorization.startsWith("Bearer")) {
+            var bearerJwt = authorization.split(" ");
+            req.jwt = bearerJwt[1];
+
+        } else {
+            return res.satatus(401).send({
+                message: "Invalid authorization method"
+            });
+        }
+    }
+
+    if (username) {
+        if (username.length <= 0) {
+            return res.status(400).send({
+                message: "Please enter a username"
+            });
+        } else if (/\s/.test(username)) {
+            return res.status(400).send({
+                message: "Username can not include spaces"
+            });
+        } else if (!(/^[a-z0-9]+$/i.test(username))) {
+            return res.status(400).send({
+                message: "Username can not include special characters"
+            });
+        } else if (username.length > 45) {
+            return res.status(400).send({
+                message: "Username can not exceed 45 characters"
+            });
+        }
+
+        req.username = username;
+    }
+
+    if (email) {
+        if (email.length <= 0) {
+            return res.status(400).send({
+                message: "Please enter an email"
+            });
+        } else if (/\s/.test(email)) {
+            return res.status(400).send({
+                message: "Email can not include spaces"
+            });
+        } else if (email.length > 255) {
+            return res.status(400).send({
+                message: "Email can not exceed 255 characters"
+            });
+        } else if (email.includes(":")) {
+            return res.status(400).send({
+                message: "Email can not include ':'"
+            });
+        } else if (!email.includes("@")) {
+            return res.status(400).send({
+                message: "Email must include '@'"
+            });
+        }
+
+        req.email = email;
+    }
+
+    if (password) {
+        if (password.length <= 6) {
+            return res.status(400).send({
+                message: "Password must be more than 6 characters"
+            });
+        } else if (password.includes(":")) {
+            return res.status(400).send({
+                message: "Password can not include ':'"
+            });
+        }
+
+        req.password = password;
+    }
+
+    if (confirmId) {
+        if (confirmId.length != 8) {
+            return res.status(400).send({
+                message: "Verification code must be 8 characters"
+            });
+        }
+
+        req.confirmId = confirmId;
+    } else {
+        req.confirmId = null;
+    }
+
+    if (refreshToken) {
+        if (refreshToken.length <= 0) {
+            return res.status(401).send({
+                message: "Could not refresh session"
+            });
+        }
+
+        req.refreshToken = refreshToken;
+    }
+
+    next();
+};
+
+const verifyCredentials = {
+    checkEntries: checkEntries
+};
+
+module.exports = verifyCredentials;
