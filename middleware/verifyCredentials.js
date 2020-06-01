@@ -7,11 +7,7 @@ checkEntries = (req, res, next) => {
 
     var authorization = req.headers.authorization;
     if (authorization) {
-        if (!authorization.startsWith("Basic")) {
-            return res.satatus(401).send({
-                message: "Invalid authorization method"
-            });
-        } else {
+        if (authorization.startsWith("Basic")) {
             var encoded = authorization.substring("Basic ".length).trim();
             var decoded = Buffer.from(encoded, "base64").toString();
             var creds = decoded.split(":");
@@ -33,6 +29,14 @@ checkEntries = (req, res, next) => {
             if (creds.length > 1) {
                 password = creds[1];
             }
+        } else if (authorization.startsWith("Bearer")) {
+            var bearerJwt = authorization.split(" ");
+            req.jwt = bearerJwt[1];
+
+        } else {
+            return res.satatus(401).send({
+                message: "Invalid authorization method"
+            });
         }
     }
 

@@ -515,3 +515,38 @@ exports.refreshToken = (req, res) => {
         });
     }
 };
+
+exports.logout = (req, res) => {
+    if (!req.refreshToken) {
+        return res.status(400).send({
+            message: "No refresh token"
+        });
+    } else {
+        User.update({
+            refresh_token: null,
+            refresh_token_expiration: null
+        },
+            {
+                where: {
+                    [Op.and]: [
+                        { refresh_token: req.refreshToken },
+                        { active: true }
+                    ]
+                }
+            }).then(user => {
+                if (!user) {
+                    return res.status(404).send({
+                        message: "User was not found"
+                    });
+                } else {
+                    return res.status(200).send({
+                        message: "Logout success"
+                    });
+                }
+            }).catch(err => {
+                return res.status(500).send({
+                    message: err.message
+                });
+            });
+    }
+};
