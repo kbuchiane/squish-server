@@ -1,9 +1,11 @@
+const appConfig = require("../config/app.config");
+
 checkEntries = (req, res, next) => {
     let username = null;
     let email = req.body.email;
     let password = null;
     let confirmId = req.body.confirmId;
-    let refreshToken = req.cookies["refresh-token"];
+    let refreshToken = req.cookies[appConfig.REFRESH_TOKEN];
 
     let authorization = req.headers.authorization;
     if (authorization) {

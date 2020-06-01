@@ -1,9 +1,10 @@
 const db = require("../models");
 const authConfig = require("../config/auth.config");
+const appConfig = require("../config/app.config");
 const email = require("../utils/email");
 const winston = require("winston");
-const loggerServer = winston.loggers.get("squish-server");
-const loggerConsole = winston.loggers.get("squish-console");
+const loggerServer = winston.loggers.get(appConfig.S_SERVER);
+const loggerConsole = winston.loggers.get(appConfig.S_CONSOLE);
 const User = db.user;
 const Op = db.Sequelize.Op;
 const { v4: uuidv4 } = require("uuid");
@@ -32,7 +33,7 @@ exports.signup = (req, res) => {
             message: "Email, username, and password are required"
         });
     } else {
-        let dateCreated = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
+        let dateCreated = moment(Date.now()).format(appConfig.DB_DATE_FORMAT);
 
         let userConfirmId = uuidv4();
         userConfirmId = userConfirmId.substring(0, 8);
@@ -99,7 +100,7 @@ function codeExpired(datetime) {
 function updateVerificationCode(emailAddr) {
     return new Promise(function (resolve, reject) {
         let newDateCreated =
-            moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
+            moment(Date.now()).format(appConfig.DB_DATE_FORMAT);
 
         let uuid = uuidv4();
         let newCode = uuid.substring(0, 8);
@@ -226,7 +227,7 @@ function getRefreshToken(emailAddr) {
     return new Promise(function (resolve, reject) {
         let refreshToken = uuidv4();
         let refreshTokenExpiration =
-            moment(Date.now()).add(1, "days").format("YYYY-MM-DD HH:mm:ss");
+            moment(Date.now()).add(1, "days").format(appConfig.DB_DATE_FORMAT);
 
         User.update({
             refresh_token: refreshToken,
@@ -327,7 +328,7 @@ exports.confirmUser = (req, res) => {
                                     message: "Account activated, but there was an issue logging in, please try again"
                                 });
                             } else {
-                                res.cookie("refresh-token", refreshToken);
+                                res.cookie(appConfig.REFRESH_TOKEN, refreshToken);
 
                                 return res.status(200).send({
                                     username: user.username,
@@ -430,7 +431,7 @@ exports.login = (req, res) => {
                                 message: "There was an issue logging in, please try again"
                             });
                         } else {
-                            res.cookie("refresh-token", refreshToken);
+                            res.cookie(appConfig.REFRESH_TOKEN, refreshToken);
 
                             return res.status(200).send({
                                 username: user.username,
@@ -495,7 +496,7 @@ exports.refreshToken = (req, res) => {
                                 message: "There was an issue renewing the session"
                             });
                         } else {
-                            res.cookie("refresh-token", refreshToken);
+                            res.cookie(appConfig.REFRESH_TOKEN, refreshToken);
 
                             return res.status(200).send({
                                 username: user.username,
