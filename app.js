@@ -1,23 +1,23 @@
-var logger = require("./utils/logger");
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var bodyParser = require("body-parser");
-var cookieParser = require("cookie-parser");
+const logger = require("./utils/logger");
+const createError = require("http-errors");
+const express = require("express");
+const path = require("path");
+const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 
-var stylus = require("stylus");
-var cors = require("cors");
+const stylus = require("stylus");
+const cors = require("cors");
 const appConfig = require("./config/app.config");
 const authConfig = require("./config/auth.config");
 
-var indexRouter = require("./routes/index.route");
-var loginRouter = require("./routes/login.route");
-var signupRouter = require("./routes/signup.route");
-var logoutRouter = require("./routes/logout.route");
-var forgotPasswordRouter = require("./routes/forgotPassword.route");
-var refreshTokenRouter = require("./routes/refreshToken.route");
+const indexRouter = require("./routes/index.route");
+const loginRouter = require("./routes/login.route");
+const signupRouter = require("./routes/signup.route");
+const logoutRouter = require("./routes/logout.route");
+const forgotPasswordRouter = require("./routes/forgotPassword.route");
+const refreshTokenRouter = require("./routes/refreshToken.route");
 
-var app = express();
+const app = express();
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -36,9 +36,9 @@ const db = require("./models");
 db.sequelize.sync();
 
 // Cors configuration
-var clientUrl = appConfig.CLIENT_URL;
-var whitelist = [clientUrl];
-var corsOptions = {
+const clientUrl = appConfig.CLIENT_URL;
+const whitelist = [clientUrl];
+const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);

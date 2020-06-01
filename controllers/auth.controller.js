@@ -4,14 +4,12 @@ const email = require("../utils/email");
 const winston = require("winston");
 const loggerServer = winston.loggers.get("squish-server");
 const loggerConsole = winston.loggers.get("squish-console");
-
 const User = db.user;
 const Op = db.Sequelize.Op;
-
 const { v4: uuidv4 } = require("uuid");
-var jwt = require("jsonwebtoken");
-var bcrypt = require("bcryptjs");
-var moment = require("moment");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const moment = require("moment");
 
 function deleteNewUser(username) {
     return new Promise(function (resolve, reject) {
@@ -29,19 +27,18 @@ function deleteNewUser(username) {
 };
 
 exports.signup = (req, res) => {
-
     if (!req.username || !req.password || !req.email) {
         return res.status(400).send({
             message: "Email, username, and password are required"
         });
     } else {
-        var dateCreated = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
+        let dateCreated = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
-        var userConfirmId = uuidv4();
+        let userConfirmId = uuidv4();
         userConfirmId = userConfirmId.substring(0, 8);
 
-        var salt = bcrypt.genSaltSync(10);
-        var passwordHash = bcrypt.hashSync(req.password, salt);
+        let salt = bcrypt.genSaltSync(10);
+        let passwordHash = bcrypt.hashSync(req.password, salt);
 
         User.create({
             username: req.username,
@@ -86,11 +83,11 @@ exports.signup = (req, res) => {
 };
 
 function codeExpired(datetime) {
-    var nowTime = moment();
-    var codeTime = moment(datetime);
-    var diff = moment.duration(nowTime.diff(codeTime));
-    var minuteDiff = diff.minutes();
-    var maxMinutes = 4;
+    let nowTime = moment();
+    let codeTime = moment(datetime);
+    let diff = moment.duration(nowTime.diff(codeTime));
+    let minuteDiff = diff.minutes();
+    let maxMinutes = 4;
 
     if (minuteDiff < maxMinutes) {
         return false;
@@ -101,11 +98,11 @@ function codeExpired(datetime) {
 
 function updateVerificationCode(emailAddr) {
     return new Promise(function (resolve, reject) {
-        var newDateCreated =
+        let newDateCreated =
             moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
-        var uuid = uuidv4();
-        var newCode = uuid.substring(0, 8);
+        let uuid = uuidv4();
+        let newCode = uuid.substring(0, 8);
 
         User.update({
             user_confirm_id: newCode,
@@ -138,7 +135,7 @@ function updateVerificationCode(emailAddr) {
 
 function updateAndEmailCode(emailAddr) {
     return new Promise(function (resolve, reject) {
-        var ret = {
+        let ret = {
             status: 200,
             message: ""
         };
@@ -227,8 +224,8 @@ function updateVerifiedUser(emailAddr) {
 
 function getRefreshToken(emailAddr) {
     return new Promise(function (resolve, reject) {
-        var refreshToken = uuidv4();
-        var refreshTokenExpiration =
+        let refreshToken = uuidv4();
+        let refreshTokenExpiration =
             moment(Date.now()).add(1, "days").format("YYYY-MM-DD HH:mm:ss");
 
         User.update({
@@ -318,7 +315,7 @@ exports.confirmUser = (req, res) => {
                             message: "There was an issue activating your account, please try again later"
                         });
                     } else {
-                        var accessToken = jwt.sign(
+                        let accessToken = jwt.sign(
                             { id: user.user_id },
                             authConfig.AUTH_SECRET,
                             { expiresIn: authConfig.JWT_EXPIRE_TIME }
@@ -411,7 +408,7 @@ exports.login = (req, res) => {
                     message: "User was not found"
                 });
             } else {
-                var validPassword = bcrypt.compareSync(
+                let validPassword = bcrypt.compareSync(
                     req.password,
                     user.password
                 );
@@ -421,7 +418,7 @@ exports.login = (req, res) => {
                         message: "Password was invalid"
                     });
                 } else {
-                    var accessToken = jwt.sign(
+                    let accessToken = jwt.sign(
                         { id: user.user_id },
                         authConfig.AUTH_SECRET,
                         { expiresIn: authConfig.JWT_EXPIRE_TIME }
@@ -452,8 +449,8 @@ exports.login = (req, res) => {
 };
 
 function refreshTokenExpired(datetime) {
-    var nowTime = moment();
-    var expirationTime = moment(datetime);
+    let nowTime = moment();
+    let expirationTime = moment(datetime);
 
     if (nowTime.isBefore(expirationTime)) {
         return false;
@@ -486,7 +483,7 @@ exports.refreshToken = (req, res) => {
                         message: "Session has expired"
                     });
                 } else {
-                    var accessToken = jwt.sign(
+                    let accessToken = jwt.sign(
                         { id: user.user_id },
                         authConfig.AUTH_SECRET,
                         { expiresIn: authConfig.JWT_EXPIRE_TIME }

@@ -1,9 +1,9 @@
-var nodemailer = require("nodemailer");
-var appConfig = require("../config/app.config");
+const nodemailer = require("nodemailer");
+const appConfig = require("../config/app.config");
 
 exports.sendConfirmation = (emailAddr, confirmId) => {
     return new Promise(function (resolve, reject) {
-        var transporter = nodemailer.createTransport({
+        let transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
                 user: process.env.confirm_email_host,
@@ -11,7 +11,7 @@ exports.sendConfirmation = (emailAddr, confirmId) => {
             }
         });
 
-        var mailOptions = {
+        let mailOptions = {
             from: process.env.confirm_email_host,
             to: emailAddr,
             subject: "Squish Sign Up Confirmation",

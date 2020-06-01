@@ -1,16 +1,16 @@
 checkEntries = (req, res, next) => {
-    var username = null;
-    var email = req.body.email;
-    var password = null;
-    var confirmId = req.body.confirmId;
-    var refreshToken = req.cookies["refresh-token"];
+    let username = null;
+    let email = req.body.email;
+    let password = null;
+    let confirmId = req.body.confirmId;
+    let refreshToken = req.cookies["refresh-token"];
 
-    var authorization = req.headers.authorization;
+    let authorization = req.headers.authorization;
     if (authorization) {
         if (authorization.startsWith("Basic")) {
-            var encoded = authorization.substring("Basic ".length).trim();
-            var decoded = Buffer.from(encoded, "base64").toString();
-            var creds = decoded.split(":");
+            let encoded = authorization.substring("Basic ".length).trim();
+            let decoded = Buffer.from(encoded, "base64").toString();
+            let creds = decoded.split(":");
 
             if (creds.length > 0) {
                 userId = creds[0];
@@ -30,7 +30,7 @@ checkEntries = (req, res, next) => {
                 password = creds[1];
             }
         } else if (authorization.startsWith("Bearer")) {
-            var bearerJwt = authorization.split(" ");
+            let bearerJwt = authorization.split(" ");
             req.jwt = bearerJwt[1];
 
         } else {
