@@ -65,7 +65,7 @@ exports.signup = (req, res) => {
                         } else {
                             return res.status(500).send({
                                 message: "There was an issue sending a confirmation email, please try again later"
-                            })
+                            });
                         }
                     });
                 } else {
