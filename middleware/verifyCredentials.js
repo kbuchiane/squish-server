@@ -5,7 +5,7 @@ checkEntries = (req, res, next) => {
     let email = req.body.email;
     let password = null;
     let confirmId = req.body.confirmId;
-    let refreshToken = req.cookies[appConfig.REFRESH_TOKEN];
+    let refreshToken = req.signedCookies[appConfig.REFRESH_TOKEN];
 
     let authorization = req.headers.authorization;
     if (authorization) {

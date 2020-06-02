@@ -328,7 +328,10 @@ exports.confirmUser = (req, res) => {
                                     message: "Account activated, but there was an issue logging in, please try again"
                                 });
                             } else {
-                                res.cookie(appConfig.REFRESH_TOKEN, refreshToken);
+                                res.cookie(appConfig.REFRESH_TOKEN, refreshToken, {
+                                    httpOnly: true,
+                                    signed: true
+                                });
 
                                 return res.status(200).send({
                                     username: user.username,
@@ -431,7 +434,10 @@ exports.login = (req, res) => {
                                 message: "There was an issue logging in, please try again"
                             });
                         } else {
-                            res.cookie(appConfig.REFRESH_TOKEN, refreshToken);
+                            res.cookie(appConfig.REFRESH_TOKEN, refreshToken, {
+                                httpOnly: true,
+                                signed: true
+                            });
 
                             return res.status(200).send({
                                 username: user.username,
@@ -462,8 +468,8 @@ function refreshTokenExpired(datetime) {
 
 exports.refreshToken = (req, res) => {
     if (!req.refreshToken) {
-        return res.status(400).send({
-            message: "Refresh token is required"
+        return res.status(200).send({
+            message: false
         });
     } else {
         User.findOne({
@@ -496,7 +502,10 @@ exports.refreshToken = (req, res) => {
                                 message: "There was an issue renewing the session"
                             });
                         } else {
-                            res.cookie(appConfig.REFRESH_TOKEN, refreshToken);
+                            res.cookie(appConfig.REFRESH_TOKEN, refreshToken, {
+                                httpOnly: true,
+                                signed: true
+                            });
 
                             return res.status(200).send({
                                 username: user.username,
@@ -516,7 +525,8 @@ exports.refreshToken = (req, res) => {
 
 exports.logout = (req, res) => {
     if (!req.refreshToken) {
-        return res.status(400).send({
+        res.clearCookie(appConfig.REFRESH_TOKEN);
+        return res.status(200).send({
             message: "No refresh token"
         });
     } else {
@@ -532,6 +542,7 @@ exports.logout = (req, res) => {
                     ]
                 }
             }).then(user => {
+                res.clearCookie(appConfig.REFRESH_TOKEN);
                 if (!user) {
                     return res.status(404).send({
                         message: "User was not found"
@@ -542,6 +553,7 @@ exports.logout = (req, res) => {
                     });
                 }
             }).catch(err => {
+                res.clearCookie(appConfig.REFRESH_TOKEN);
                 return res.status(500).send({
                     message: err.message
                 });
