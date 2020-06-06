@@ -6,6 +6,7 @@ const winston = require("winston");
 const loggerServer = winston.loggers.get(appConfig.S_SERVER);
 const loggerConsole = winston.loggers.get(appConfig.S_CONSOLE);
 const User = db.user;
+const RefreshToken = db.refreshToken;
 const Op = db.Sequelize.Op;
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
@@ -223,22 +224,59 @@ function updateVerifiedUser(emailAddr) {
     });
 };
 
-function getRefreshToken(emailAddr) {
+function createRefreshToken(emailAddr) {
     return new Promise(function (resolve, reject) {
         let refreshToken = uuidv4();
         let refreshTokenExpiration =
             moment(Date.now()).add(1, "days").format(appConfig.DB_DATE_FORMAT);
 
-        User.update({
-            refresh_token: refreshToken,
-            refresh_token_expiration: refreshTokenExpiration
+        User.findOne({
+            where: {
+                [Op.and]: [
+                    { email: emailAddr },
+                    { active: true }
+                ]
+            }
+        }).then(user => {
+            RefreshToken.create({
+                refresh_token_id: refreshToken,
+                refresh_token_user_id: user.user_id,
+                expiration_date: refreshTokenExpiration
+            }).then(tokenRow => {
+                if (!tokenRow) {
+                    loggerServer.warn("User email: "
+                        + emailAddr
+                        + ": could not be given a refresh token");
+                    resolve(false);
+                } else {
+                    resolve(refreshToken);
+                }
+            }).catch(err => {
+                loggerServer.warn("User email: "
+                    + emailAddr + ": " + err);
+                resolve(false);
+            });
+        }).catch(err => {
+            loggerServer.warn("User email: "
+                + emailAddr + ": " + err);
+            resolve(false);
+        });
+    });
+};
+
+function updateRefreshToken(oldRefreshToken) {
+    return new Promise(function (resolve, reject) {
+        let refreshToken = uuidv4();
+        let refreshTokenExpiration =
+            moment(Date.now()).add(1, "days").format(appConfig.DB_DATE_FORMAT);
+
+        RefreshToken.update({
+            refresh_token_id: refreshToken,
+            expiration_date: refreshTokenExpiration
         },
             {
                 where: {
-                    [Op.and]: [
-                        { email: emailAddr },
-                        { active: true }
-                    ]
+                    refresh_token_id: oldRefreshToken
                 }
             }).then(user => {
                 if (!user) {
@@ -322,7 +360,7 @@ exports.confirmUser = (req, res) => {
                             { expiresIn: authConfig.JWT_EXPIRE_TIME }
                         );
 
-                        getRefreshToken(user.email).then(refreshToken => {
+                        createRefreshToken(user.email).then(refreshToken => {
                             if (!refreshToken) {
                                 return res.status(500).send({
                                     message: "Account activated, but there was an issue logging in, please try again"
@@ -428,7 +466,7 @@ exports.login = (req, res) => {
                         { expiresIn: authConfig.JWT_EXPIRE_TIME }
                     );
 
-                    getRefreshToken(user.email).then(refreshToken => {
+                    createRefreshToken(user.email).then(refreshToken => {
                         if (!refreshToken) {
                             return res.status(500).send({
                                 message: "There was an issue logging in, please try again"
@@ -472,44 +510,60 @@ exports.refreshToken = (req, res) => {
             message: false
         });
     } else {
-        User.findOne({
+        RefreshToken.findOne({
             where: {
-                [Op.and]: [
-                    { refresh_token: req.refreshToken },
-                    { active: true }
-                ]
+                refresh_token_id: req.refreshToken
             }
-        }).then(user => {
-            if (!user) {
+        }).then(tokenRow => {
+            if (!tokenRow) {
                 return res.status(404).send({
                     message: "Refresh token was not found"
                 });
             } else {
-                if (refreshTokenExpired(user.refresh_token_expiration)) {
+                if (refreshTokenExpired(tokenRow.expiration_date)) {
                     return res.status(401).send({
                         message: "Session has expired"
                     });
                 } else {
                     let accessToken = jwt.sign(
-                        { id: user.user_id },
+                        { id: tokenRow.refresh_token_user_id },
                         authConfig.AUTH_SECRET,
                         { expiresIn: authConfig.JWT_EXPIRE_TIME }
                     );
 
-                    getRefreshToken(user.email).then(refreshToken => {
+                    updateRefreshToken(req.refreshToken).then(refreshToken => {
                         if (!refreshToken) {
                             return res.status(500).send({
                                 message: "There was an issue renewing the session"
                             });
                         } else {
-                            res.cookie(appConfig.REFRESH_TOKEN, refreshToken, {
-                                httpOnly: true,
-                                signed: true
-                            });
+                            User.findOne({
+                                where: {
+                                    [Op.and]: [
+                                        { user_id: tokenRow.refresh_token_user_id },
+                                        { active: true }
+                                    ]
+                                }
+                            }).then(user => {
+                                if (!user) {
+                                    return res.status(500).send({
+                                        message: "There was an issue renewing the session"
+                                    });
+                                } else {
+                                    res.cookie(appConfig.REFRESH_TOKEN, refreshToken, {
+                                        httpOnly: true,
+                                        signed: true
+                                    });
 
-                            return res.status(200).send({
-                                username: user.username,
-                                accessToken: accessToken
+                                    return res.status(200).send({
+                                        username: user.username,
+                                        accessToken: accessToken
+                                    });
+                                }
+                            }).catch(err => {
+                                return res.status(500).send({
+                                    message: "There was an issue renewing the session"
+                                });
                             });
                         }
                     });
@@ -524,39 +578,27 @@ exports.refreshToken = (req, res) => {
 };
 
 exports.logout = (req, res) => {
-    if (!req.refreshToken) {
-        res.clearCookie(appConfig.REFRESH_TOKEN);
+    let token = req.refreshToken;
+    res.clearCookie(appConfig.REFRESH_TOKEN);
+
+    if (!token) {
         return res.status(200).send({
             message: "No refresh token"
         });
     } else {
-        User.update({
-            refresh_token: null,
-            refresh_token_expiration: null
-        },
-            {
-                where: {
-                    [Op.and]: [
-                        { refresh_token: req.refreshToken },
-                        { active: true }
-                    ]
-                }
-            }).then(user => {
-                res.clearCookie(appConfig.REFRESH_TOKEN);
-                if (!user) {
-                    return res.status(404).send({
-                        message: "User was not found"
-                    });
-                } else {
-                    return res.status(200).send({
-                        message: "Logout success"
-                    });
-                }
-            }).catch(err => {
-                res.clearCookie(appConfig.REFRESH_TOKEN);
-                return res.status(500).send({
-                    message: err.message
-                });
+        RefreshToken.destroy({
+            where: {
+                refresh_token_id: token
+            }
+        }).then(empty => {
+            return res.status(200).send({
+                message: "Logout success"
             });
+        }).catch(err => {
+            loggerServer.warn(err);
+            return res.status(200).send({
+                message: "Logout success"
+            });
+        });
     }
 };
