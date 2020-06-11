@@ -228,7 +228,7 @@ function createRefreshToken(emailAddr) {
     return new Promise(function (resolve, reject) {
         let refreshToken = uuidv4();
         let refreshTokenExpiration =
-            moment(Date.now()).add(1, "days").format(appConfig.DB_DATE_FORMAT);
+            moment(Date.now()).add(7, "days").format(appConfig.DB_DATE_FORMAT);
 
         User.findOne({
             where: {
@@ -268,7 +268,7 @@ function updateRefreshToken(oldRefreshToken) {
     return new Promise(function (resolve, reject) {
         let refreshToken = uuidv4();
         let refreshTokenExpiration =
-            moment(Date.now()).add(1, "days").format(appConfig.DB_DATE_FORMAT);
+            moment(Date.now()).add(7, "days").format(appConfig.DB_DATE_FORMAT);
 
         RefreshToken.update({
             refresh_token_id: refreshToken,
