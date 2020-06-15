@@ -7,21 +7,21 @@ router.post("/",
     [
         verifyCredentials.checkEntries
     ],
-    authController.signup
+    authController.resetPassword
 );
 
-router.post("/confirmUser",
+router.post("/confirmResetPassword",
     [
         verifyCredentials.checkEntries
     ],
-    authController.confirmUser
+    authController.confirmResetPassword
 );
 
-router.post("/resendCode",
+router.post("/resendResetCode",
     [
         verifyCredentials.checkEntries
     ],
-    authController.resendCode
+    authController.resendResetCode
 );
 
 module.exports = router;

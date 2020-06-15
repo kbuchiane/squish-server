@@ -1,6 +1,7 @@
 const winston = require("winston");
 const { format } = winston;
 const { combine, timestamp, label, printf, json } = format;
+const appConfig = require("../config/app.config");
 
 const myFormat = printf(({ level, message, label, timestamp }) => {
   return `${timestamp}  ${level}  ${message}`;
@@ -9,11 +10,11 @@ const myFormat = printf(({ level, message, label, timestamp }) => {
 // TODO: Update so logger names and log file paths are read from configuration file
 
 // Configure file logging
-winston.loggers.add("squish-server", {
+winston.loggers.add(appConfig.S_SERVER, {
   format: combine(
     // format.colorize(),
     timestamp(),
-    label({ label: "squish-server" }),
+    label({ label: appConfig.S_SERVER }),
     json()
   ),
   transports: [
@@ -26,11 +27,11 @@ winston.loggers.add("squish-server", {
 
 // Configure console logging, only log when not in production
 if (process.env.NODE_ENV !== "production") {
-  winston.loggers.add("squish-console", {
+  winston.loggers.add(appConfig.S_CONSOLE, {
     format: combine(
       format.colorize(),
       timestamp(),
-      label({ label: "squish-console" }),
+      label({ label: appConfig.S_CONSOLE }),
       myFormat
     ),
     transports: [
@@ -39,8 +40,8 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-const fileLogger = winston.loggers.get("squish-server");
-const consoleLogger = winston.loggers.get("squish-console");
+const fileLogger = winston.loggers.get(appConfig.S_SERVER);
+const consoleLogger = winston.loggers.get(appConfig.S_CONSOLE);
 
 fileLogger.info("Logging successfully initialized");
 consoleLogger.info("Logging successfully initialized");

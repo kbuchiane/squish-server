@@ -1,14 +1,12 @@
-var express = require("express");
+const express = require("express");
 const { auth } = require("../middleware");
 const { verifyCredentials } = require("../middleware");
 const authController = require("../controllers/auth.controller");
-
-var router = express.Router();
+const router = express.Router();
 
 router.post("/",
     [
-        verifyCredentials.checkEntries,
-        auth.verifyToken
+        verifyCredentials.checkEntries
     ],
     authController.logout
 );
