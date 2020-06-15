@@ -50,7 +50,7 @@ exports.sendResetPassword = (emailAddr, confirmId) => {
             html: "<b style='font-weight:700'>Reset Password Code (expires in 4 minutes): "
                 + confirmId
                 + "<br><br><a href='"
-                + appConfig.VERIFY_EMAIL_URL
+                + appConfig.RESET_PASSWORD_URL
                 + "'>Reset Password</a></b>"
         };
 

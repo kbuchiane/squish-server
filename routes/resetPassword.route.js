@@ -10,4 +10,20 @@ router.post("/",
     authController.resetPassword
 );
 
+router.post("/confirmResetPassword",
+    [
+        verifyCredentials.checkEntries
+    ],
+    authController.confirmResetPassword
+);
+
+/*
+router.post("/resendResetCode",
+    [
+        verifyCredentials.checkEntries
+    ],
+    authController.resendResetCode
+);
+*/
+
 module.exports = router;
