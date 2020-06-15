@@ -415,7 +415,7 @@ exports.resendCode = (req, res) => {
                         });
                     } else {
                         return res.status(200).send({
-                            message: "A verification code has been sent to "
+                            message: "A new verification code has been sent to "
                                 + user.email
                         });
                     }
@@ -911,6 +911,46 @@ exports.confirmResetPassword = (req, res) => {
                         return res.status(200).send({
                             email: req.email,
                             message: "Your password has been reset successfully"
+                        });
+                    }
+                });
+            }
+        }).catch(err => {
+            return res.status(500).send({
+                message: err.message
+            });
+        });
+    }
+};
+
+exports.resendResetCode = (req, res) => {
+    if (!req.email) {
+        return res.status(400).send({
+            message: "Email is required"
+        });
+    } else {
+        User.findOne({
+            where: {
+                [Op.and]: [
+                    { email: req.email },
+                    { active: true }
+                ]
+            }
+        }).then(user => {
+            if (!user) {
+                return res.status(404).send({
+                    message: "Email entered was not found, or the account has not been activated"
+                });
+            } else {
+                updateAndEmailResetCode(user.email).then(updateAndEmailResetCodeRet => {
+                    if (updateAndEmailResetCodeRet.status === 500) {
+                        return res.status(500).send({
+                            message: updateAndEmailResetCodeRet.message
+                        });
+                    } else {
+                        return res.status(200).send({
+                            message: "A new reset password code has been sent to "
+                                + user.email
                         });
                     }
                 });

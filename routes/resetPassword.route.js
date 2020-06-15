@@ -17,13 +17,11 @@ router.post("/confirmResetPassword",
     authController.confirmResetPassword
 );
 
-/*
 router.post("/resendResetCode",
     [
         verifyCredentials.checkEntries
     ],
     authController.resendResetCode
 );
-*/
 
 module.exports = router;
