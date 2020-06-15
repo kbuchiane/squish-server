@@ -19,6 +19,10 @@ checkEntries = (req, res, next) => {
 
                 if (userId.includes("@")) {
                     email = userId;
+
+                    if (!username) {
+                        req.username = null;
+                    }
                 } else {
                     username = userId;
 

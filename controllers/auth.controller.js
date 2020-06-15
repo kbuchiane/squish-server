@@ -698,6 +698,7 @@ exports.resetPassword = (req, res) => {
                         });
                     } else {
                         return res.status(200).send({
+                            email: user.email,
                             message: "A reset password code has been sent to "
                                 + user.email
                         });
