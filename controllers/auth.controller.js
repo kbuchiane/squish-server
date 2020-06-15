@@ -155,6 +155,7 @@ function updateAndEmailCode(emailAddr) {
                     if (!emailSuccess) {
                         ret.status = 500;
                         ret.message = "There was an issue sending a confirmation email, please try again later";
+                        resolve(ret);
                     } else {
                         resolve(ret);
                     }
@@ -414,7 +415,7 @@ exports.resendCode = (req, res) => {
                         });
                     } else {
                         return res.status(200).send({
-                            message: "A verification code has been sent to "
+                            message: "A new verification code has been sent to "
                                 + user.email
                         });
                     }
@@ -598,6 +599,365 @@ exports.logout = (req, res) => {
             loggerServer.warn(err);
             return res.status(200).send({
                 message: "Logout success"
+            });
+        });
+    }
+};
+
+function updateResetPasswordCode(emailAddr) {
+    return new Promise(function (resolve, reject) {
+        let newDateCreated =
+            moment(Date.now()).format(appConfig.DB_DATE_FORMAT);
+
+        let uuid = uuidv4();
+        let newCode = uuid.substring(0, 8);
+
+        User.update({
+            user_confirm_id: newCode,
+            confirm_id_date_created: newDateCreated,
+            verify_attempt_count: 0
+        },
+            {
+                where: {
+                    [Op.and]: [
+                        { email: emailAddr },
+                        { active: true }
+                    ]
+                }
+            }).then(user => {
+                if (!user) {
+                    loggerServer.warn("User email: "
+                        + emailAddr
+                        + " not found and could not be updated");
+                    resolve(false);
+                } else {
+                    resolve(newCode);
+                }
+            }).catch(err => {
+                loggerServer.warn("User email: "
+                    + emailAddr + ": " + err);
+                resolve(false);
+            });
+    });
+};
+
+function updateAndEmailResetPasswordCode(emailAddr) {
+    return new Promise(function (resolve, reject) {
+        let ret = {
+            status: 200,
+            message: ""
+        };
+
+        updateResetPasswordCode(emailAddr).then(updateCode => {
+            if (!updateCode) {
+                ret.status = 500;
+                ret.message = "There was an issue creating a reset password code, please try again later";
+                resolve(ret);
+            } else {
+                email.sendResetPassword(
+                    emailAddr,
+                    updateCode
+                ).then(emailSuccess => {
+                    if (!emailSuccess) {
+                        ret.status = 500;
+                        ret.message = "There was an issue sending a reset password email, please try again later";
+                        resolve(ret);
+                    } else {
+                        resolve(ret);
+                    }
+                });
+            }
+        });
+    });
+};
+
+exports.resetPassword = (req, res) => {
+    if (!req.email && !req.username) {
+        return res.status(400).send({
+            message: "Email or username is required"
+        });
+    } else {
+        User.findOne({
+            where: {
+                [Op.or]: [
+                    { username: req.username },
+                    { email: req.email }
+                ],
+                [Op.and]: [
+                    { active: true }
+                ]
+            }
+        }).then(user => {
+            if (!user) {
+                return res.status(404).send({
+                    message: "Email or username entered was not found, or the account has not been activated"
+                });
+            } else {
+                updateAndEmailResetPasswordCode(user.email).then(updateAndEmailCodeRet => {
+                    if (updateAndEmailCodeRet.status === 500) {
+                        return res.status(500).send({
+                            message: updateAndEmailCodeRet.message
+                        });
+                    } else {
+                        return res.status(200).send({
+                            email: user.email,
+                            message: "A reset password code has been sent to "
+                                + user.email
+                        });
+                    }
+                });
+            }
+        }).catch(err => {
+            return res.status(500).send({
+                message: err.message
+            });
+        });
+    }
+};
+
+function updateResetCode(emailAddr) {
+    return new Promise(function (resolve, reject) {
+        let newDateCreated =
+            moment(Date.now()).format(appConfig.DB_DATE_FORMAT);
+
+        let uuid = uuidv4();
+        let newCode = uuid.substring(0, 8);
+
+        User.update({
+            user_confirm_id: newCode,
+            confirm_id_date_created: newDateCreated,
+            verify_attempt_count: 0
+        },
+            {
+                where: {
+                    [Op.and]: [
+                        { email: emailAddr },
+                        { active: true }
+                    ]
+                }
+            }).then(user => {
+                if (!user) {
+                    loggerServer.warn("User email: "
+                        + emailAddr
+                        + " not found and could not be updated");
+                    resolve(false);
+                } else {
+                    resolve(newCode);
+                }
+            }).catch(err => {
+                loggerServer.warn("User email: "
+                    + emailAddr + ": " + err);
+                resolve(false);
+            });
+    });
+};
+
+function updateAndEmailResetCode(emailAddr) {
+    return new Promise(function (resolve, reject) {
+        let ret = {
+            status: 200,
+            message: ""
+        };
+
+        updateResetCode(emailAddr).then(updateCode => {
+            if (!updateCode) {
+                ret.status = 500;
+                ret.message = "There was an issue creating a new reset password code, please try again later";
+                resolve(ret);
+            } else {
+                email.sendResetPassword(
+                    emailAddr,
+                    updateCode
+                ).then(emailSuccess => {
+                    if (!emailSuccess) {
+                        ret.status = 500;
+                        ret.message = "There was an issue sending a reset password email, please try again later";
+                        resolve(ret);
+                    } else {
+                        resolve(ret);
+                    }
+                });
+            }
+        });
+    });
+};
+
+function updateUserPassword(emailAddr, password) {
+    return new Promise(function (resolve, reject) {
+        let ret = {
+            status: 200,
+            message: ""
+        };
+
+        let salt = bcrypt.genSaltSync(10);
+        let passwordHash = bcrypt.hashSync(password, salt);
+
+        User.update({
+            password: passwordHash,
+            user_confirm_id: null,
+            confirm_id_date_created: null,
+            verify_attempt_count: 0
+        },
+            {
+                where: {
+                    [Op.and]: [
+                        { email: emailAddr },
+                        { active: true }
+                    ]
+                }
+            }).then(user => {
+                if (!user) {
+                    ret.status = 500;
+                    ret.message = "There was an issue resetting your password, please try again later";
+                    resolve(ret);
+                } else {
+                    resolve(ret);
+                }
+            }).catch(err => {
+                ret.status = 500;
+                ret.message = err.message;
+                resolve(ret);
+            });
+    });
+};
+
+function addResetPasswordAttempt(emailAddr) {
+    return new Promise(function (resolve, reject) {
+        User.increment(
+            "verify_attempt_count",
+            {
+                where: {
+                    [Op.and]: [
+                        { email: emailAddr },
+                        { active: true }
+                    ]
+                }
+            }).then(user => {
+                if (!user) {
+                    loggerServer.warn("User email: "
+                        + emailAddr
+                        + " not found and could not be updated");
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            }).catch(err => {
+                loggerServer.warn("User email: "
+                    + emailAddr + ": " + err);
+                resolve(false);
+            });
+    });
+};
+
+exports.confirmResetPassword = (req, res) => {
+    if (!req.email || !req.confirmId || !req.password) {
+        return res.status(400).send({
+            message: "Email, reset password code, and a new password are required"
+        });
+    } else {
+        User.findOne({
+            where: {
+                [Op.and]: [
+                    { email: req.email },
+                    { active: true }
+                ]
+            }
+        }).then(user => {
+            if (!user) {
+                return res.status(404).send({
+                    message: "Email entered was not found, or the account has not been activated"
+                });
+            } else if (user.verify_attempt_count === 3) {
+                updateAndEmailResetCode(user.email).then(updateAndEmailResetCodeRet => {
+                    if (updateAndEmailResetCodeRet.status === 500) {
+                        return res.status(500).send({
+                            message: "Maximum attempts reached<br />"
+                                + updateAndEmailResetCodeRet.message
+                        });
+                    } else {
+                        return res.status(400).send({
+                            message: "Maximum attempts reached, a new reset password code has been sent to "
+                                + user.email
+                        });
+                    }
+                });
+            } else if (codeExpired(user.confirm_id_date_created)) {
+                updateAndEmailResetCode(user.email).then(updateAndEmailResetCodeRet => {
+                    if (updateAndEmailResetCodeRet.status === 500) {
+                        return res.status(500).send({
+                            message: "Reset password code has expired<br />"
+                                + updateAndEmailResetCodeRet.message
+                        });
+                    } else {
+                        return res.status(400).send({
+                            message: "Reset password code has expired, a new code has been sent to "
+                                + user.email
+                        });
+                    }
+                });
+            } else if (user.user_confirm_id != req.confirmId) {
+                addResetPasswordAttempt(user.email).then(addResetAttemptRet => {
+                    return res.status(400).send({
+                        message: "Reset password code is incorrect"
+                    });
+                });
+            } else {
+                updateUserPassword(user.email, req.password).then(updateUserPasswordRet => {
+                    if (updateUserPasswordRet.status === 500) {
+                        return res.status(500).send({
+                            message: updateUserPasswordRet.message
+                        });
+                    } else {
+                        return res.status(200).send({
+                            email: req.email,
+                            message: "Your password has been reset successfully"
+                        });
+                    }
+                });
+            }
+        }).catch(err => {
+            return res.status(500).send({
+                message: err.message
+            });
+        });
+    }
+};
+
+exports.resendResetCode = (req, res) => {
+    if (!req.email) {
+        return res.status(400).send({
+            message: "Email is required"
+        });
+    } else {
+        User.findOne({
+            where: {
+                [Op.and]: [
+                    { email: req.email },
+                    { active: true }
+                ]
+            }
+        }).then(user => {
+            if (!user) {
+                return res.status(404).send({
+                    message: "Email entered was not found, or the account has not been activated"
+                });
+            } else {
+                updateAndEmailResetCode(user.email).then(updateAndEmailResetCodeRet => {
+                    if (updateAndEmailResetCodeRet.status === 500) {
+                        return res.status(500).send({
+                            message: updateAndEmailResetCodeRet.message
+                        });
+                    } else {
+                        return res.status(200).send({
+                            message: "A new reset password code has been sent to "
+                                + user.email
+                        });
+                    }
+                });
+            }
+        }).catch(err => {
+            return res.status(500).send({
+                message: err.message
             });
         });
     }

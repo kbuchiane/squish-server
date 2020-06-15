@@ -14,7 +14,7 @@ const indexRouter = require("./routes/index.route");
 const loginRouter = require("./routes/login.route");
 const signupRouter = require("./routes/signup.route");
 const logoutRouter = require("./routes/logout.route");
-const forgotPasswordRouter = require("./routes/forgotPassword.route");
+const resetPasswordRouter = require("./routes/resetPassword.route");
 const refreshTokenRouter = require("./routes/refreshToken.route");
 
 const app = express();
@@ -66,7 +66,7 @@ app.use("/", indexRouter);
 app.use("/login", cors(corsOptions), loginRouter);
 app.use("/signup", cors(corsOptions), signupRouter);
 app.use("/logout", cors(corsOptions), logoutRouter);
-app.use("/forgotPassword", cors(corsOptions), forgotPasswordRouter);
+app.use("/resetPassword", cors(corsOptions), resetPasswordRouter);
 app.use("/refreshToken", cors(corsOptions), refreshTokenRouter);
 
 // catch 404 and forward to error handler
