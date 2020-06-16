@@ -1,4 +1,5 @@
 const winston = require("winston");
+require('winston-daily-rotate-file');
 const { format } = winston;
 const { combine, timestamp, label, printf, json } = format;
 const appConfig = require("../config/app.config");
@@ -18,10 +19,44 @@ winston.loggers.add(appConfig.S_SERVER, {
     json()
   ),
   transports: [
-    //new winston.transports.Console({ level: 'debug' }),
-    new winston.transports.File({ filename: "./logs/systemDebug.log", level: "debug" }),
-    new winston.transports.File({ filename: "./logs/systemMonitor.log", level: "http" }),
-    new winston.transports.File({ filename: "./logs/systemError.log", level: "warn" }),
+    //new winston.transports.File({ filename: "./logs/systemDebug.log", level: "debug" }),
+    new winston.transports.DailyRotateFile({
+      filename: 'debug-%DATE%',
+      extension:'.log',
+      dirname:'logs',
+      auditFile:'logs/debugAudit.json',
+      level: 'debug',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d'
+    }),
+
+    //new winston.transports.File({ filename: "./logs/systemMonitor.log", level: "http" }),
+    new winston.transports.DailyRotateFile({
+      filename: 'monitor-%DATE%',
+      extension:'.log',
+      dirname:'logs',
+      auditFile:'logs/monitorAudit.json',
+      level: 'info',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d'
+    }),
+
+    //new winston.transports.File({ filename: "./logs/systemError.log", level: "warn" }),
+    new winston.transports.DailyRotateFile({
+      filename: 'error-%DATE%',
+      extension:'.log',
+      dirname:'logs',
+      auditFile:'logs/errorAudit.json',
+      level: 'warn',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d'
+    }),
   ]
 });
 
