@@ -8,8 +8,6 @@ const myFormat = printf(({ level, message, label, timestamp }) => {
   return `${timestamp}  ${level}  ${message}`;
 });
 
-// TODO: Update so logger names and log file paths are read from configuration file
-
 // Configure file logging
 winston.loggers.add(appConfig.S_SERVER, {
   format: combine(
@@ -19,12 +17,11 @@ winston.loggers.add(appConfig.S_SERVER, {
     json()
   ),
   transports: [
-    //new winston.transports.File({ filename: "./logs/systemDebug.log", level: "debug" }),
     new winston.transports.DailyRotateFile({
       filename: 'debug-%DATE%',
-      extension:'.log',
-      dirname:'logs',
-      auditFile:'logs/debugAudit.json',
+      extension: '.log',
+      dirname: 'logs',
+      auditFile: 'logs/debugAudit.json',
       level: 'debug',
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
@@ -32,12 +29,11 @@ winston.loggers.add(appConfig.S_SERVER, {
       maxFiles: '14d'
     }),
 
-    //new winston.transports.File({ filename: "./logs/systemMonitor.log", level: "http" }),
     new winston.transports.DailyRotateFile({
       filename: 'monitor-%DATE%',
-      extension:'.log',
-      dirname:'logs',
-      auditFile:'logs/monitorAudit.json',
+      extension: '.log',
+      dirname: 'logs',
+      auditFile: 'logs/monitorAudit.json',
       level: 'info',
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
@@ -45,12 +41,11 @@ winston.loggers.add(appConfig.S_SERVER, {
       maxFiles: '14d'
     }),
 
-    //new winston.transports.File({ filename: "./logs/systemError.log", level: "warn" }),
     new winston.transports.DailyRotateFile({
       filename: 'error-%DATE%',
-      extension:'.log',
-      dirname:'logs',
-      auditFile:'logs/errorAudit.json',
+      extension: '.log',
+      dirname: 'logs',
+      auditFile: 'logs/errorAudit.json',
       level: 'warn',
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
