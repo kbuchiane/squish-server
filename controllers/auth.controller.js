@@ -2,9 +2,8 @@ const db = require("../models");
 const authConfig = require("../config/auth.config");
 const appConfig = require("../config/app.config");
 const email = require("../utils/email");
-const winston = require("winston");
-const loggerServer = winston.loggers.get(appConfig.S_SERVER);
-const loggerConsole = winston.loggers.get(appConfig.S_CONSOLE);
+const logger = require("../utils/logger");
+
 const User = db.user;
 const RefreshToken = db.refreshToken;
 const Op = db.Sequelize.Op;
@@ -20,7 +19,7 @@ function deleteNewUser(username) {
                 username: username
             }
         }).catch(err => {
-            loggerServer.warn("User: " + username + ": " + err);
+            logger.warn("User: " + username + ": " + err);
             resolve(false);
         });
 
@@ -60,10 +59,12 @@ exports.signup = (req, res) => {
                 if (!emailSuccess) {
                     deleteNewUser(user.username).then(deleteSuccess => {
                         if (!deleteSuccess) {
+                            logger.error("Failed to delete user " + user.username);                      
                             return res.status(500).send({
                                 message: "A rare error occurred (whoops), you may have to try again later using a different username/email or please contact customer service for assistance"
                             });
                         } else {
+                            logger.warn("Failed to send confirmation email for deleting user  " + user.username);
                             return res.status(500).send({
                                 message: "There was an issue sending a confirmation email, please try again later"
                             });
@@ -77,6 +78,7 @@ exports.signup = (req, res) => {
                 }
             });
         }).catch(err => {
+            logger.error("Create user error, " + err.message);
             return res.status(500).send({
                 message: err.message
             });
@@ -120,7 +122,7 @@ function updateVerificationCode(emailAddr) {
                 }
             }).then(user => {
                 if (!user) {
-                    loggerServer.warn("User email: "
+                    logger.warn("User email: "
                         + emailAddr
                         + " not found and could not be updated");
                     resolve(false);
@@ -128,7 +130,7 @@ function updateVerificationCode(emailAddr) {
                     resolve(newCode);
                 }
             }).catch(err => {
-                loggerServer.warn("User email: "
+                logger.warn("Unable to update verification code for user email: "
                     + emailAddr + ": " + err);
                 resolve(false);
             });
@@ -178,7 +180,7 @@ function addVerifyAttempt(emailAddr) {
                 }
             }).then(user => {
                 if (!user) {
-                    loggerServer.warn("User email: "
+                    logger.warn("User email: "
                         + emailAddr
                         + " not found and could not be updated");
                     resolve(false);
@@ -186,7 +188,7 @@ function addVerifyAttempt(emailAddr) {
                     resolve(true);
                 }
             }).catch(err => {
-                loggerServer.warn("User email: "
+                logger.warn("User email: "
                     + emailAddr + ": " + err);
                 resolve(false);
             });
@@ -210,7 +212,7 @@ function updateVerifiedUser(emailAddr) {
                 }
             }).then(user => {
                 if (!user) {
-                    loggerServer.warn("User email: "
+                    logger.warn("User email: "
                         + emailAddr
                         + " could not be verified");
                     resolve(false);
@@ -218,7 +220,7 @@ function updateVerifiedUser(emailAddr) {
                     resolve(true);
                 }
             }).catch(err => {
-                loggerServer.warn("User email: "
+                logger.warn("User email: "
                     + emailAddr + ": " + err);
                 resolve(false);
             });
@@ -245,21 +247,21 @@ function createRefreshToken(emailAddr) {
                 expiration_date: refreshTokenExpiration
             }).then(tokenRow => {
                 if (!tokenRow) {
-                    loggerServer.warn("User email: "
+                    logger.warn("User email: "
                         + emailAddr
-                        + ": could not be given a refresh token");
+                        + ": could not be given a refresh token");    
                     resolve(false);
                 } else {
                     resolve(refreshToken);
                 }
             }).catch(err => {
-                loggerServer.warn("User email: "
-                    + emailAddr + ": " + err);
+                logger.warn("User email: "
+                    + emailAddr + ": " + err);    
                 resolve(false);
             });
         }).catch(err => {
-            loggerServer.warn("User email: "
-                + emailAddr + ": " + err);
+            logger.warn("User email: "
+                + emailAddr + ": " + err); 
             resolve(false);
         });
     });
@@ -281,15 +283,15 @@ function updateRefreshToken(oldRefreshToken) {
                 }
             }).then(user => {
                 if (!user) {
-                    loggerServer.warn("User email: "
+                    logger.warn("User email: "
                         + emailAddr
-                        + ": could not be given a refresh token");
+                        + ": could not be given a refresh token");   
                     resolve(false);
                 } else {
                     resolve(refreshToken);
                 }
             }).catch(err => {
-                loggerServer.warn("User email: "
+                logger.warn("User email: "
                     + emailAddr + ": " + err);
                 resolve(false);
             });
@@ -457,6 +459,7 @@ exports.login = (req, res) => {
                 );
 
                 if (!validPassword) {
+                    logger.warn("Invalid password entered for user " + req.username);
                     return res.status(401).send({
                         message: "Password was invalid"
                     });
@@ -596,7 +599,7 @@ exports.logout = (req, res) => {
                 message: "Logout success"
             });
         }).catch(err => {
-            loggerServer.warn(err);
+            logger.warn(err);
             return res.status(200).send({
                 message: "Logout success"
             });
@@ -626,7 +629,7 @@ function updateResetPasswordCode(emailAddr) {
                 }
             }).then(user => {
                 if (!user) {
-                    loggerServer.warn("User email: "
+                    logger.warn("User email: "
                         + emailAddr
                         + " not found and could not be updated");
                     resolve(false);
@@ -634,7 +637,7 @@ function updateResetPasswordCode(emailAddr) {
                     resolve(newCode);
                 }
             }).catch(err => {
-                loggerServer.warn("User email: "
+                logger.warn("User email: "
                     + emailAddr + ": " + err);
                 resolve(false);
             });
@@ -737,7 +740,7 @@ function updateResetCode(emailAddr) {
                 }
             }).then(user => {
                 if (!user) {
-                    loggerServer.warn("User email: "
+                    logger.warn("User email: "
                         + emailAddr
                         + " not found and could not be updated");
                     resolve(false);
@@ -745,8 +748,8 @@ function updateResetCode(emailAddr) {
                     resolve(newCode);
                 }
             }).catch(err => {
-                loggerServer.warn("User email: "
-                    + emailAddr + ": " + err);
+                logger.warn("User email: "
+                    + emailAddr + ": " + err); 
                 resolve(false);
             });
     });
@@ -834,15 +837,15 @@ function addResetPasswordAttempt(emailAddr) {
                 }
             }).then(user => {
                 if (!user) {
-                    loggerServer.warn("User email: "
+                    logger.warn("User email: "
                         + emailAddr
-                        + " not found and could not be updated");
+                        + " not found and could not be updated"); 
                     resolve(false);
                 } else {
                     resolve(true);
                 }
             }).catch(err => {
-                loggerServer.warn("User email: "
+                logger.warn("User email: "
                     + emailAddr + ": " + err);
                 resolve(false);
             });

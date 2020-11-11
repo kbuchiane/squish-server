@@ -1,4 +1,5 @@
 const appConfig = require("../config/app.config");
+const logger = require("../utils/logger");
 
 checkEntries = (req, res, next) => {
     let username = null;
@@ -40,7 +41,7 @@ checkEntries = (req, res, next) => {
             req.jwt = bearerJwt[1];
 
         } else {
-            return res.satatus(401).send({
+            return res.status(401).send({
                 message: "Invalid authorization method"
             });
         }
@@ -122,6 +123,7 @@ checkEntries = (req, res, next) => {
 
     if (refreshToken) {
         if (refreshToken.length <= 0) {
+            logger.warn("Could not refresh session for user " + user + " [" + email + "]");
             return res.status(401).send({
                 message: "Could not refresh session"
             });
