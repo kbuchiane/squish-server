@@ -8,70 +8,68 @@ const myFormat = printf(({ level, message, label, timestamp }) => {
   return `${timestamp}  ${level}  ${message}`;
 });
 
-// Configure file logging
-winston.loggers.add(appConfig.S_SERVER, {
+var debugTransport = new (winston.transports.DailyRotateFile)({
+  filename: 'debug-%DATE%',
+  extension: '.log',
+  dirname: 'logs',
+  auditFile: 'logs/debugAudit.json',
+  level: 'debug',
+  datePattern: 'YYYY-MM-DD',
+  zippedArchive: true,
+  maxSize: '20m',
+  maxFiles: '14d'
+});
+
+var monitorTransport = new (winston.transports.DailyRotateFile)({
+  filename: 'monitor-%DATE%',
+  extension: '.log',
+  dirname: 'logs',
+  auditFile: 'logs/monitorAudit.json',
+  level: 'info',
+  datePattern: 'YYYY-MM-DD',
+  zippedArchive: true,
+  maxSize: '20m',
+  maxFiles: '14d'
+});
+
+var errorTransport = new (winston.transports.DailyRotateFile)({
+  filename: 'error-%DATE%',
+  extension: '.log',
+  dirname: 'logs',
+  auditFile: 'logs/errorAudit.json',
+  level: 'warn',
+  datePattern: 'YYYY-MM-DD',
+  zippedArchive: true,
+  maxSize: '20m',
+  maxFiles: '14d'
+});
+
+const logger = winston.createLogger({
   format: combine(
     // format.colorize(),
     timestamp(),
     label({ label: appConfig.S_SERVER }),
     json()
   ),
+
   transports: [
-    new winston.transports.DailyRotateFile({
-      filename: 'debug-%DATE%',
-      extension: '.log',
-      dirname: 'logs',
-      auditFile: 'logs/debugAudit.json',
-      level: 'debug',
-      datePattern: 'YYYY-MM-DD',
-      zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d'
-    }),
-
-    new winston.transports.DailyRotateFile({
-      filename: 'monitor-%DATE%',
-      extension: '.log',
-      dirname: 'logs',
-      auditFile: 'logs/monitorAudit.json',
-      level: 'info',
-      datePattern: 'YYYY-MM-DD',
-      zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d'
-    }),
-
-    new winston.transports.DailyRotateFile({
-      filename: 'error-%DATE%',
-      extension: '.log',
-      dirname: 'logs',
-      auditFile: 'logs/errorAudit.json',
-      level: 'warn',
-      datePattern: 'YYYY-MM-DD',
-      zippedArchive: true,
-      maxSize: '20m',
-      maxFiles: '14d'
-    }),
+    debugTransport, monitorTransport, errorTransport
   ]
 });
 
 // Configure console logging, only log when not in production
 if (process.env.NODE_ENV !== "production") {
-  winston.loggers.add(appConfig.S_CONSOLE, {
+  logger.add(new winston.transports.Console({
+    level: "info",
     format: combine(
       format.colorize(),
       timestamp(),
       label({ label: appConfig.S_CONSOLE }),
       myFormat
     ),
-    transports: [
-      new winston.transports.Console({ level: "info" })
-    ]
-  });
+  }));
 }
 
-const fileLogger = winston.loggers.get(appConfig.S_SERVER);
-const consoleLogger = winston.loggers.get(appConfig.S_CONSOLE);
+logger.info("Logging successfully initialized");
 
-fileLogger.info("Logging successfully initialized");
-consoleLogger.info("Logging successfully initialized");
+module.exports = logger;

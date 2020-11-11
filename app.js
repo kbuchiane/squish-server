@@ -1,4 +1,3 @@
-const logger = require("./utils/logger");
 const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
@@ -9,6 +8,7 @@ const stylus = require("stylus");
 const cors = require("cors");
 const appConfig = require("./config/app.config");
 const authConfig = require("./config/auth.config");
+const logger = require("./utils/logger");
 
 const indexRouter = require("./routes/index.route");
 const loginRouter = require("./routes/login.route");
@@ -43,6 +43,7 @@ const corsOptions = {
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      logger.warn("Origin " + origin + " not in whitelist");
       callback(new Error("Not allowed by CORS"));
     }
   }

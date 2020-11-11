@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const authConfig = require("../config/auth.config");
+const logger = require("../utils/logger");
 
 verifyToken = (req, res, next) => {
     let token = req.jwt;
@@ -11,6 +12,7 @@ verifyToken = (req, res, next) => {
     } else {
         jwt.verify(token, authConfig.AUTH_SECRET, (err, decoded) => {
             if (err) {
+                logger.warn("Unauthorized request, " + err);
                 return res.status(401).send({
                     message: "Unauthorized request"
                 });
