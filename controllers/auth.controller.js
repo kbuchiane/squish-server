@@ -80,7 +80,7 @@ exports.signup = (req, res) => {
         }).catch(err => {
             logger.error("Create user error, " + err.message);
             return res.status(500).send({
-                message: err.message
+                message: "That username or email may already be taken. Please try again."
             });
         });
     }
