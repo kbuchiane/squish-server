@@ -1,5 +1,7 @@
+const dbConfig = require("../config/db.config");
 const winston = require("winston");
 require('winston-daily-rotate-file');
+const { SQLTransport } = require('winston-sql-transport');
 const { format } = winston;
 const { combine, timestamp, label, printf, json } = format;
 const appConfig = require("../config/app.config");
@@ -44,6 +46,18 @@ var errorTransport = new (winston.transports.DailyRotateFile)({
   maxFiles: '14d'
 });
 
+var mysqlTransport = new SQLTransport({ 
+  level:"warn",
+  client: dbConfig.dialect,
+  connection: {  
+    user: dbConfig.USER,
+    password: dbConfig.PASSWORD, 
+    database: dbConfig.LOGDB
+  },
+  name: 'SQLTransport',
+  tableName: 'systemlog'
+});
+
 const logger = winston.createLogger({
   format: combine(
     // format.colorize(),
@@ -53,7 +67,7 @@ const logger = winston.createLogger({
   ),
 
   transports: [
-    debugTransport, monitorTransport, errorTransport
+    debugTransport, monitorTransport, errorTransport, mysqlTransport
   ]
 });
 
