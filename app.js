@@ -37,13 +37,13 @@ db.sequelize.sync();
 
 // Cors configuration
 const clientUrl = appConfig.CLIENT_URL;
-const whitelist = [clientUrl];
+const allowList = [clientUrl];
 const corsOptions = {
   origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
+    if (allowList.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      logger.warn("Origin " + origin + " not in whitelist");
+      logger.warn("Origin " + origin + " not in allowList");
       callback(new Error("Not allowed by CORS"));
     }
   }
