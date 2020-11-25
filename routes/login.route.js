@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/",
     [
-        verifyCredentials.checkEntries
+        verifyCredentials.checkCredentials
     ],
     authController.login
 );

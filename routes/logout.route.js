@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/",
     [
-        verifyCredentials.checkEntries
+        verifyCredentials.checkRefreshToken
     ],
     authController.logout
 );
