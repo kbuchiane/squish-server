@@ -5,21 +5,22 @@ const router = express.Router();
 
 router.post("/",
     [
-        verifyCredentials.checkEntries
+        verifyCredentials.checkCredentials
     ],
     authController.resetPassword
 );
 
 router.post("/confirmResetPassword",
     [
-        verifyCredentials.checkEntries
+        verifyCredentials.checkCredentials,
+        verifyCredentials.checkConfirmId
     ],
     authController.confirmResetPassword
 );
 
 router.post("/resendResetCode",
     [
-        verifyCredentials.checkEntries
+        verifyCredentials.checkCredentials
     ],
     authController.resendResetCode
 );

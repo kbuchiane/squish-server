@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/",
     [
-        verifyCredentials.checkEntries
+        verifyCredentials.checkRefreshToken
     ],
     authController.refreshToken
 );
