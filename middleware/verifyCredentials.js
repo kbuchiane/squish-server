@@ -145,9 +145,9 @@ checkConfirmId = (req, res, next) => {
 };
 
 const verifyCredentials = {
-    checkCredentials: this.checkCredentials,
-    checkRefreshToken: this.checkRefreshToken,
-    checkConfirmId: this.checkConfirmId
+    checkCredentials: checkCredentials,
+    checkRefreshToken: checkRefreshToken,
+    checkConfirmId: checkConfirmId
 };
 
 module.exports = verifyCredentials;
