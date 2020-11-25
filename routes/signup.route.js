@@ -5,21 +5,22 @@ const router = express.Router();
 
 router.post("/",
     [
-        verifyCredentials.checkEntries
+        verifyCredentials.checkCredentials
     ],
     authController.signup
 );
 
 router.post("/confirmUser",
     [
-        verifyCredentials.checkEntries
+        verifyCredentials.checkCredentials,
+        verifyCredentials.checkConfirmId
     ],
     authController.confirmUser
 );
 
 router.post("/resendCode",
     [
-        verifyCredentials.checkEntries
+        verifyCredentials.checkCredentials
     ],
     authController.resendCode
 );
