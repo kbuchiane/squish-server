@@ -78,7 +78,6 @@ exports.signup = (req, res) => {
                 }
             });
         }).catch(err => {
-            logger.error("Create user error, " + err.message);
             return res.status(500).send({
                 message: err.message
             });
