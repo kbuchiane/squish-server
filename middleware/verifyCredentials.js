@@ -1,12 +1,10 @@
 const appConfig = require("../config/app.config");
 const logger = require("../utils/logger");
 
-checkEntries = (req, res, next) => {
+checkCredentials = (req, res, next) => {
     let username = null;
     let email = req.body.email;
     let password = null;
-    let confirmId = req.body.confirmId;
-    let refreshToken = req.signedCookies[appConfig.REFRESH_TOKEN];
 
     let authorization = req.headers.authorization;
     if (authorization) {
@@ -39,7 +37,6 @@ checkEntries = (req, res, next) => {
         } else if (authorization.startsWith("Bearer")) {
             let bearerJwt = authorization.split(" ");
             req.jwt = bearerJwt[1];
-
         } else {
             return res.status(401).send({
                 message: "Invalid authorization method"
@@ -109,17 +106,11 @@ checkEntries = (req, res, next) => {
         req.password = password;
     }
 
-    if (confirmId) {
-        if (confirmId.length != 8) {
-            return res.status(400).send({
-                message: "Verification code must be 8 characters"
-            });
-        }
+    next();
+};
 
-        req.confirmId = confirmId;
-    } else {
-        req.confirmId = null;
-    }
+checkRefreshToken = (req, res, next) => {
+    let refreshToken = req.signedCookies[appConfig.REFRESH_TOKEN];
 
     if (refreshToken) {
         if (refreshToken.length <= 0) {
@@ -135,8 +126,28 @@ checkEntries = (req, res, next) => {
     next();
 };
 
+checkConfirmId = (req, res, next) => {
+    let confirmId = req.body.confirmId;
+
+    if (confirmId) {
+        if (confirmId.length != 8) {
+            return res.status(400).send({
+                message: "Verification code must be 8 characters"
+            });
+        }
+
+        req.confirmId = confirmId;
+    } else {
+        req.confirmId = null;
+    }
+
+    next();
+};
+
 const verifyCredentials = {
-    checkEntries: checkEntries
+    checkCredentials: checkCredentials,
+    checkRefreshToken: checkRefreshToken,
+    checkConfirmId: checkConfirmId
 };
 
 module.exports = verifyCredentials;

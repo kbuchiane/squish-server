@@ -79,7 +79,7 @@ exports.signup = (req, res) => {
             });
         }).catch(err => {
             return res.status(500).send({
-                message: err.message
+                message: "That username or email may already be taken. Please try again."
             });
         });
     }
@@ -383,8 +383,9 @@ exports.confirmUser = (req, res) => {
                 });
             }
         }).catch(err => {
+            logger.error(err.message);
             return res.status(500).send({
-                message: err.message
+                message: "An error occured during verification. Please try again."
             });
         });
     }
@@ -423,8 +424,9 @@ exports.resendCode = (req, res) => {
                 });
             }
         }).catch(err => {
+            logger.error(err.message);
             return res.status(500).send({
-                message: err.message
+                message: "An error occured while resending verification code. Please try again."
             });
         });
     }
@@ -489,8 +491,9 @@ exports.login = (req, res) => {
                 }
             }
         }).catch(err => {
+            logger.error(err.message);
             return res.status(500).send({
-                message: err.message
+                message: "An error occurred during login. Please try again."
             });
         });
     }
@@ -573,8 +576,9 @@ exports.refreshToken = (req, res) => {
                 }
             }
         }).catch(err => {
+            logger.error(err.message);
             return res.status(500).send({
-                message: err.message
+                message: "An error occurred while refreshing your session. Please log in again."
             });
         });
     }
@@ -710,8 +714,9 @@ exports.resetPassword = (req, res) => {
                 });
             }
         }).catch(err => {
+            logger.error(err.message);
             return res.status(500).send({
-                message: err.message
+                message: "An error occurred while resetting your password. Please try again."
             });
         });
     }
@@ -816,8 +821,9 @@ function updateUserPassword(emailAddr, password) {
                     resolve(ret);
                 }
             }).catch(err => {
+                logger.error(err.message);
                 ret.status = 500;
-                ret.message = err.message;
+                ret.message = "An error occured while updating your password. Please try again.";
                 resolve(ret);
             });
     });
@@ -918,8 +924,9 @@ exports.confirmResetPassword = (req, res) => {
                 });
             }
         }).catch(err => {
+            logger.error(err.message);
             return res.status(500).send({
-                message: err.message
+                message: "An error occurred. Please try again."
             });
         });
     }
@@ -958,8 +965,9 @@ exports.resendResetCode = (req, res) => {
                 });
             }
         }).catch(err => {
+            logger.error(err.message);
             return res.status(500).send({
-                message: err.message
+                message: "An error occurred while resending your password reset code. Please try again."
             });
         });
     }
