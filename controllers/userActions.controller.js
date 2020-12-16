@@ -7,11 +7,9 @@ const UserFollowing = db.userFollowing;
 const User = db.user;
 const RefreshToken = db.refreshToken;
 const Op = db.Sequelize.Op;
-const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const moment = require("moment");
-const { verifyCredentials } = require("../middleware");
 
 exports.followUser = (req, res) => {
     if (!req.body.followerUsername || !req.body.followedUsername) {
@@ -46,23 +44,22 @@ exports.followUser = (req, res) => {
                             followed_user_id: followedId,
                             date_followed: dateFollowed
                         }).then(userFollowing => {
-                            console.log("success");
                             return res.status(200).send({
                                 message: "User followed!"
                             })
                         }).catch(err => {
-                            console.log(err.message);
-                            logger.error("Create user error, " + err.message);
+                            logger.error("Follow user error, " + err.message);
                             return res.status(500).send({
                                 message: "Failed to follow user. Please try again."
                             });
                         });
                     } else {
                         return res.status(400).send({
-                            message: "Already following that user."
+                            message: "You are already following this user."
                         });
                     }
                 }).catch(err => {
+                    logger.error("Follow user error, " + err.message);
                     return res.status(400).send({
                         message: "Error. Please try again."
                     });
