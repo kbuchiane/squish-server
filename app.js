@@ -10,6 +10,7 @@ const appConfig = require("./config/app.config");
 const authConfig = require("./config/auth.config");
 const logger = require("./utils/logger");
 
+const followUserRouter = require("./routes/followUser.route");
 const indexRouter = require("./routes/index.route");
 const loginRouter = require("./routes/login.route");
 const signupRouter = require("./routes/signup.route");
@@ -64,6 +65,7 @@ app.use(function (req, res, next) {
 });
 
 app.use("/", indexRouter);
+app.use("/followUser", cors(corsOptions), followUserRouter);
 app.use("/login", cors(corsOptions), loginRouter);
 app.use("/signup", cors(corsOptions), signupRouter);
 app.use("/logout", cors(corsOptions), logoutRouter);
