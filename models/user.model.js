@@ -1,43 +1,49 @@
 module.exports = (sequelize, Sequelize) => {
-    const User = sequelize.define("user", {
-        user_id: {
-            type: Sequelize.STRING,
+    const User = sequelize.define("User", {
+        UserId: {
+            type: Sequelize.BIGINT,
+            autoIncrement: true,
             primaryKey: true
         },
-        username: {
+        Username: {
+            type: Sequelize.STRING(45, false)
+        },
+        Email: {
             type: Sequelize.STRING
         },
-        email: {
+        Password: {
+            type: Sequelize.STRING(60, false)
+        },
+        DateCreated: {
+            type: Sequelize.DATE
+        },
+        IconFilepath: {
             type: Sequelize.STRING
         },
-        password: {
+        Active: {
+            type: Sequelize.TINYINT
+        },
+        RefreshToken: {
             type: Sequelize.STRING
         },
-        date_created: {
-            type: Sequelize.STRING
+        RefreshTokenExpiration: {
+            type: Sequelize.DATE
         },
-        user_icon_filepath: {
-            type: Sequelize.STRING
+        ConfirmId: {
+            type: Sequelize.STRING(8, false)
         },
-        active: {
-            type: Sequelize.STRING
+        ConfirmIdDateCreated: {
+            type: Sequelize.DATE
         },
-        user_confirm_id: {
-            type: Sequelize.STRING
+        VerifyAttemptCount: {
+            type: Sequelize.INTEGER
         },
-        confirm_id_date_created: {
-            type: Sequelize.STRING
-        },
-        verify_attempt_count: {
-            type: Sequelize.STRING
-        },
-        admin: {
-            type: Sequelize.STRING
+        Admin: {
+            type: Sequelize.TINYINT
         }
     }, {
         timestamps: false,
-        underscored: true,
-        freezeTableName: true,
+        underscored: false,
         freezeTableName: true
     });
 

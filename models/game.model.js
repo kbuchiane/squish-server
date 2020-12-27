@@ -1,20 +1,23 @@
 module.exports = (sequelize, Sequelize) => {
-    const RefreshToken = sequelize.define("RefreshToken", {
-        RefreshTokenId: {
-            type: Sequelize.STRING,
+    const Game = sequelize.define('Game', {
+        GameId: {
+            type: Sequelize.BIGINT,
+            autoIncrement: true,
             primaryKey: true
+
         },
-        RefreshTokenUserId: {
+        Title: {
             type: Sequelize.STRING
         },
-        ExpirationDate: {
+        IconFilepath: {
             type: Sequelize.STRING
-        }
+        },
     }, {
         timestamps: false,
         underscored: false,
         freezeTableName: true
+
     });
 
-    return RefreshToken;
+    return Game;
 };
