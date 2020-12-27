@@ -1,20 +1,22 @@
 module.exports = (sequelize, Sequelize) => {
-    const Game = sequelize.define("game", {
-        game_id: {
-            type: Sequelize.STRING,
+    const Game = sequelize.define('Game', {
+        GameId: {
+            type: Sequelize.BIGINT,
+            autoIncrement: true,
             primaryKey: true
+
         },
-        game_title: {
+        Title: {
             type: Sequelize.STRING
         },
-        game_icon_filepath: {
+        IconFilepath: {
             type: Sequelize.STRING
         },
     }, {
         timestamps: false,
-        underscored: true,
-        freezeTableName: true,
+        underscored: false,
         freezeTableName: true
+
     });
 
     return Game;
