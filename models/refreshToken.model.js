@@ -1,19 +1,18 @@
 module.exports = (sequelize, Sequelize) => {
-    const RefreshToken = sequelize.define("refresh_token", {
-        refresh_token_id: {
+    const RefreshToken = sequelize.define("RefreshToken", {
+        RefreshTokenId: {
             type: Sequelize.STRING,
             primaryKey: true
         },
-        refresh_token_user_id: {
+        RefreshTokenUserId: {
             type: Sequelize.STRING
         },
-        expiration_date: {
+        ExpirationDate: {
             type: Sequelize.STRING
         }
     }, {
         timestamps: false,
-        underscored: true,
-        freezeTableName: true,
+        underscored: false,
         freezeTableName: true
     });
 

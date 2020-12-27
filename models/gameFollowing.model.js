@@ -1,22 +1,22 @@
 module.exports = (sequelize, Sequelize) => {
-    const GameFollowing = sequelize.define("game_following", {
-        game_follow_id: {
-            type: Sequelize.STRING,
+    const GameFollowing = sequelize.define("GameFollowing", {
+        GameFollowingId: {
+            type: Sequelize.BIGINT,
+            autoIncrement: true,
             primaryKey: true
         },
-        game_follower_user_id: {
-            type: Sequelize.STRING
+        GameFollowerUserId: {
+            type: Sequelize.BIGINT
         },
-        followed_game_id: {
-            type: Sequelize.STRING
+        FollowedGameId: {
+            type: Sequelize.BIGINT
         },
-        date_game_followed: {
-            type: Sequelize.STRING
+        DateGameFollowed: {
+            type: Sequelize.DATE
         }
     }, {
         timestamps: false,
-        underscored: true,
-        freezeTableName: true,
+        underscored: false,
         freezeTableName: true
     });
 

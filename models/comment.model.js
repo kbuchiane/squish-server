@@ -1,24 +1,31 @@
 module.exports = (sequelize, Sequelize) => {
-    const UserFollowing = sequelize.define("UserFollowing", {
-        FollowId: {
+    const Comment = sequelize.define('Comment', {
+        CommentId: {
             type: Sequelize.BIGINT,
             autoIncrement: true,
             primaryKey: true
         },
-        FollowerUserId: {
+        UserId: {
             type: Sequelize.BIGINT
         },
-        FollowedUserId: {
+        Text: {
+            type: Sequelize.TEXT('medium')
+        },
+        DateCreated: {
+            type: Sequelize.DATE
+        },
+        ParentClipId: {
             type: Sequelize.BIGINT
         },
-        DateFollowed: {
-            type: Sequelize.STRING
+        ParentCommentId: {
+            type: Sequelize.BIGINT
         }
     }, {
         timestamps: false,
         underscored: false,
         freezeTableName: true
+
     });
 
-    return UserFollowing;
+    return Comment;
 };

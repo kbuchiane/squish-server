@@ -16,7 +16,7 @@ function deleteNewUser(username) {
     return new Promise(function (resolve, reject) {
         User.destroy({
             where: {
-                username: username
+                Username: username
             }
         }).catch(err => {
             logger.warn("User: " + username + ": " + err);
@@ -40,31 +40,31 @@ exports.signup = (req, res) => {
 
         let salt = bcrypt.genSaltSync(10);
         let passwordHash = bcrypt.hashSync(req.password, salt);
-
+        
         User.create({
-            username: req.username,
-            email: req.email,
-            password: passwordHash,
-            date_created: dateCreated,
-            active: false,
-            user_confirm_id: userConfirmId,
-            confirm_id_date_created: dateCreated,
-            verify_attempt_count: 0,
-            admin: false
+            Username: req.username,
+            Email: req.email,
+            Password: passwordHash,
+            DateCreated: dateCreated,            
+            Active: false,
+            ConfirmId: userConfirmId,
+            ConfirmIdDateCreated: dateCreated,
+            VerifyAttemptCount: 0,
+            Admin: false
         }).then(user => {
             email.sendConfirmation(
-                user.email,
-                user.user_confirm_id
+                user.Email,
+                user.ConfirmId
             ).then(emailSuccess => {
                 if (!emailSuccess) {
-                    deleteNewUser(user.username).then(deleteSuccess => {
+                    deleteNewUser(user.Username).then(deleteSuccess => {
                         if (!deleteSuccess) {
-                            logger.error("Failed to delete user " + user.username);                      
+                            logger.error("Failed to delete user " + user.Username);                      
                             return res.status(500).send({
                                 message: "A rare error occurred (whoops), you may have to try again later using a different username/email or please contact customer service for assistance"
                             });
                         } else {
-                            logger.warn("Failed to send confirmation email for deleting user  " + user.username);
+                            logger.warn("Failed to send confirmation email for deleting user  " + user.Username);
                             return res.status(500).send({
                                 message: "There was an issue sending a confirmation email, please try again later"
                             });
@@ -73,7 +73,7 @@ exports.signup = (req, res) => {
                 } else {
                     return res.status(200).send({
                         message: "A verification code has been sent to "
-                            + user.email
+                            + user.Email
                     });
                 }
             });
@@ -109,15 +109,15 @@ function updateVerificationCode(emailAddr) {
         let newCode = uuid.substring(0, 8);
 
         User.update({
-            user_confirm_id: newCode,
-            confirm_id_date_created: newDateCreated,
-            verify_attempt_count: 0
+            ConfirmId: newCode,
+            ConfirmIdDateCreated: newDateCreated,
+            VerifyAttemptCount: 0
         },
             {
                 where: {
                     [Op.and]: [
-                        { email: emailAddr },
-                        { active: false }
+                        { Email: emailAddr },
+                        { Active: false }
                     ]
                 }
             }).then(user => {
@@ -170,12 +170,12 @@ function updateAndEmailCode(emailAddr) {
 function addVerifyAttempt(emailAddr) {
     return new Promise(function (resolve, reject) {
         User.increment(
-            "verify_attempt_count",
+            "VerifyAttemptCount",
             {
                 where: {
                     [Op.and]: [
-                        { email: emailAddr },
-                        { active: false }
+                        { Email: emailAddr },
+                        { Active: false }
                     ]
                 }
             }).then(user => {
@@ -198,16 +198,16 @@ function addVerifyAttempt(emailAddr) {
 function updateVerifiedUser(emailAddr) {
     return new Promise(function (resolve, reject) {
         User.update({
-            user_confirm_id: null,
-            confirm_id_date_created: null,
-            verify_attempt_count: 0,
-            active: true
+            ConfirmId: null,
+            ConfirmIdDateCreated: null,
+            VerifyAttemptCount: 0,
+            Active: true
         },
             {
                 where: {
                     [Op.and]: [
-                        { email: emailAddr },
-                        { active: false }
+                        { Email: emailAddr },
+                        { Active: false }
                     ]
                 }
             }).then(user => {
@@ -236,15 +236,15 @@ function createRefreshToken(emailAddr) {
         User.findOne({
             where: {
                 [Op.and]: [
-                    { email: emailAddr },
-                    { active: true }
+                    { Email: emailAddr },
+                    { Active: true }
                 ]
             }
         }).then(user => {
             RefreshToken.create({
-                refresh_token_id: refreshToken,
-                refresh_token_user_id: user.user_id,
-                expiration_date: refreshTokenExpiration
+                RefreshTokenId: refreshToken,
+                RefreshTokenUserId: user.UserId,
+                ExpirationDate: refreshTokenExpiration
             }).then(tokenRow => {
                 if (!tokenRow) {
                     logger.warn("User email: "
@@ -274,15 +274,15 @@ function updateRefreshToken(oldRefreshToken) {
             moment(Date.now()).add(7, "days").format(appConfig.DB_DATE_FORMAT);
 
         RefreshToken.update({
-            refresh_token_id: refreshToken,
-            expiration_date: refreshTokenExpiration
+            RefreshTokenId: refreshToken,
+            ExpirationDate: refreshTokenExpiration
         },
             {
                 where: {
-                    refresh_token_id: oldRefreshToken
+                    RefreshTokenId: oldRefreshToken
                 }
             }).then(user => {
-                if (!user) {
+                if (!user) {          
                     logger.warn("User email: "
                         + emailAddr
                         + ": could not be given a refresh token");   
@@ -307,8 +307,8 @@ exports.confirmUser = (req, res) => {
         User.findOne({
             where: {
                 [Op.and]: [
-                    { email: req.email },
-                    { active: false }
+                    { Email: req.email },
+                    { Active: false }
                 ]
             }
         }).then(user => {
@@ -316,8 +316,8 @@ exports.confirmUser = (req, res) => {
                 return res.status(404).send({
                     message: "Email entered was not found, or has already been activated"
                 });
-            } else if (user.verify_attempt_count === 3) {
-                updateAndEmailCode(user.email).then(updateAndEmailCodeRet => {
+            } else if (user.VerifyAttemptCount === 3) {
+                updateAndEmailCode(user.Email).then(updateAndEmailCodeRet => {
                     if (updateAndEmailCodeRet.status === 500) {
                         return res.status(500).send({
                             message: "Maximum attempts reached<br />"
@@ -330,8 +330,8 @@ exports.confirmUser = (req, res) => {
                         });
                     }
                 });
-            } else if (codeExpired(user.confirm_id_date_created)) {
-                updateAndEmailCode(user.email).then(updateAndEmailCodeRet => {
+            } else if (codeExpired(user.ConfirmIdDateCreated)) {
+                updateAndEmailCode(user.Email).then(updateAndEmailCodeRet => {
                     if (updateAndEmailCodeRet.status === 500) {
                         return res.status(500).send({
                             message: "Verification code has expired<br />"
@@ -340,30 +340,30 @@ exports.confirmUser = (req, res) => {
                     } else {
                         return res.status(400).send({
                             message: "Verification code has expired, a new code has been sent to "
-                                + user.email
+                                + user.Email
                         });
                     }
                 });
-            } else if (user.user_confirm_id != req.confirmId) {
-                addVerifyAttempt(user.email).then(addVerifyAttemptRet => {
+            } else if (user.ConfirmId != req.confirmId) {
+                addVerifyAttempt(user.Email).then(addVerifyAttemptRet => {
                     return res.status(400).send({
                         message: "Verification code is incorrect"
                     });
                 });
             } else {
-                updateVerifiedUser(user.email).then(updateUserRet => {
+                updateVerifiedUser(user.Email).then(updateUserRet => {
                     if (!updateUserRet) {
                         return res.status(500).send({
                             message: "There was an issue activating your account, please try again later"
                         });
                     } else {
                         let accessToken = jwt.sign(
-                            { id: user.user_id },
+                            { id: user.UserId },
                             authConfig.AUTH_SECRET,
                             { expiresIn: authConfig.JWT_EXPIRE_TIME }
                         );
 
-                        createRefreshToken(user.email).then(refreshToken => {
+                        createRefreshToken(user.Email).then(refreshToken => {
                             if (!refreshToken) {
                                 return res.status(500).send({
                                     message: "Account activated, but there was an issue logging in, please try again"
@@ -375,7 +375,7 @@ exports.confirmUser = (req, res) => {
                                 });
 
                                 return res.status(200).send({
-                                    username: user.username,
+                                    username: user.Username,
                                     accessToken: accessToken
                                 });
                             }
@@ -401,8 +401,8 @@ exports.resendCode = (req, res) => {
         User.findOne({
             where: {
                 [Op.and]: [
-                    { email: req.email },
-                    { active: false }
+                    { Email: req.email },
+                    { Active: false }
                 ]
             }
         }).then(user => {
@@ -411,7 +411,7 @@ exports.resendCode = (req, res) => {
                     message: "Email entered was not found, or has already been activated"
                 });
             } else {
-                updateAndEmailCode(user.email).then(updateAndEmailCodeRet => {
+                updateAndEmailCode(user.Email).then(updateAndEmailCodeRet => {
                     if (updateAndEmailCodeRet.status === 500) {
                         return res.status(500).send({
                             message: updateAndEmailCodeRet.message
@@ -419,7 +419,7 @@ exports.resendCode = (req, res) => {
                     } else {
                         return res.status(200).send({
                             message: "A new verification code has been sent to "
-                                + user.email
+                                + user.Email
                         });
                     }
                 });
@@ -438,15 +438,15 @@ exports.login = (req, res) => {
         return res.status(400).send({
             message: "Email or username and password are required"
         });
-    } else {
+    } else {   
         User.findOne({
             where: {
                 [Op.or]: [
-                    { username: req.username },
-                    { email: req.email }
+                    { Username: req.username },
+                    { Email: req.email }
                 ],
                 [Op.and]: [
-                    { active: true }
+                    { Active: true }
                 ]
             }
         }).then(user => {
@@ -457,7 +457,7 @@ exports.login = (req, res) => {
             } else {
                 let validPassword = bcrypt.compareSync(
                     req.password,
-                    user.password
+                    user.Password
                 );
 
                 if (!validPassword) {
@@ -467,12 +467,12 @@ exports.login = (req, res) => {
                     });
                 } else {
                     let accessToken = jwt.sign(
-                        { id: user.user_id },
+                        { id: user.UserId },
                         authConfig.AUTH_SECRET,
                         { expiresIn: authConfig.JWT_EXPIRE_TIME }
                     );
 
-                    createRefreshToken(user.email).then(refreshToken => {
+                    createRefreshToken(user.Email).then(refreshToken => {
                         if (!refreshToken) {
                             return res.status(500).send({
                                 message: "There was an issue logging in, please try again"
@@ -484,7 +484,7 @@ exports.login = (req, res) => {
                             });
 
                             return res.status(200).send({
-                                username: user.username,
+                                username: user.Username,
                                 accessToken: accessToken
                             });
                         }
@@ -519,7 +519,7 @@ exports.refreshToken = (req, res) => {
     } else {
         RefreshToken.findOne({
             where: {
-                refresh_token_id: req.refreshToken
+                RefreshTokenId: req.refreshToken
             }
         }).then(tokenRow => {
             if (!tokenRow) {
@@ -527,13 +527,13 @@ exports.refreshToken = (req, res) => {
                     message: "Refresh token was not found"
                 });
             } else {
-                if (refreshTokenExpired(tokenRow.expiration_date)) {
+                if (refreshTokenExpired(tokenRow.ExpirationDate)) {
                     return res.status(401).send({
                         message: "Session has expired"
                     });
                 } else {
                     let accessToken = jwt.sign(
-                        { id: tokenRow.refresh_token_user_id },
+                        { id: tokenRow.RefreshTokenUserId },
                         authConfig.AUTH_SECRET,
                         { expiresIn: authConfig.JWT_EXPIRE_TIME }
                     );
@@ -547,8 +547,8 @@ exports.refreshToken = (req, res) => {
                             User.findOne({
                                 where: {
                                     [Op.and]: [
-                                        { user_id: tokenRow.refresh_token_user_id },
-                                        { active: true }
+                                        { UserId: tokenRow.RefreshTokenUserId },
+                                        { Active: true }
                                     ]
                                 }
                             }).then(user => {
@@ -563,7 +563,7 @@ exports.refreshToken = (req, res) => {
                                     });
 
                                     return res.status(200).send({
-                                        username: user.username,
+                                        username: user.Username,
                                         accessToken: accessToken
                                     });
                                 }
@@ -596,7 +596,7 @@ exports.logout = (req, res) => {
     } else {
         RefreshToken.destroy({
             where: {
-                refresh_token_id: token
+                RefreshTokenId: token
             }
         }).then(empty => {
             return res.status(200).send({
@@ -620,15 +620,15 @@ function updateResetPasswordCode(emailAddr) {
         let newCode = uuid.substring(0, 8);
 
         User.update({
-            user_confirm_id: newCode,
-            confirm_id_date_created: newDateCreated,
-            verify_attempt_count: 0
+            ConfirmId: newCode,
+            ConfirmIdDateCreated: newDateCreated,
+            VerifyAttemptCount: 0
         },
             {
                 where: {
                     [Op.and]: [
-                        { email: emailAddr },
-                        { active: true }
+                        { Email: emailAddr },
+                        { Active: true }
                     ]
                 }
             }).then(user => {
@@ -687,11 +687,11 @@ exports.resetPassword = (req, res) => {
         User.findOne({
             where: {
                 [Op.or]: [
-                    { username: req.username },
-                    { email: req.email }
+                    { Username: req.username },
+                    { Email: req.email }
                 ],
                 [Op.and]: [
-                    { active: true }
+                    { Active: true }
                 ]
             }
         }).then(user => {
@@ -700,16 +700,16 @@ exports.resetPassword = (req, res) => {
                     message: "Email or username entered was not found, or the account has not been activated"
                 });
             } else {
-                updateAndEmailResetPasswordCode(user.email).then(updateAndEmailCodeRet => {
+                updateAndEmailResetPasswordCode(user.Email).then(updateAndEmailCodeRet => {
                     if (updateAndEmailCodeRet.status === 500) {
                         return res.status(500).send({
                             message: updateAndEmailCodeRet.message
                         });
                     } else {
                         return res.status(200).send({
-                            email: user.email,
+                            email: user.Email,
                             message: "A reset password code has been sent to "
-                                + user.email
+                                + user.Email
                         });
                     }
                 });
@@ -732,15 +732,15 @@ function updateResetCode(emailAddr) {
         let newCode = uuid.substring(0, 8);
 
         User.update({
-            user_confirm_id: newCode,
-            confirm_id_date_created: newDateCreated,
-            verify_attempt_count: 0
+            ConfirmId: newCode,
+            ConfirmIdDateCreated: newDateCreated,
+            VerifyAttemptCount: 0
         },
             {
                 where: {
                     [Op.and]: [
-                        { email: emailAddr },
-                        { active: true }
+                        { Email: emailAddr },
+                        { Active: true }
                     ]
                 }
             }).then(user => {
@@ -801,16 +801,16 @@ function updateUserPassword(emailAddr, password) {
         let passwordHash = bcrypt.hashSync(password, salt);
 
         User.update({
-            password: passwordHash,
-            user_confirm_id: null,
-            confirm_id_date_created: null,
-            verify_attempt_count: 0
+            Password: passwordHash,
+            ConfirmId: null,
+            ConfirmIdDateCreated: null,
+            VerifyAttemptCount: 0
         },
             {
                 where: {
                     [Op.and]: [
-                        { email: emailAddr },
-                        { active: true }
+                        { Email: emailAddr },
+                        { Active: true }
                     ]
                 }
             }).then(user => {
@@ -833,12 +833,12 @@ function updateUserPassword(emailAddr, password) {
 function addResetPasswordAttempt(emailAddr) {
     return new Promise(function (resolve, reject) {
         User.increment(
-            "verify_attempt_count",
+            "VerifyAttemptCount",
             {
                 where: {
                     [Op.and]: [
-                        { email: emailAddr },
-                        { active: true }
+                        { Email: emailAddr },
+                        { Active: true }
                     ]
                 }
             }).then(user => {
@@ -867,8 +867,8 @@ exports.confirmResetPassword = (req, res) => {
         User.findOne({
             where: {
                 [Op.and]: [
-                    { email: req.email },
-                    { active: true }
+                    { Email: req.email },
+                    { Active: true }
                 ]
             }
         }).then(user => {
@@ -876,8 +876,8 @@ exports.confirmResetPassword = (req, res) => {
                 return res.status(404).send({
                     message: "Email entered was not found, or the account has not been activated"
                 });
-            } else if (user.verify_attempt_count === 3) {
-                updateAndEmailResetCode(user.email).then(updateAndEmailResetCodeRet => {
+            } else if (user.VerifyAttemptCount === 3) {
+                updateAndEmailResetCode(user.Email).then(updateAndEmailResetCodeRet => {
                     if (updateAndEmailResetCodeRet.status === 500) {
                         return res.status(500).send({
                             message: "Maximum attempts reached<br />"
@@ -886,12 +886,12 @@ exports.confirmResetPassword = (req, res) => {
                     } else {
                         return res.status(400).send({
                             message: "Maximum attempts reached, a new reset password code has been sent to "
-                                + user.email
+                                + user.Email
                         });
                     }
                 });
-            } else if (codeExpired(user.confirm_id_date_created)) {
-                updateAndEmailResetCode(user.email).then(updateAndEmailResetCodeRet => {
+            } else if (codeExpired(user.ConfirmIdDateCreated)) {
+                updateAndEmailResetCode(user.Email).then(updateAndEmailResetCodeRet => {
                     if (updateAndEmailResetCodeRet.status === 500) {
                         return res.status(500).send({
                             message: "Reset password code has expired<br />"
@@ -900,18 +900,18 @@ exports.confirmResetPassword = (req, res) => {
                     } else {
                         return res.status(400).send({
                             message: "Reset password code has expired, a new code has been sent to "
-                                + user.email
+                                + user.Email
                         });
                     }
                 });
-            } else if (user.user_confirm_id != req.confirmId) {
-                addResetPasswordAttempt(user.email).then(addResetAttemptRet => {
+            } else if (user.ConfirmId != req.confirmId) {
+                addResetPasswordAttempt(user.Email).then(addResetAttemptRet => {
                     return res.status(400).send({
                         message: "Reset password code is incorrect"
                     });
                 });
             } else {
-                updateUserPassword(user.email, req.password).then(updateUserPasswordRet => {
+                updateUserPassword(user.Email, req.password).then(updateUserPasswordRet => {
                     if (updateUserPasswordRet.status === 500) {
                         return res.status(500).send({
                             message: updateUserPasswordRet.message
@@ -942,8 +942,8 @@ exports.resendResetCode = (req, res) => {
         User.findOne({
             where: {
                 [Op.and]: [
-                    { email: req.email },
-                    { active: true }
+                    { Email: req.email },
+                    { Active: true }
                 ]
             }
         }).then(user => {
@@ -952,7 +952,7 @@ exports.resendResetCode = (req, res) => {
                     message: "Email entered was not found, or the account has not been activated"
                 });
             } else {
-                updateAndEmailResetCode(user.email).then(updateAndEmailResetCodeRet => {
+                updateAndEmailResetCode(user.Email).then(updateAndEmailResetCodeRet => {
                     if (updateAndEmailResetCodeRet.status === 500) {
                         return res.status(500).send({
                             message: updateAndEmailResetCodeRet.message
@@ -960,7 +960,7 @@ exports.resendResetCode = (req, res) => {
                     } else {
                         return res.status(200).send({
                             message: "A new reset password code has been sent to "
-                                + user.email
+                                + user.Email
                         });
                     }
                 });

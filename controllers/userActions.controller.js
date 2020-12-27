@@ -23,13 +23,13 @@ exports.followUser = (req, res) => {
         let dateFollowed = moment(Date.now()).format(appConfig.DB_DATE_FORMAT);
         User.findOne({
             where: {
-                    username: req.body.followerUsername
+                    Username: req.body.followerUsername
             }
         }).then(user => {
-            followerId = user.user_id;
+            followerId = user.UserId;
             User.findOne({
                 where: {
-                        username: req.body.followedUsername
+                        Username: req.body.followedUsername
                 }
             }).then(user => {
                 if (!user) {              
@@ -37,21 +37,23 @@ exports.followUser = (req, res) => {
                         message: "Unable to follow requested user, " + req.body.followedUsername + " is not available."
                     });
                 }
-                followedId = user.user_id;            
+                followedId = user.UserId;            
                 UserFollowing.findOne({
                     where: {
                         [Op.and]: [
-                            { follower_user_id: followerId },
-                            { followed_user_id: followedId }
+                            { FollowerUserId: followerId },
+                            { FollowedUserId: followedId }
                         ]
                     }
                 }).then(user => {
                     if (!user) {
                         UserFollowing.create({
-                            follower_user_id: followerId,
-                            followed_user_id: followedId,
-                            date_followed: dateFollowed
+                            FollowerUserId: followerId,
+                            FollowedUserId: followedId,
+                            DateFollowed: dateFollowed
                         }).then(userFollowing => {
+                            let msg = "Now following user " + req.body.followedUsername;
+                            console.log(msg);
                             return res.status(200).send({
                                 message: "User followed!"                             
                             })
@@ -62,6 +64,8 @@ exports.followUser = (req, res) => {
                             });
                         });
                     } else {
+                        let msg = "User " + req.body.followedUsername + " is already being followed."
+                        console.log(msg);
                         return res.status(400).send({
                             message: "You are already following this user."
                         });
@@ -89,14 +93,14 @@ exports.followGame = (req, res) => {
 
     User.findOne({
         where: {
-            username: followerUsername
+            Username: followerUsername
         }
     }).then(user => {
-        let followerId = user.user_id;
+        let followerId = user.UserId;
 
         Game.findOne({
             where: {
-                game_title: requestedGame
+                Title: requestedGame
             }
         }).then(game => {
 
@@ -106,12 +110,12 @@ exports.followGame = (req, res) => {
                 return res.status(400).send({ message: msg });
             }
 
-            let requestedGameId = game.game_id;
+            let requestedGameId = game.GameId;
             GameFollowing.findOne({
                 where: {
                     [Op.and]: [
-                        { game_follower_user_id: followerId },
-                        { followed_game_id: requestedGameId }
+                        { GameFollowerUserId: followerId },
+                        { FollowedGameId: requestedGameId }
                     ]
                 }
             }).then(gameFollowing => {
@@ -119,9 +123,9 @@ exports.followGame = (req, res) => {
                     let dateFollowed = moment(Date.now()).format(appConfig.DB_DATE_FORMAT);
 
                     GameFollowing.create({
-                        game_follower_user_id: followerId,
-                        followed_game_id: requestedGameId,
-                        date_game_followed: dateFollowed
+                        GameFollowerUserId: followerId,
+                        FollowedGameId: requestedGameId,
+                        DateGameFollowed: dateFollowed
                     }).then(gameFollowing => {
                         let msg = "Now following game " + requestedGame;
                         console.log(msg);
