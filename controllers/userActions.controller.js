@@ -23,21 +23,21 @@ exports.followUser = (req, res) => {
         let dateFollowed = moment(Date.now()).format(appConfig.DB_DATE_FORMAT);
         User.findOne({
             where: {
-                    Username: req.body.followerUsername
+                Username: req.body.followerUsername
             }
         }).then(user => {
             followerId = user.UserId;
             User.findOne({
                 where: {
-                        Username: req.body.followedUsername
+                    Username: req.body.followedUsername
                 }
             }).then(user => {
-                if (!user) {              
+                if (!user) {
                     return res.status(400).send({
                         message: "Unable to follow requested user, " + req.body.followedUsername + " is not available."
                     });
                 }
-                followedId = user.UserId;            
+                followedId = user.UserId;
                 UserFollowing.findOne({
                     where: {
                         [Op.and]: [
@@ -55,7 +55,7 @@ exports.followUser = (req, res) => {
                             let msg = "Now following user " + req.body.followedUsername;
                             console.log(msg);
                             return res.status(200).send({
-                                message: "User followed!"                             
+                                message: "User followed!"
                             })
                         }).catch(err => {
                             logger.error("Follow user error, " + err.message);

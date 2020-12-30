@@ -40,12 +40,12 @@ exports.signup = (req, res) => {
 
         let salt = bcrypt.genSaltSync(10);
         let passwordHash = bcrypt.hashSync(req.password, salt);
-        
+
         User.create({
             Username: req.username,
             Email: req.email,
             Password: passwordHash,
-            DateCreated: dateCreated,            
+            DateCreated: dateCreated,
             Active: false,
             ConfirmId: userConfirmId,
             ConfirmIdDateCreated: dateCreated,
@@ -59,7 +59,7 @@ exports.signup = (req, res) => {
                 if (!emailSuccess) {
                     deleteNewUser(user.Username).then(deleteSuccess => {
                         if (!deleteSuccess) {
-                            logger.error("Failed to delete user " + user.Username);                      
+                            logger.error("Failed to delete user " + user.Username);
                             return res.status(500).send({
                                 message: "A rare error occurred (whoops), you may have to try again later using a different username/email or please contact customer service for assistance"
                             });
@@ -249,19 +249,19 @@ function createRefreshToken(emailAddr) {
                 if (!tokenRow) {
                     logger.warn("User email: "
                         + emailAddr
-                        + ": could not be given a refresh token");    
+                        + ": could not be given a refresh token");
                     resolve(false);
                 } else {
                     resolve(refreshToken);
                 }
             }).catch(err => {
                 logger.warn("User email: "
-                    + emailAddr + ": " + err);    
+                    + emailAddr + ": " + err);
                 resolve(false);
             });
         }).catch(err => {
             logger.warn("User email: "
-                + emailAddr + ": " + err); 
+                + emailAddr + ": " + err);
             resolve(false);
         });
     });
@@ -282,10 +282,10 @@ function updateRefreshToken(oldRefreshToken) {
                     RefreshTokenId: oldRefreshToken
                 }
             }).then(user => {
-                if (!user) {          
+                if (!user) {
                     logger.warn("User email: "
                         + emailAddr
-                        + ": could not be given a refresh token");   
+                        + ": could not be given a refresh token");
                     resolve(false);
                 } else {
                     resolve(refreshToken);
@@ -438,7 +438,7 @@ exports.login = (req, res) => {
         return res.status(400).send({
             message: "Email or username and password are required"
         });
-    } else {   
+    } else {
         User.findOne({
             where: {
                 [Op.or]: [
@@ -754,7 +754,7 @@ function updateResetCode(emailAddr) {
                 }
             }).catch(err => {
                 logger.warn("User email: "
-                    + emailAddr + ": " + err); 
+                    + emailAddr + ": " + err);
                 resolve(false);
             });
     });
@@ -845,7 +845,7 @@ function addResetPasswordAttempt(emailAddr) {
                 if (!user) {
                     logger.warn("User email: "
                         + emailAddr
-                        + " not found and could not be updated"); 
+                        + " not found and could not be updated");
                     resolve(false);
                 } else {
                     resolve(true);
