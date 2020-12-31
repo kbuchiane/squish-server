@@ -14,7 +14,7 @@ module.exports = (sequelize, Sequelize) => {
         DateCreated: {
             type: Sequelize.DATE
         },
-        ParentClipId: {
+        ClipId: {
             type: Sequelize.BIGINT
         },
         ParentCommentId: {
