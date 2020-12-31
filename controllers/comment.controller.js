@@ -8,15 +8,12 @@ const moment = require("moment");
 
 exports.addComment = (req, res) => {
     let commenter = req.body.commenter;
-    let clipTitle = req.body.clipTitle;
+    let clipId = req.body.clipId;
     let text = req.body.comment;
-    let parentComment = req.body.parentComment;
+    let parentCommentId = req.body.parentCommentId;
 
-    // console.log("Add comment  [" + commenter + "] [" + clipTitle + "] [" + text + "] [" + parentComment + "]");
-
-    if (!commenter || !clipTitle || !text) {
+    if (!commenter || !clipId || !text) {
         let msg = "Invalid request to comment on clip.  Please try again.";
-        console.log(msg);
         return res.status(400).send({ message: msg });
     }
 
@@ -28,7 +25,6 @@ exports.addComment = (req, res) => {
     }).then(user => {
         if (!user) {
             let msg = "Unable to add comment, user " + commenter + " was not found.";
-            console.log(msg);
             return res.status(400).send({ message: msg });
         }
 
@@ -37,27 +33,24 @@ exports.addComment = (req, res) => {
         // Get ClipId
         Clip.findOne({
             where: {
-                Title: clipTitle
+                ClipId: clipId
             }
         }).then(clip => {
             if (!clip) {
-                let msg = "Unable to add comment, clip " + clipTitle + " was not found.";
-                console.log(msg);
+                let msg = "Unable to add comment, clip was not found.";
                 return res.status(400).send({ message: msg });
             }
 
-            let clipId = clip.ClipId;
-
-            // Get Parent CommentId (if one exists)
+            // Get Parent comment (if one exists)
             Comment.findOne({
                 where: {
-                    Text: parentComment
+                    CommentId: parentCommentId
                 }
             }).then(comment => {
-                let parentCommentId = null;
+                let foundParentCommentId = null;
 
                 if (comment) {
-                    parentCommentId = comment.CommentId;  // Comment made by parent
+                    foundParentCommentId = comment.CommentId;
                 }
 
                 // Add new comment
@@ -67,10 +60,9 @@ exports.addComment = (req, res) => {
                     Text: text,
                     DateCreated: dateCreated,
                     ClipId: clipId,
-                    ParentCommentId: parentCommentId
+                    ParentCommentId: foundParentCommentId
                 }).then(newComment => {
-                    let msg = "Comment has been added:  " + text;
-                    console.log(msg);
+                    let msg = "Successfully added comment";
                     return res.status(200).send({ message: msg })
                 }).catch(err => {
                     let msg = "Add comment error, " + err.message;
