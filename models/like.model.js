@@ -5,13 +5,13 @@ module.exports = (sequelize, Sequelize) => {
             autoIncrement: true,
             primaryKey: true
         },
-        LikedClipId: {
+        ClipId: {
             type: Sequelize.BIGINT
         },
-        LikedCommentId: {
+        CommentId: {
             type: Sequelize.BIGINT
         },
-        LikeUserId: {
+        UserId: {
             type: Sequelize.BIGINT
         }
     }, {
