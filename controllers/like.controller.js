@@ -29,7 +29,7 @@ exports.addLike = (req, res) => {
         // Get CommentId
         Comment.findOne({
             where: {
-                CommentId: CommentId
+                CommentId: commentId
             }
         }).then(comment => {
             if (!comment) {
@@ -42,7 +42,7 @@ exports.addLike = (req, res) => {
                 ClipId: null,
                 CommentId: commentId,
                 UserId: userId
-            }).then(newComment => {
+            }).then(like => {
                 return res.status(200);
             }).catch(err => {
                 let msg = "Add comment LIKE error, " + err.message;
