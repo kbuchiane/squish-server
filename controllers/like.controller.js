@@ -43,8 +43,7 @@ exports.addLike = (req, res) => {
                 CommentId: commentId,
                 UserId: userId
             }).then(newComment => {
-                let msg = "Successfully added LIKE";
-                return res.status(200).send({ message: msg })
+                return res.status(200);
             }).catch(err => {
                 let msg = "Add comment LIKE error, " + err.message;
                 logger.error(msg);
