@@ -92,7 +92,7 @@ if (argv._.includes('build')) {
 
     if (argv.production) {
         let answer = prompt('Updating the PRODUCTION database.  Are you sure? ');
-        let answerLower = ans1.toLowerCase();
+        let answerLower = answer.toLowerCase();
 
         if (answerLower == "yes" || answerLower == "y") {
             platform = 'PRODUCTION';
