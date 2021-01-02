@@ -42,13 +42,18 @@ exports.addComment = (req, res) => {
             }
 
             // Get Parent comment (if one exists)
+            let foundParentCommentId = null;
+
+            if (!parentCommentId) {
+                // Query doesn't like null values in where clause. Expect NOT to find parentCommentId
+                parentCommentId = -1;
+            }
+
             Comment.findOne({
                 where: {
                     CommentId: parentCommentId
                 }
             }).then(comment => {
-                let foundParentCommentId = null;
-
                 if (comment) {
                     foundParentCommentId = comment.CommentId;
                 }
@@ -62,8 +67,7 @@ exports.addComment = (req, res) => {
                     ClipId: clipId,
                     ParentCommentId: foundParentCommentId
                 }).then(newComment => {
-                    let msg = "Successfully added comment";
-                    return res.status(200).send({ message: msg })
+                    return res.status(200);
                 }).catch(err => {
                     let msg = "Add comment error, " + err.message;
                     logger.error(msg);

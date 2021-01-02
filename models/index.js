@@ -25,5 +25,6 @@ db.gameFollowing = require("./gameFollowing.model")(sequelize, Sequelize);
 db.refreshToken = require("./refreshToken.model")(sequelize, Sequelize);
 db.clip = require("./clip.model")(sequelize, Sequelize);
 db.comment = require("./comment.model")(sequelize, Sequelize);
+db.like = require("./like.model")(sequelize, Sequelize);
 
 module.exports = db;
