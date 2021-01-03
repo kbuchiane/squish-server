@@ -9,7 +9,7 @@ router.post("/",
         verifyCredentials.checkCredentials,
         auth.verifyToken
     ],
-    likeController.addLike
+    likeController.likeComment
 );
 
 module.exports = router;
