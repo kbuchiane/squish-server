@@ -7,7 +7,7 @@ const Clip = db.clip;
 const Like = db.like;
 
 exports.likeClip = (req, res) => {
-    let liker = req.body.liker;
+    let liker = req.body.username;
     let clipId = req.body.clipId;
 
     if (!liker || !clipId) {
@@ -58,7 +58,7 @@ exports.likeClip = (req, res) => {
 };
 
 exports.likeComment = (req, res) => {
-    let liker = req.body.liker;
+    let liker = req.body.username;
     let commentId = req.body.commentId;
 
     if (!liker || !commentId) {
@@ -99,6 +99,114 @@ exports.likeComment = (req, res) => {
                 return res.status(200);
             }).catch(err => {
                 let msg = "Add comment LIKE error, " + err.message;
+                logger.error(msg);
+                return res.status(500).send({
+                    message: msg
+                });
+            });
+        })
+    })
+};
+
+exports.unlikeClip = (req, res) => {
+    // User not needed for unliking but keep around for auditing purposes
+    let unliker = req.body.username;
+    let likeId = req.body.likeId;
+
+    if (!unliker || !likeId) {
+        let msg = "Invalid unLIKE request.  Please try again.";
+        return res.status(400).send({ message: msg });
+    }
+
+    // Get id of unliker
+    User.findOne({
+        where: {
+            Username: unliker
+        }
+    }).then(user => {
+        if (!user) {
+            let msg = "Unable to remove LIKE, user " + username + " was not found.";
+            return res.status(400).send({ message: msg });
+        }
+
+        // Verify like exists
+        Like.findOne({
+            where: {
+                LikeId: likeId
+            }
+        }).then(like => {
+            if (!like) {
+                let msg = "LIKE not found, unable to remove.";
+                return res.status(400).send({ message: msg });
+            }
+
+            if (!like.ClipId) {
+                let msg = "Invalid unLIKE request.  Please try again.";
+                return res.status(400).send({ message: msg });
+            }
+
+            Like.destroy({
+                where: {
+                    LikeId: likeId
+                }
+            }).then(like => {
+                return res.status(200);
+            }).catch(err => {
+                let msg = "Delete LIKE comment error, " + err.message;
+                logger.error(msg);
+                return res.status(500).send({
+                    message: msg
+                });
+            });
+        })
+    })
+};
+
+exports.unlikeComment = (req, res) => {
+    // User not needed for unliking but keep around for auditing purposes
+    let unliker = req.body.username;
+    let likeId = req.body.likeId;
+
+    if (!unliker || !likeId) {
+        let msg = "Invalid unLIKE request.  Please try again.";
+        return res.status(400).send({ message: msg });
+    }
+
+    // Get id of unliker
+    User.findOne({
+        where: {
+            Username: unliker
+        }
+    }).then(user => {
+        if (!user) {
+            let msg = "Unable to remove LIKE, user " + username + " was not found.";
+            return res.status(400).send({ message: msg });
+        }
+
+        // Verify like exists
+        Like.findOne({
+            where: {
+                LikeId: likeId
+            }
+        }).then(like => {
+            if (!like) {
+                let msg = "LIKE not found, unable to remove.";
+                return res.status(400).send({ message: msg });
+            }
+
+            if (!like.CommentId) {
+                let msg = "Invalid unLIKE request.  Please try again.";
+                return res.status(400).send({ message: msg });
+            }
+
+            Like.destroy({
+                where: {
+                    LikeId: likeId
+                }
+            }).then(like => {
+                return res.status(200);
+            }).catch(err => {
+                let msg = "Delete LIKE comment error, " + err.message;
                 logger.error(msg);
                 return res.status(500).send({
                     message: msg
