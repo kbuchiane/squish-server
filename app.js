@@ -21,6 +21,8 @@ const refreshTokenRouter = require("./routes/refreshToken.route");
 const addCommentRouter = require("./routes/addComment.route");
 const likeCommentRouter = require("./routes/likeComment.route");
 const likeClipRouter = require("./routes/likeClip.route");
+const unfollowUserRouter = require("./routes/unfollowUser.route");
+const unfollowGameRouter = require("./routes/unfollowGame.route");
 
 const app = express();
 
@@ -79,6 +81,8 @@ app.use("/refreshToken", cors(corsOptions), refreshTokenRouter);
 app.use("/addComment", cors(corsOptions), addCommentRouter);
 app.use("/likeClip", cors(corsOptions), likeClipRouter);
 app.use("/likeComment", cors(corsOptions), likeCommentRouter);
+app.use("/unfollowUser", cors(corsOptions), unfollowUserRouter);
+app.use("/unfollowGame", cors(corsOptions), unfollowGameRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
