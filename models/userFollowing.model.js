@@ -1,6 +1,6 @@
 module.exports = (sequelize, Sequelize) => {
     const UserFollowing = sequelize.define("UserFollowing", {
-        FollowId: {
+        UserFollowingId: {
             type: Sequelize.BIGINT,
             autoIncrement: true,
             primaryKey: true
