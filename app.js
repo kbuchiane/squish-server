@@ -23,6 +23,8 @@ const likeCommentRouter = require("./routes/likeComment.route");
 const likeClipRouter = require("./routes/likeClip.route");
 const unfollowUserRouter = require("./routes/unfollowUser.route");
 const unfollowGameRouter = require("./routes/unfollowGame.route");
+const unlikeCommentRouter = require("./routes/unlikeComment.route");
+const unlikeClipRouter = require("./routes/unlikeClip.route");
 
 const app = express();
 
@@ -83,6 +85,8 @@ app.use("/likeClip", cors(corsOptions), likeClipRouter);
 app.use("/likeComment", cors(corsOptions), likeCommentRouter);
 app.use("/unfollowUser", cors(corsOptions), unfollowUserRouter);
 app.use("/unfollowGame", cors(corsOptions), unfollowGameRouter);
+app.use("/unlikeComment", cors(corsOptions), unlikeCommentRouter);
+app.use("/unlikeClip", cors(corsOptions), unlikeClipRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

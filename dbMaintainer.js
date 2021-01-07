@@ -39,6 +39,7 @@ let dbName = dbConfig.TESTDB;
 let dbNameMatch = '/_test$/';
 let modelsPath = "./models/";
 
+// TODO: Update to read data from file
 let clipData = [
     {
         PosterUserId: '1', VideoFilepath: '/home/games/Frogger.jpeg', Title: 'Frogger Greatest Hits', GameId: '1',
@@ -180,6 +181,10 @@ async function startMaintainer() {
     } catch (error) {
         console.log(red("Problem connecting to the database"));
     }
+    // TODO: Update to gracefully close database
+    // } finally {
+    //     sequelize.close();
+    // }
 }
 
 function configureModels() {
