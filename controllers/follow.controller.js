@@ -8,6 +8,10 @@ const Game = db.game;
 const Op = db.Sequelize.Op;
 const moment = require("moment");
 
+exports.follows = (req, res) => {
+    return res.status(200);
+}
+
 exports.followUser = (req, res) => {
     let followerUsername = req.body.followerUsername;
     let followedUsername = req.body.followedUsername;

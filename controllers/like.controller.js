@@ -6,6 +6,10 @@ const Comment = db.comment;
 const Clip = db.clip;
 const Like = db.like;
 
+exports.likes = (req, res) => {
+    return res.status(200);
+}
+
 exports.likeClip = (req, res) => {
     let liker = req.body.username;
     let clipId = req.body.clipId;
