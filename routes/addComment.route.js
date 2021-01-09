@@ -1,7 +1,7 @@
 const express = require("express");
 const { auth } = require("../middleware");
 const { verifyCredentials } = require("../middleware");
-const userActionsController = require("../controllers/userActions.controller");
+const commentController = require("../controllers/comment.controller");
 const router = express.Router();
 
 router.post("/",
@@ -9,7 +9,7 @@ router.post("/",
         verifyCredentials.checkCredentials,
         auth.verifyToken
     ],
-    userActionsController.followGame
+    commentController.addComment
 );
 
 module.exports = router;

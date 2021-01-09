@@ -46,12 +46,12 @@ var errorTransport = new (winston.transports.DailyRotateFile)({
   maxFiles: '14d'
 });
 
-var mysqlTransport = new SQLTransport({ 
-  level:"warn",
+var mysqlTransport = new SQLTransport({
+  level: "warn",
   client: dbConfig.dialect,
-  connection: {  
+  connection: {
     user: dbConfig.USER,
-    password: dbConfig.PASSWORD, 
+    password: dbConfig.PASSWORD,
     database: dbConfig.LOGDB
   },
   name: 'SQLTransport',

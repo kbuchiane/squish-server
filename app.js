@@ -3,21 +3,21 @@ const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-
 const stylus = require("stylus");
 const cors = require("cors");
 const appConfig = require("./config/app.config");
 const authConfig = require("./config/auth.config");
 const logger = require("./utils/logger");
 
-const followUserRouter = require("./routes/followUser.route");
-const followGameRouter = require("./routes/followGame.route");
 const indexRouter = require("./routes/index.route");
 const loginRouter = require("./routes/login.route");
 const signupRouter = require("./routes/signup.route");
 const logoutRouter = require("./routes/logout.route");
 const resetPasswordRouter = require("./routes/resetPassword.route");
 const refreshTokenRouter = require("./routes/refreshToken.route");
+const addCommentRouter = require("./routes/addComment.route");
+const likesRouter = require("./routes/likes.route");
+const followsRouter = require("./routes/follows.route");
 
 const app = express();
 
@@ -66,13 +66,14 @@ app.use(function (req, res, next) {
 });
 
 app.use("/", indexRouter);
-app.use("/followUser", cors(corsOptions), followUserRouter);
-app.use("/followGame", cors(corsOptions), followGameRouter);
 app.use("/login", cors(corsOptions), loginRouter);
 app.use("/signup", cors(corsOptions), signupRouter);
 app.use("/logout", cors(corsOptions), logoutRouter);
 app.use("/resetPassword", cors(corsOptions), resetPasswordRouter);
 app.use("/refreshToken", cors(corsOptions), refreshTokenRouter);
+app.use("/addComment", cors(corsOptions), addCommentRouter);
+app.use("/likes", cors(corsOptions), likesRouter);
+app.use("/follows", cors(corsOptions), followsRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

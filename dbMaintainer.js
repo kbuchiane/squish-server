@@ -1,3 +1,4 @@
+const bcrypt = require("bcryptjs");
 const yargs = require('yargs');
 const prompt = require('prompt-sync')();
 const dbConfig = require("./config/db.config");
@@ -29,6 +30,8 @@ var sequelize = null;
 var db = null;
 var name = "";
 var pw = "";
+var testUserEmail = 'testUser@MyTest.com';
+var testUserPassword = '$2a$10$jXWVrWoWDLRW5TJDNcrI7O/2QU5m9ViKymIHFgVqBk/6dH.UsuR7u'; // equates to changeme
 
 let platform = 'TEST';
 let forceSync = false;
@@ -36,20 +39,63 @@ let dbName = dbConfig.TESTDB;
 let dbNameMatch = '/_test$/';
 let modelsPath = "./models/";
 
+// TODO: Update to read data from file
+let clipData = [
+    {
+        PosterUserId: '1', VideoFilepath: '/home/games/Frogger.jpeg', Title: 'Frogger Greatest Hits', GameId: '1',
+        Duration: '5', DateCreated: '12/29/2020', ThumbnailFilepath: '/tmp/Frogger.thm', ViewCount: '6'
+    },
+    {
+        PosterUserId: '2', VideoFilepath: '/home/games/AstroFire.jpeg', Title: 'AstroFire Clasics', GameId: '2',
+        Duration: '44', DateCreated: '12/31/2020', ThumbnailFilepath: '/tmp/AstroFire.thm', ViewCount: '55'
+    }
+];
+
+let commentData = [
+    {
+        UserId: '1', Text: 'Frogger is such a classic', DateCreated: '12/29/2020', ClipId: '1', ParentCommentId: null
+    },
+    {
+        UserId: '2', Text: 'Give this a try', DateCreated: '12/31/2020', ClipId: '2', ParentCommentId: null
+    }
+];
+
+let gameData = [
+    {
+        Title: 'Frogger', IconFilepath: '/home/games/frogger.icon'
+    },
+    {
+        Title: 'AstroFire', IconFilepath: '/home/games/astrofire.icon'
+    }
+];
+
+let userData = [
+    {
+        Username: 'Freddy', Email: testUserEmail, Password: testUserPassword, DateCreated: '7/7/1982',
+        IconFilepath: '/home/users/freddy/Freddy.ico', Active: '1', RefreshToken: null, RefreshTokenExpiration: null,
+        ConfirmId: null, ConfirmIdDateCreated: null, VerifyAttemptCount: '0', Admin: '0'
+    },
+    {
+        Username: 'Andy', Email: testUserEmail, Password: testUserPassword, DateCreated: '8/21/1978',
+        IconFilepath: '/home/users/andy/Andy.ico', Active: '1', RefreshToken: null, RefreshTokenExpiration: null,
+        ConfirmId: null, ConfirmIdDateCreated: null, VerifyAttemptCount: '0', Admin: '0'
+    }
+];
+
 console.log('\n');
 console.log('***  \x1b[32m%s\x1b[0m  ***', 'Squish');
 console.log('Database Maintainer');
 
 if (argv._.includes('build')) {
-    name = prompt('Enter name: ');
+    name = prompt('Enter database administrator name: ');
     console.log('Enter password');
     pw = prompt({ echo: '*' });
 
     if (argv.production) {
-        let ans1 = prompt('Updating the PRODUCTION database.  Are you sure? ');
-        let ans1Lower = ans1.toLowerCase();
+        let answer = prompt('Updating the PRODUCTION database.  Are you sure? ');
+        let answerLower = answer.toLowerCase();
 
-        if (ans1Lower == "yes" || ans1Lower == "y") {
+        if (answerLower == "yes" || answerLower == "y") {
             platform = 'PRODUCTION';
         }
     }
@@ -59,24 +105,35 @@ if (argv._.includes('build')) {
 }
 
 function dropTables() {
-    let ans1 = prompt('Dropping tables.  Are you sure? ');
-    let ans1Lower = ans1.toLowerCase();
+    let answer = prompt('Dropping tables.  Are you sure? ');
+    let answerLower = answer.toLowerCase();
 
-    if (ans1Lower == "yes" || ans1Lower == "y") {
+    if (answerLower == "yes" || answerLower == "y") {
         forceSync = true;
     }
 }
 
-function red(s) {
-    return '\033[31m' + s;
-}
+function checkDataValues() {
+    let answer = prompt('Test users will be added to the User table. Would you like to use an operational email account for them? ');
+    let answerLower = answer.toLowerCase();
+    if (answerLower == "yes" || answerLower == "y") {
+        testUserEmail = prompt('Enter valid email address: ');      
+        userData.forEach(element => {
+            element.Email = testUserEmail;
+        });
+    }
 
-function green(s) {
-    return '\033[32m' + s;
-}
-
-function yellow(s) {
-    return '\033[33m' + s;
+    answer = prompt('The test user\'s password will default to \"changeme\". Would you like to use a different password? ');
+    answerLower = answer.toLowerCase();
+    if (answerLower == "yes" || answerLower == "y") {
+        console.log('Enter NEW password');
+        let answer2 = prompt({ echo: '*' });
+        let salt = bcrypt.genSaltSync(10);
+        testUserPassword = bcrypt.hashSync(answer2, salt);
+        userData.forEach(element => {
+            element.Password = testUserPassword;
+        });
+    }
 }
 
 function initialize() {
@@ -101,7 +158,6 @@ function initialize() {
     );
 
     db = {};
-
     db.Sequelize = Sequelize;
     db.sequelize = sequelize;
 }
@@ -114,14 +170,21 @@ async function startMaintainer() {
         configureModels();
 
         if (argv.drop) {
-
             dropTables();
+        }
+
+        if (argv.load) {
+            checkDataValues();
         }
 
         syncAndLoadTables();
     } catch (error) {
         console.log(red("Problem connecting to the database"));
     }
+    // TODO: Update to gracefully close database
+    // } finally {
+    //     sequelize.close();
+    // }
 }
 
 function configureModels() {
@@ -143,20 +206,27 @@ function syncAndLoadTables() {
     // Clip
     db.clip.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('Clip'));
+        if (argv.load) {
+            db.clip.bulkCreate(clipData);
+            console.log(green(clipData.length + ' rows added to Clip'));
+        }
     });
 
     // Comment
     db.comment.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('Comment'));
+        if (argv.load) {
+            db.comment.bulkCreate(commentData);
+            console.log(green(commentData.length + ' rows added to Comment'));
+        }
     });
 
     // Game
     db.game.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+        console.log(yellow('Game'));
         if (argv.load) {
-            db.game.bulkCreate([
-                { Title: 'Frogger', IconFilepath: '/home/games/frogger.icon' },
-                { Title: 'AstroFire', IconFilepath: '/home/games/astrofire.icon' }])
-            console.log(yellow('Game'));
+            db.game.bulkCreate(gameData)
+            console.log(green(gameData.length + ' rows added to Game'));
         }
     });
 
@@ -178,10 +248,26 @@ function syncAndLoadTables() {
     //User
     db.user.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('User'));
+        if (argv.load) {
+            db.user.bulkCreate(userData);
+            console.log(green(userData.length + ' rows added to User'));
+        }
     });
 
     // UserFollowing
     db.userFollowing.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('UserFollowing'));
     });
+}
+
+function red(s) {
+    return '\033[31m' + s;
+}
+
+function green(s) {
+    return '\033[32m' + s;
+}
+
+function yellow(s) {
+    return '\033[33m' + s;
 }
