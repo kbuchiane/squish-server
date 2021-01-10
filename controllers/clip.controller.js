@@ -1,0 +1,154 @@
+const db = require("../models");
+const authConfig = require("../config/auth.config");
+const appConfig = require("../config/app.config");
+const logger = require("../utils/logger");
+const fs = require("fs");
+const indexRouter = require("../routes/index.route");
+
+const User = db.user;
+const Clip = db.clip;
+const Game = db.game;
+const RefreshToken = db.refreshToken;
+const Op = db.Sequelize.Op;
+
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const moment = require("moment");
+
+/*
+Should eventually do file metadata processing to prevent users from accidentally 
+(or intentionally and perhaps maliciously) uploading the same file many times.
+Currently we don't perform any check, so a video can be uploaded many times over.
+If you're testing this, make sure you occasionally clean out the local destination 
+directory or this will fill up your disk.
+
+This doesn't currently perform the intended functionality.  Right now all this 
+does is copy a file from the local file system to a new directory and make the 
+database calls needed to store and construct unique file paths for each user.
+
+This code will need to be updated with video streaming functionality once later 
+architectural and dependency decisions are made. We will want the user's clip to 
+be streamed incrementally to the server, be fault tolerant, and be able to save 
+the video that's being loaded into memory onto disk once the upload is complete. 
+Since we want this to be as easy for users as possible, we'll probably want the 
+solution that will result in the least amount of processing time for the user/ 
+client in order to free up their browser. I did some light research into this, 
+but didn't immediately find anything that stood out as fitting our needs.
+
+Ideas:
+-Compress file on client side so that transfer is faster. Can you even compress 
+a video file? Is it faster?
+-How does Youtube uploading work? How fast is it?
+-There are other things that have to happen after a video is uploaded before it 
+can be viewed. What are those things?
+
+File copy drops file extension. Video/thumbnail are still viewable, but throw 
+warning when trying to view.
+*/
+
+exports.postClip = (req, res) => {
+    let title = req.body.title;
+    let game = req.body.game;
+    let username = req.body.user;
+    let video = req.body.video;
+    let thumbnail = req.body.thumbnail;
+
+    //Find duration of video file
+    let duration = req.body.duration;
+
+    //Find date created from file metadata
+    let dateCreated = req.body.date;
+
+    User.findOne({
+        where: {
+            Username: username
+        }
+    }).then(user => {
+        if (!user) {
+            let msg = "Unable to add comment, user " + commenter + " was not found.";
+            return res.status(400).send({ message: msg });
+        }
+
+        let posterId = user.UserId;
+        Game.findOne({
+            where: {
+                Title: game
+            }
+        }).then(game => {
+            if (!game) {
+                let msg = "Unable to find game " + game + ".";
+                return res.status(400).send({ message: msg });
+            }
+            let gameId = game.GameId;
+            Clip.create({
+                PosterUserId: posterId,
+                Title: title,
+                GameId: gameId,
+                Duration: duration,
+                DateCreated: dateCreated,
+                ViewCount: 0
+            }).then(clip => {
+                let clipId = clip.ClipId;
+                let videoFilePath = username + "/" + clipId;
+                let thumbnailFilePath = username + "/" + clipId + "-thumbnail";
+                Clip.update({
+                    VideoFilepath: videoFilePath,
+                    ThumbnailFilepath: thumbnailFilePath
+                },
+                {
+                    where: {
+                        ClipId: clipId
+                    }
+                }).then(clip => {
+                    let relativeClipPath = "./clips/" + videoFilePath;
+                    let relativeThumbnailPath = "./clips/" + thumbnailFilePath;
+
+                    fs.stat("./clips/" + username, function(error, stats) {
+                        if(stats == null) {
+                            fs.mkdir("./clips/" + username, error => {
+                                if(error) {
+                                    logger.error(error);
+                                    throw(error);
+                                }
+                            });
+                        }
+                        fs.copyFile("../squish-client/src/assets/videos/snipe1.mp4", relativeClipPath, error => {
+                            if(error) {
+                                logger.error(error);
+                                throw(error); 
+                            }
+                        });
+                        fs.copyFile("../squish-client/src/assets/images/snipe1poster.png", relativeThumbnailPath, error => {
+                            if(error) {
+                                logger.error(error);
+                                throw(error); 
+                            }
+                        });  
+                    })
+                                          
+                    return res.status(200).send();
+                }).catch(err => {
+                    let msg = "Add clip error, " + err.message;
+                    logger.error(msg);
+                    return res.status(400).send({
+                        message: msg
+                    });
+                });
+
+                return res.status(200);
+            }).catch(err => {
+                let msg = "Add clip error, " + err.message;
+                logger.error(msg);
+                return res.status(400).send({
+                    message: msg
+                });
+            });
+        }).catch(err => {
+            let msg = "Add clip error, " + err.message;
+            logger.error(msg);
+            return res.status(400).send({
+                message: msg
+            });
+        });
+    });
+}
