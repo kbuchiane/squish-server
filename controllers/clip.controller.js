@@ -1,19 +1,10 @@
 const db = require("../models");
-const authConfig = require("../config/auth.config");
-const appConfig = require("../config/app.config");
 const logger = require("../utils/logger");
 const fs = require("fs");
-const indexRouter = require("../routes/index.route");
 
 const User = db.user;
 const Clip = db.clip;
 const Game = db.game;
-const RefreshToken = db.refreshToken;
-const Op = db.Sequelize.Op;
-
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const moment = require("moment");
 
 /*
 Should eventually do file metadata processing to prevent users from accidentally 

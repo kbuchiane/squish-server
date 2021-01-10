@@ -16,13 +16,9 @@ const logoutRouter = require("./routes/logout.route");
 const resetPasswordRouter = require("./routes/resetPassword.route");
 const refreshTokenRouter = require("./routes/refreshToken.route");
 const addCommentRouter = require("./routes/addComment.route");
-<<<<<<< HEAD
 const likesRouter = require("./routes/likes.route");
 const followsRouter = require("./routes/follows.route");
-=======
-const addLikeRouter = require("./routes/addLike.route");
 const postClipRouter = require("./routes/postClip.route");
->>>>>>> 0adadc2 (Handler for posting clips)
 
 const app = express();
 
@@ -79,7 +75,6 @@ app.use("/refreshToken", cors(corsOptions), refreshTokenRouter);
 app.use("/addComment", cors(corsOptions), addCommentRouter);
 app.use("/likes", cors(corsOptions), likesRouter);
 app.use("/follows", cors(corsOptions), followsRouter);
-app.use("/addLike", cors(corsOptions), addLikeRouter);
 app.use("/postClip", cors(corsOptions), postClipRouter);
 
 // catch 404 and forward to error handler
