@@ -17,7 +17,7 @@ router.post("/deleteClip",
         verifyCredentials.checkCredentials,
         auth.verifyToken
     ],
-    clipController.postClip
+    clipController.deleteClip
 );
 
 module.exports = router;
