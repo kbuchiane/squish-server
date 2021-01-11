@@ -163,9 +163,29 @@ exports.deleteClip = (req, res) => {
         }
         Clip.destroy({
             where: {
-                ClipId: clip.ClipId
+                ClipId: clipId
             }
         }).then(clip => {
+            fs.stat("./clips/" + username + "/" + clipId, function(error, stats) {
+                if(stats != null) {
+                    fs.unlink("./clips/" + username + "/" + clipId, error => {
+                        if(error) {
+                            logger.error("Failed to delete clip from local disk");
+                        }
+                    });
+                }
+            });
+            fs.stat("./clips/" + username + "/" + clipId + "-thumbnail", function(error, stats) {
+                console.log("thumnail exists");
+                if(stats != null) {
+                    fs.unlink("./clips/" + username + "/" + clipId + "-thumbnail", error => {
+                        console.log("thumbnail deleted");
+                        if(error) {
+                            logger.error("Failed to delete thumbnail from local disk");
+                        }
+                    });
+                }
+            });
             return res.status(200).send();
         }).catch(err => {
             let msg = "Delete clip error, " + err.message;
