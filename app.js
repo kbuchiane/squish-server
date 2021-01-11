@@ -18,7 +18,7 @@ const refreshTokenRouter = require("./routes/refreshToken.route");
 const addCommentRouter = require("./routes/addComment.route");
 const likesRouter = require("./routes/likes.route");
 const followsRouter = require("./routes/follows.route");
-const postClipRouter = require("./routes/postClip.route");
+const postClipRouter = require("./routes/clip.route");
 
 const app = express();
 
@@ -75,7 +75,7 @@ app.use("/refreshToken", cors(corsOptions), refreshTokenRouter);
 app.use("/addComment", cors(corsOptions), addCommentRouter);
 app.use("/likes", cors(corsOptions), likesRouter);
 app.use("/follows", cors(corsOptions), followsRouter);
-app.use("/postClip", cors(corsOptions), postClipRouter);
+app.use("/clip", cors(corsOptions), postClipRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
