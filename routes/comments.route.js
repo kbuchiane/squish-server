@@ -9,7 +9,23 @@ router.post("/",
         verifyCredentials.checkCredentials,
         auth.verifyToken
     ],
+    commentController.comments
+);
+
+router.post("/addComment",
+    [
+        verifyCredentials.checkCredentials,
+        auth.verifyToken
+    ],
     commentController.addComment
+);
+
+router.post("/deleteComment",
+    [
+        verifyCredentials.checkCredentials,
+        auth.verifyToken
+    ],
+    commentController.deleteComment
 );
 
 module.exports = router;
