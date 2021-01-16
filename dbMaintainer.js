@@ -74,7 +74,7 @@ function checkDataValues() {
     let answer = prompt('Test users will be added to the User table. Would you like to use an operational email account for them? ');
     let answerLower = answer.toLowerCase();
     if (answerLower == "yes" || answerLower == "y") {
-        testUserEmail = prompt('Enter valid email address: ');      
+        testUserEmail = prompt('Enter valid email address: ');
         userData.forEach(element => {
             element.Email = testUserEmail;
         });
@@ -156,15 +156,16 @@ function configureModels() {
     db.refreshToken = require(modelsPath + "refreshToken.model")(sequelize, Sequelize);
     db.user = require(modelsPath + "user.model")(sequelize, Sequelize);
     db.userFollowing = require(modelsPath + "userFollowing.model")(sequelize, Sequelize);
+    db.report = require(modelsPath + "report.model")(sequelize, Sequelize);
 }
 
 function syncAndLoadTables() {
     let msg = "";
 
     if (forceSync) {
-       msg = "Drop, "
+        msg = "Drop, "
     }
-    
+
     msg = msg + "Sync"
 
     if (argv.load) {
@@ -270,13 +271,25 @@ function syncAndLoadTables() {
             }
         }
     });
+
+    // Report
+    db.report.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+        console.log(yellow('Report'));
+        if (argv.load) {
+            let json = loadData('report.json');
+            if (json) {
+                db.report.bulkCreate(json)
+                console.log(green('Added ' + json.length + ' records to Report'));
+            }
+        }
+    });
 }
 
 function loadData(fileName) {
     const fs = require('fs');
     let dataFilePath = __dirname + '/test/' + fileName;
     let json = null;
- 
+
     try {
         if (fs.existsSync(dataFilePath)) {
             let data = fs.readFileSync(dataFilePath, 'utf8')
