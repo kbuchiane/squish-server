@@ -32,7 +32,7 @@ exports.likeClip = (req, res) => {
 
         let userId = user.UserId;
 
-        // Verify clip exists
+        // Verify clipId exists
         Clip.findOne({
             where: {
                 ClipId: clipId
@@ -45,8 +45,8 @@ exports.likeClip = (req, res) => {
 
             // Add new clip LIKE
             Like.create({
-                ClipId: clipId,
-                CommentId: null,
+                Type: 'Clip',
+                TypeId: clipId,
                 UserId: userId
             }).then(like => {
                 return res.status(200);
@@ -96,8 +96,8 @@ exports.likeComment = (req, res) => {
 
             // Add new comment LIKE
             Like.create({
-                ClipId: null,
-                CommentId: commentId,
+                Type: 'Comment',
+                TypeId: commentId,
                 UserId: userId
             }).then(like => {
                 return res.status(200);
@@ -165,6 +165,8 @@ exports.unlikeClip = (req, res) => {
         })
     })
 };
+
+// TODO probably can change to only have one unlike method
 
 exports.unlikeComment = (req, res) => {
     // User not needed for unliking but keep around for auditing purposes

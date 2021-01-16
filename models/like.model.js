@@ -5,10 +5,11 @@ module.exports = (sequelize, Sequelize) => {
             autoIncrement: true,
             primaryKey: true
         },
-        ClipId: {
-            type: Sequelize.BIGINT
+        Type: {
+            type: Sequelize.ENUM,
+            values: ['Clip', 'Comment', 'Impressive', 'Funny', 'Discussion']
         },
-        CommentId: {
+        TypeId: {
             type: Sequelize.BIGINT
         },
         UserId: {

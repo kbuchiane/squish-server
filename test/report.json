@@ -1,0 +1,6 @@
+[{
+    "ReportId":1, "ReporterId":2, "Reason": "Quality", "Text":"This frogger clip is blury", "DateCreated":"12/29/2020", "Resolved":0, "DateResolved": null,"ClipId":1, "CommentId": null
+},
+{
+    "ReportId":2, "ReporterId":1, "Reason": "Off-Topic", "Text":"Comment is totally unrelated", "DateCreated":"12/10/2020", "Resolved":0, "DateResolved": null,"ClipId": null, "CommentId": 1
+}]
