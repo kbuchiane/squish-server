@@ -4,6 +4,7 @@ const logger = require("../utils/logger");
 const User = db.user;
 const Clip = db.clip;
 const Comment = db.comment;
+const Op = db.Sequelize.Op;
 const moment = require("moment");
 
 exports.comments = (req, res) => {
@@ -24,7 +25,10 @@ exports.addComment = (req, res) => {
     // Get UserId of commenter
     User.findOne({
         where: {
-            Username: commenter
+            [Op.and]: [
+                { Username: commenter },
+                { Active: '1' }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -96,7 +100,10 @@ exports.deleteComment = (req, res) => {
     // Get UserId of commenter
     User.findOne({
         where: {
-            Username: commenter
+            [Op.and]: [
+                { Username: commenter },
+                { Active: '1' }
+            ]
         }
     }).then(user => {
         if (!user) {

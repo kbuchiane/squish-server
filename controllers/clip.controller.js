@@ -52,7 +52,10 @@ exports.postClip = (req, res) => {
 
     User.findOne({
         where: {
-            Username: username
+            [Op.and]: [
+                { Username: username },
+                { Active: '1' }
+            ]
         }
     }).then(user => {
         if (!user) {

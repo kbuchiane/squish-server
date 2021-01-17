@@ -5,6 +5,7 @@ const User = db.user;
 const Comment = db.comment;
 const Clip = db.clip;
 const Report = db.report;
+const Op = db.Sequelize.Op;
 const moment = require("moment");
 
 exports.reports = (req, res) => {
@@ -30,11 +31,14 @@ exports.reportClip = (req, res) => {
     // Get id of reporter
     User.findOne({
         where: {
-            Username: reporter
+            [Op.and]: [
+                { Username: reporter },
+                { Active: '1' }
+            ]
         }
     }).then(user => {
         if (!user) {
-            let msg = "Unable to add REPORT, user " + username + " was not found.";
+            let msg = "Unable to add REPORT, user " + reporter + " was not found.";
             return res.status(400).send({ message: msg });
         }
 
@@ -94,11 +98,14 @@ exports.reportComment = (req, res) => {
     // Get id of reporter
     User.findOne({
         where: {
-            Username: reporter
+            [Op.and]: [
+                { Username: reporter },
+                { Active: '1' }
+            ]
         }
     }).then(user => {
         if (!user) {
-            let msg = "Unable to add REPORT, user " + username + " was not found.";
+            let msg = "Unable to add REPORT, user " + reporter + " was not found.";
             return res.status(400).send({ message: msg });
         }
 
