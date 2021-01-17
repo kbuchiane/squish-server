@@ -19,6 +19,7 @@ const commentsRouter = require("./routes/comments.route");
 const likesRouter = require("./routes/likes.route");
 const followsRouter = require("./routes/follows.route");
 const postClipRouter = require("./routes/clip.route");
+const reportsRouter = require("./routes/reports.route");
 
 const app = express();
 
@@ -76,6 +77,7 @@ app.use("/comments", cors(corsOptions), commentsRouter);
 app.use("/likes", cors(corsOptions), likesRouter);
 app.use("/follows", cors(corsOptions), followsRouter);
 app.use("/clip", cors(corsOptions), postClipRouter);
+app.use("/reports", cors(corsOptions), reportsRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
