@@ -1,12 +1,16 @@
+const { v4: uuidv4 } = require("uuid");
+
 module.exports = (sequelize, Sequelize) => {
     const Comment = sequelize.define('Comment', {
         CommentId: {
-            type: Sequelize.BIGINT,
-            autoIncrement: true,
+            type: Sequelize.UUID,
+            defaultValue: Sequelize.UUIDV4,
+            allowNull: false,
+            unique: true,
             primaryKey: true
         },
         UserId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         Text: {
             type: Sequelize.TEXT('medium')
@@ -15,16 +19,15 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.DATE
         },
         ClipId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         ParentCommentId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         }
     }, {
         timestamps: false,
         underscored: false,
         freezeTableName: true
-
     });
 
     return Comment;

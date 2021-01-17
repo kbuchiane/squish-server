@@ -1,15 +1,19 @@
+const { v4: uuidv4 } = require("uuid");
+
 module.exports = (sequelize, Sequelize) => {
     const UserFollowing = sequelize.define("UserFollowing", {
         UserFollowingId: {
-            type: Sequelize.BIGINT,
-            autoIncrement: true,
+            type: Sequelize.UUID,
+            defaultValue: Sequelize.UUIDV4,
+            allowNull: false,
+            unique: true,
             primaryKey: true
         },
         FollowerUserId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         FollowedUserId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         DateFollowed: {
             type: Sequelize.STRING

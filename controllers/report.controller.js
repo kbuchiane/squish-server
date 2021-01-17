@@ -34,7 +34,7 @@ exports.reportClip = (req, res) => {
         }
     }).then(user => {
         if (!user) {
-            let msg = "Unable to add REPORT, user " + username + " was not found.";
+            let msg = "Unable to add REPORT, user " + reporter + " was not found.";
             return res.status(400).send({ message: msg });
         }
 
@@ -47,7 +47,7 @@ exports.reportClip = (req, res) => {
             }
         }).then(clip => {
             if (!clip) {
-                let msg = "Unable to add REPORT, clip was not found.";
+                let msg = "Unable to add REPORT, clip was not found.";               
                 return res.status(400).send({ message: msg });
             }
 
@@ -98,7 +98,7 @@ exports.reportComment = (req, res) => {
         }
     }).then(user => {
         if (!user) {
-            let msg = "Unable to add REPORT, user " + username + " was not found.";
+            let msg = "Unable to add REPORT, user " + reporter + " was not found.";
             return res.status(400).send({ message: msg });
         }
 

@@ -1,8 +1,12 @@
+const { v4: uuidv4 } = require("uuid");
+
 module.exports = (sequelize, Sequelize) => {
     const Like = sequelize.define('Like', {
         LikeId: {
-            type: Sequelize.BIGINT,
-            autoIncrement: true,
+            type: Sequelize.UUID,
+            defaultValue: Sequelize.UUIDV4,
+            allowNull: false,
+            unique: true,
             primaryKey: true
         },
         Type: {
@@ -10,19 +14,18 @@ module.exports = (sequelize, Sequelize) => {
             values: ['Like', 'Impressive', 'Funny', 'Discussion']
         },
         ClipId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         CommentId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         UserId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         }
     }, {
         timestamps: false,
         underscored: false,
         freezeTableName: true
-
     });
 
     return Like;
