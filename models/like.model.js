@@ -7,9 +7,12 @@ module.exports = (sequelize, Sequelize) => {
         },
         Type: {
             type: Sequelize.ENUM,
-            values: ['Clip', 'Comment', 'Impressive', 'Funny', 'Discussion']
+            values: ['Like', 'Impressive', 'Funny', 'Discussion']
         },
-        TypeId: {
+        ClipId: {
+            type: Sequelize.BIGINT
+        },
+        CommentId: {
             type: Sequelize.BIGINT
         },
         UserId: {

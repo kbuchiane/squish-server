@@ -12,10 +12,16 @@ exports.likes = (req, res) => {
 
 exports.likeClip = (req, res) => {
     let liker = req.body.username;
+    let type = req.body.type;
     let clipId = req.body.clipId;
 
-    if (!liker || !clipId) {
+    if (!liker || !type || !clipId) {
         let msg = "Invalid LIKE request.  Please try again.";
+        return res.status(400).send({ message: msg });
+    }
+
+    if (!checkType(type)) {
+        let msg = "Invalid LIKE type.  Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -45,8 +51,9 @@ exports.likeClip = (req, res) => {
 
             // Add new clip LIKE
             Like.create({
-                Type: 'Clip',
-                TypeId: clipId,
+                Type: type,
+                ClipId: clipId,
+                CommentId: null,
                 UserId: userId
             }).then(like => {
                 return res.status(200);
@@ -63,13 +70,19 @@ exports.likeClip = (req, res) => {
 
 exports.likeComment = (req, res) => {
     let liker = req.body.username;
+    let type = req.body.type;
     let commentId = req.body.commentId;
 
-    if (!liker || !commentId) {
+    if (!liker || !type || !commentId) {
         let msg = "Invalid LIKE request.  Please try again.";
         return res.status(400).send({ message: msg });
     }
-    
+
+    if (!checkType(type)) {
+        let msg = "Invalid LIKE type.  Please try again.";
+        return res.status(400).send({ message: msg });
+    }
+
     // Get id of liker
     User.findOne({
         where: {
@@ -96,8 +109,9 @@ exports.likeComment = (req, res) => {
 
             // Add new comment LIKE
             Like.create({
-                Type: 'Comment',
-                TypeId: commentId,
+                Type: type,
+                ClipId: null,
+                CommentId: commentId,
                 UserId: userId
             }).then(like => {
                 return res.status(200);
@@ -166,8 +180,6 @@ exports.unlikeClip = (req, res) => {
     })
 };
 
-// TODO probably can change to only have one unlike method
-
 exports.unlikeComment = (req, res) => {
     // User not needed for unliking but keep around for auditing purposes
     let unliker = req.body.username;
@@ -221,3 +233,14 @@ exports.unlikeComment = (req, res) => {
         })
     })
 };
+
+function checkType(type) {
+    let found = false;
+    Like.rawAttributes.Type.values.forEach(element => {
+        if (type == element) {
+            found = true;
+        }
+    });
+
+    return found;
+}
