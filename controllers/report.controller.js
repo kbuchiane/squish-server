@@ -33,7 +33,7 @@ exports.reportClip = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: reporter },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {
@@ -100,7 +100,7 @@ exports.reportComment = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: reporter },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {

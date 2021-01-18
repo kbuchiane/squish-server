@@ -54,7 +54,7 @@ exports.postClip = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: username },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {

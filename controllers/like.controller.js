@@ -31,7 +31,7 @@ exports.likeClip = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: liker },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {
@@ -92,7 +92,7 @@ exports.likeComment = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: liker },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {
@@ -148,7 +148,7 @@ exports.unlikeClip = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: unliker },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {
@@ -205,7 +205,7 @@ exports.unlikeComment = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: unliker },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {

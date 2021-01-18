@@ -27,7 +27,7 @@ exports.addComment = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: commenter },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {
@@ -102,7 +102,7 @@ exports.deleteComment = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: commenter },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {

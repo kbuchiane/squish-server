@@ -25,7 +25,7 @@ exports.followUser = (req, res) => {
             where: {
                 [Op.and]: [
                     { Username: followerUsername },
-                    { Active: '1' }
+                    { Active: true }
                 ]
             }
         }).then(user => {
@@ -98,7 +98,7 @@ exports.followGame = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: followerUsername },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {
@@ -171,7 +171,7 @@ exports.unfollowGame = (req, res) => {
      where: {
                 [Op.and]: [
                     { Username: followerUsername },
-                    { Active: '1' }
+                    { Active: true }
                 ]
             }
     }).then(user => {
@@ -230,7 +230,7 @@ exports.unfollowUser = (req, res) => {
         where: {
             [Op.and]: [
                 { Username: followerUsername },
-                { Active: '1' }
+                { Active: true }
             ]
         }
     }).then(user => {
