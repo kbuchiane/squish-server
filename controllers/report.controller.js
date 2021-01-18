@@ -5,6 +5,7 @@ const User = db.user;
 const Comment = db.comment;
 const Clip = db.clip;
 const Report = db.report;
+const Op = db.Sequelize.Op;
 const moment = require("moment");
 
 exports.reports = (req, res) => {
@@ -30,7 +31,10 @@ exports.reportClip = (req, res) => {
     // Get id of reporter
     User.findOne({
         where: {
-            Username: reporter
+            [Op.and]: [
+                { Username: reporter },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -94,7 +98,10 @@ exports.reportComment = (req, res) => {
     // Get id of reporter
     User.findOne({
         where: {
-            Username: reporter
+            [Op.and]: [
+                { Username: reporter },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {

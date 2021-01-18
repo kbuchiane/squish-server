@@ -23,7 +23,10 @@ exports.followUser = (req, res) => {
     } else {
         User.findOne({
             where: {
-                Username: followerUsername
+                [Op.and]: [
+                    { Username: followerUsername },
+                    { Active: true }
+                ]
             }
         }).then(user => {
             if (!user) {
@@ -93,7 +96,10 @@ exports.followGame = (req, res) => {
 
     User.findOne({
         where: {
-            Username: followerUsername
+            [Op.and]: [
+                { Username: followerUsername },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -162,9 +168,12 @@ exports.unfollowGame = (req, res) => {
     }
 
     User.findOne({
-        where: {
-            Username: followerUsername
-        }
+     where: {
+                [Op.and]: [
+                    { Username: followerUsername },
+                    { Active: true }
+                ]
+            }
     }).then(user => {
         if (!user) {
             let msg = "User " + followerUsername + " is unknown.  Please try again.";
@@ -219,7 +228,10 @@ exports.unfollowUser = (req, res) => {
 
     User.findOne({
         where: {
-            Username: followerUsername
+            [Op.and]: [
+                { Username: followerUsername },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {

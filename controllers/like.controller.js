@@ -5,6 +5,7 @@ const User = db.user;
 const Comment = db.comment;
 const Clip = db.clip;
 const Like = db.like;
+const Op = db.Sequelize.Op;
 
 exports.likes = (req, res) => {
     return res.status(200);
@@ -28,7 +29,10 @@ exports.likeClip = (req, res) => {
     // Get id of liker
     User.findOne({
         where: {
-            Username: liker
+            [Op.and]: [
+                { Username: liker },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -86,7 +90,10 @@ exports.likeComment = (req, res) => {
     // Get id of liker
     User.findOne({
         where: {
-            Username: liker
+            [Op.and]: [
+                { Username: liker },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -139,7 +146,10 @@ exports.unlikeClip = (req, res) => {
     // Get id of unliker
     User.findOne({
         where: {
-            Username: unliker
+            [Op.and]: [
+                { Username: unliker },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -193,7 +203,10 @@ exports.unlikeComment = (req, res) => {
     // Get id of unliker
     User.findOne({
         where: {
-            Username: unliker
+            [Op.and]: [
+                { Username: unliker },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
