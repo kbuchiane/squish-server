@@ -1,8 +1,8 @@
 [
     {
-        "GameFollowingId":1, "GameFollowerUserId":1, "FollowedGameId":2, "DateGameFollowed":"01/05/2021"
+        "GameFollowerUserId":1, "FollowedGameId":2, "DateGameFollowed":"01/05/2021"
     },
     {
-        "GameFollowingId":2, "GameFollowerUserId":2, "FollowedGameId":1, "DateGameFollowed":"01/10/2021"
+        "GameFollowerUserId":2, "FollowedGameId":1, "DateGameFollowed":"01/10/2021"
     }
 ]

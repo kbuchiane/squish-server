@@ -1,8 +1,8 @@
 [
     {
-        "UserFollowingId":2, "FollowerUserId": 3, "FollowedUserId":1, "DateFollowed": "01/13/2021"
+        "FollowerUserId": 3, "FollowedUserId":1, "DateFollowed": "01/13/2021"
     },
     {
-        "UserFollowingId":1, "FollowerUserId": 2, "FollowedUserId":2, "DateFollowed": "01/12/2021"
+        "FollowerUserId": 2, "FollowedUserId":2, "DateFollowed": "01/12/2021"
     }
 ]

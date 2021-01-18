@@ -1,12 +1,16 @@
+const { v4: uuidv4 } = require("uuid");
+
 module.exports = (sequelize, Sequelize) => {
     const Report = sequelize.define('Report', {
         ReportId: {
-            type: Sequelize.BIGINT,
-            autoIncrement: true,
+            type: Sequelize.UUID,
+            defaultValue: Sequelize.UUIDV4,
+            allowNull: false,
+            unique: true,
             primaryKey: true
         },
         ReporterId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         Reason: {
             type: Sequelize.ENUM,
@@ -25,16 +29,15 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.DATE
         },
         ClipId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         CommentId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         }
     }, {
         timestamps: false,
         underscored: false,
         freezeTableName: true
-
     });
 
     return Report;
