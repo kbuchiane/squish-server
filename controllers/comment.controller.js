@@ -18,7 +18,7 @@ exports.addComment = (req, res) => {
     let parentCommentId = req.body.parentCommentId;
 
     if (!commenter || !clipId || !text) {
-        let msg = "Invalid request to comment on clip.  Please try again.";
+        let msg = "Invalid request to comment on clip. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -93,7 +93,7 @@ exports.deleteComment = (req, res) => {
     let commentId = req.body.commentId;
 
     if (!commenter || !commentId) {
-        let msg = "Unable to delete comment.  Please try again.";
+        let msg = "Unable to delete comment. Please try again.";
         return res.status(400).send({ message: msg });
     }
 

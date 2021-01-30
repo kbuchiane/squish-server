@@ -19,12 +19,12 @@ exports.reportClip = (req, res) => {
     let text = req.body.text;
 
     if (!reporter || !clipId || !reason || !text) {
-        let msg = "Invalid REPORT request.  Please try again.";
+        let msg = "Invalid REPORT request. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
     if (!checkReason(reason)) {
-        let msg = "Invalid REPORT reason.  Please try again.";
+        let msg = "Invalid REPORT reason. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -51,7 +51,7 @@ exports.reportClip = (req, res) => {
             }
         }).then(clip => {
             if (!clip) {
-                let msg = "Unable to add REPORT, clip was not found.";               
+                let msg = "Unable to add REPORT, clip was not found.";
                 return res.status(400).send({ message: msg });
             }
 
@@ -86,12 +86,12 @@ exports.reportComment = (req, res) => {
     let text = req.body.text;
 
     if (!reporter || !commentId || !reason || !text) {
-        let msg = "Invalid REPORT request.  Please try again.";
+        let msg = "Invalid REPORT request. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
     if (!checkReason(reason)) {
-        let msg = "Invalid REPORT reason.  Please try again.";
+        let msg = "Invalid REPORT reason. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
