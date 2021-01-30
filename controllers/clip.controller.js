@@ -89,45 +89,45 @@ exports.postClip = (req, res) => {
                     VideoFilepath: videoFilePath,
                     ThumbnailFilepath: thumbnailFilePath
                 },
-                {
-                    where: {
-                        ClipId: clipId
-                    }
-                }).then(clip => {
-                    let relativeClipPath = "./clips/" + videoFilePath;
-                    let relativeThumbnailPath = "./clips/" + thumbnailFilePath;
+                    {
+                        where: {
+                            ClipId: clipId
+                        }
+                    }).then(clip => {
+                        let relativeClipPath = "./clips/" + videoFilePath;
+                        let relativeThumbnailPath = "./clips/" + thumbnailFilePath;
 
-                    fs.stat("./clips/" + username, function(error, stats) {
-                        if(stats == null) {
-                            fs.mkdir("./clips/" + username, error => {
-                                if(error) {
+                        fs.stat("./clips/" + username, function (error, stats) {
+                            if (stats == null) {
+                                fs.mkdir("./clips/" + username, error => {
+                                    if (error) {
+                                        logger.error(error);
+                                        throw (error);
+                                    }
+                                });
+                            }
+                            fs.copyFile("../squish-client/src/assets/videos/snipe1.mp4", relativeClipPath, error => {
+                                if (error) {
                                     logger.error(error);
-                                    throw(error);
+                                    throw (error);
                                 }
                             });
-                        }
-                        fs.copyFile("../squish-client/src/assets/videos/snipe1.mp4", relativeClipPath, error => {
-                            if(error) {
-                                logger.error(error);
-                                throw(error); 
-                            }
+                            fs.copyFile("../squish-client/src/assets/images/snipe1poster.png", relativeThumbnailPath, error => {
+                                if (error) {
+                                    logger.error(error);
+                                    throw (error);
+                                }
+                            });
+                        })
+
+                        return res.status(200).send();
+                    }).catch(err => {
+                        let msg = "Add clip error, " + err.message;
+                        logger.error(msg);
+                        return res.status(400).send({
+                            message: msg
                         });
-                        fs.copyFile("../squish-client/src/assets/images/snipe1poster.png", relativeThumbnailPath, error => {
-                            if(error) {
-                                logger.error(error);
-                                throw(error); 
-                            }
-                        });  
-                    })
-                                          
-                    return res.status(200).send();
-                }).catch(err => {
-                    let msg = "Add clip error, " + err.message;
-                    logger.error(msg);
-                    return res.status(400).send({
-                        message: msg
                     });
-                });
 
                 return res.status(200);
             }).catch(err => {
@@ -161,7 +161,7 @@ exports.deleteClip = (req, res) => {
             return res.status(400).send({ message: msg });
         }
         if (!clip.ClipId) {
-            let msg = "Invalid delete request.  Please try again.";
+            let msg = "Invalid delete request. Please try again.";
             return res.status(400).send({ message: msg });
         }
         Clip.destroy({
@@ -169,21 +169,21 @@ exports.deleteClip = (req, res) => {
                 ClipId: clipId
             }
         }).then(clip => {
-            fs.stat("./clips/" + username + "/" + clipId, function(error, stats) {
-                if(stats != null) {
+            fs.stat("./clips/" + username + "/" + clipId, function (error, stats) {
+                if (stats != null) {
                     fs.unlink("./clips/" + username + "/" + clipId, error => {
-                        if(error) {
+                        if (error) {
                             logger.error("Failed to delete clip from local disk");
                         }
                     });
                 }
             });
-            fs.stat("./clips/" + username + "/" + clipId + "-thumbnail", function(error, stats) {
+            fs.stat("./clips/" + username + "/" + clipId + "-thumbnail", function (error, stats) {
                 console.log("thumnail exists");
-                if(stats != null) {
+                if (stats != null) {
                     fs.unlink("./clips/" + username + "/" + clipId + "-thumbnail", error => {
                         console.log("thumbnail deleted");
-                        if(error) {
+                        if (error) {
                             logger.error("Failed to delete thumbnail from local disk");
                         }
                     });
