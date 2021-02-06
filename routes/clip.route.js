@@ -20,4 +20,12 @@ router.post("/deleteClip",
     clipController.deleteClip
 );
 
+router.get("/getClip",
+    [
+        verifyCredentials.checkCredentials,
+        auth.verifyToken
+    ],
+    clipController.getClip
+);
+
 module.exports = router;

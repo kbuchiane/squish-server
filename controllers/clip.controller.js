@@ -1,6 +1,7 @@
 const db = require("../models");
 const logger = require("../utils/logger");
 const fs = require("fs");
+const moment = require("moment");
 
 const User = db.user;
 const Clip = db.clip;
@@ -89,45 +90,45 @@ exports.postClip = (req, res) => {
                     VideoFilepath: videoFilePath,
                     ThumbnailFilepath: thumbnailFilePath
                 },
-                {
-                    where: {
-                        ClipId: clipId
-                    }
-                }).then(clip => {
-                    let relativeClipPath = "./clips/" + videoFilePath;
-                    let relativeThumbnailPath = "./clips/" + thumbnailFilePath;
+                    {
+                        where: {
+                            ClipId: clipId
+                        }
+                    }).then(clip => {
+                        let relativeClipPath = "./clips/" + videoFilePath;
+                        let relativeThumbnailPath = "./clips/" + thumbnailFilePath;
 
-                    fs.stat("./clips/" + username, function(error, stats) {
-                        if(stats == null) {
-                            fs.mkdir("./clips/" + username, error => {
-                                if(error) {
+                        fs.stat("./clips/" + username, function (error, stats) {
+                            if (stats == null) {
+                                fs.mkdir("./clips/" + username, error => {
+                                    if (error) {
+                                        logger.error(error);
+                                        throw (error);
+                                    }
+                                });
+                            }
+                            fs.copyFile("../squish-client/src/assets/videos/snipe1.mp4", relativeClipPath, error => {
+                                if (error) {
                                     logger.error(error);
-                                    throw(error);
+                                    throw (error);
                                 }
                             });
-                        }
-                        fs.copyFile("../squish-client/src/assets/videos/snipe1.mp4", relativeClipPath, error => {
-                            if(error) {
-                                logger.error(error);
-                                throw(error); 
-                            }
+                            fs.copyFile("../squish-client/src/assets/images/snipe1poster.png", relativeThumbnailPath, error => {
+                                if (error) {
+                                    logger.error(error);
+                                    throw (error);
+                                }
+                            });
+                        })
+
+                        return res.status(200).send();
+                    }).catch(err => {
+                        let msg = "Add clip error, " + err.message;
+                        logger.error(msg);
+                        return res.status(400).send({
+                            message: msg
                         });
-                        fs.copyFile("../squish-client/src/assets/images/snipe1poster.png", relativeThumbnailPath, error => {
-                            if(error) {
-                                logger.error(error);
-                                throw(error); 
-                            }
-                        });  
-                    })
-                                          
-                    return res.status(200).send();
-                }).catch(err => {
-                    let msg = "Add clip error, " + err.message;
-                    logger.error(msg);
-                    return res.status(400).send({
-                        message: msg
                     });
-                });
 
                 return res.status(200);
             }).catch(err => {
@@ -169,21 +170,21 @@ exports.deleteClip = (req, res) => {
                 ClipId: clipId
             }
         }).then(clip => {
-            fs.stat("./clips/" + username + "/" + clipId, function(error, stats) {
-                if(stats != null) {
+            fs.stat("./clips/" + username + "/" + clipId, function (error, stats) {
+                if (stats != null) {
                     fs.unlink("./clips/" + username + "/" + clipId, error => {
-                        if(error) {
+                        if (error) {
                             logger.error("Failed to delete clip from local disk");
                         }
                     });
                 }
             });
-            fs.stat("./clips/" + username + "/" + clipId + "-thumbnail", function(error, stats) {
+            fs.stat("./clips/" + username + "/" + clipId + "-thumbnail", function (error, stats) {
                 console.log("thumnail exists");
-                if(stats != null) {
+                if (stats != null) {
                     fs.unlink("./clips/" + username + "/" + clipId + "-thumbnail", error => {
                         console.log("thumbnail deleted");
-                        if(error) {
+                        if (error) {
                             logger.error("Failed to delete thumbnail from local disk");
                         }
                     });
@@ -196,6 +197,124 @@ exports.deleteClip = (req, res) => {
             return res.status(500).send({
                 message: msg
             });
+        });
+    });
+}
+
+exports.getClip = (req, res) => {
+    let clipId = req.query.clipId;
+
+    if (!clipId) {
+        let msg = "Unable to get clip, ID is undefined.";
+        return res.status(400).send({ message: msg });
+    }
+
+    Clip.findOne({
+        where: {
+            ClipId: clipId
+        }
+    }).then(clip => {
+        if (!clip) {
+            let msg = "Clip was not found.";
+            return res.status(400).send({ message: msg });
+        }
+
+        // Prepare output in JSON format
+        response = {
+            PosterUserId: clip.PosterUserId,
+            VideoFilepath: clip.VideoFilepath,
+            Title: clip.Title,
+            GameId: clip.GameId,
+            Duration: clip.Duration,
+            DateCreated: clip.DateCreated,
+            ThumbnailFilepath: clip.ThumbnailFilepath,
+            ViewCount: clip.ViewCount
+        };
+        res.status(200).end(JSON.stringify(response));
+    });
+}
+
+// Generates data for browseGames page
+exports.browseGamesPage = (req, res, next) => {
+    let readOnlyView = req.readOnlyView;
+    let username = req.query.username;
+    let useCache = req.useCache;
+
+    console.log("** Step 8 ** clip.controller.browseGamesPage user  [" + username + "]  useCache [" + useCache + "]  readOnly [" + readOnlyView + "]");
+
+    if (useCache) {
+        next();
+        return;
+    }
+
+    // Previously generated results from previous steps
+    let results = req.results;
+
+    (async function loop() {
+        for (let i = 0; i < results.length; i++) {
+            await new Promise(resolve => {
+                let gameId = results[i].GameId;
+
+                getClipsTodayAndAllTimeCount(gameId).then(clipTodayAndAllTimeCount => {
+                    let counts = clipTodayAndAllTimeCount.split(":");
+                    let clipsTodayCount = counts[0];
+                    let clipsAllTimeCount = counts[1];
+
+                    results[i].ClipsTodayCount = clipsTodayCount;
+                    results[i].ClipsAllTimeCount = clipsAllTimeCount;
+
+                    resolve();
+                }).catch(err => {
+                    let msg = "Failed to find today and all-time clip count for game " + gameId + ", " + err.message;
+                    logger.warn(msg);
+                    reject(msg);
+                });
+            });
+        }
+
+        next();
+    })();
+}
+
+// Returns game clips for today and for all-time
+function getClipsTodayAndAllTimeCount(gameId) {
+    var todayAndAllTimeCount = '0:0';
+
+    return new Promise(function (resolve, reject) {
+        if (!gameId) {
+            let msg = "Unable to get clip today count, gameId is null.";
+            logger.warn(msg);
+            reject(msg);
+        }
+
+        // TODO may make sense to make a new table with all the different totals
+
+        Clip.findAll({
+            where: {
+                GameId: gameId
+            }
+        }).then(clips => {
+            if (clips) {
+                // Loop thru games to determine those from today (no adjustment for GMT)
+                let today = moment(Date.now()).format("YYYY-MM-DD");
+                let allTimeCount = clips.length;
+                let todayCount = 0;
+
+                clips.forEach(clip => {
+                    let dateCreated = moment(clip.DateCreated).format("YYYY-MM-DD");
+                    if (dateCreated === today) {
+                        todayCount = todayCount + 1;
+                    }
+                });
+
+                todayAndAllTimeCount = todayCount + ":" + allTimeCount;
+            }
+
+            resolve(todayAndAllTimeCount);
+        }).catch(err => {
+            let msg = "Search for clips today count failed, " + err.message;
+            logger.error(msg);
+            reject(msg);
         });
     });
 }

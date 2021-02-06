@@ -1,8 +1,8 @@
 [
     {
-        "Title":"Frogger", "IconFilepath": "/home/games/frogger.icon"
+        "Title":"Frogger", "IconFilepath": "Froggercover.png", "ReleaseDate": "Late 1997", "Tags": ["Classic", "Boomer"]
     },
     {
-        "Title":"AstroFire", "IconFilepath":"/home/games/astrofire.icon"
+        "Title":"AstroFire", "IconFilepath":"astrofire.png", "ReleaseDate": "May 1994", "Tags": ["Ancient", "Classic"]
     }
 ]

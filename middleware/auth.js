@@ -4,8 +4,16 @@ const logger = require("../utils/logger");
 
 verifyToken = (req, res, next) => {
     let token = req.jwt;
+    let readOnlyView = req.readOnlyView;
 
     if (!token) {
+
+        // Allow for pages to be viewed without login
+        if (readOnlyView) {
+            next();
+            return;
+        }
+
         return res.status(403).send({
             message: "No token provided for request"
         });
