@@ -357,6 +357,42 @@ exports.confirmUser = (req, res) => {
                             message: "There was an issue activating your account, please try again later"
                         });
                     } else {
+                        let username = user.dataValues.Username;
+                        let email = user.dataValues.Email;
+                        User.findAll({
+                            where: {
+                                [Op.and]: [
+                                    { Username: username },
+                                    { Active: false }
+                                ]
+                            }
+                        }).then(users => {
+                            for(i in users) {
+                                userToRemove = users[i];
+                                User.destroy({
+                                    where: {
+                                        UserId: userToRemove.UserId
+                                    }
+                                });
+                            }
+                        });
+                        User.findAll({
+                            where: {
+                                [Op.and]: [
+                                    { Email: email },
+                                    { Active: false }
+                                ]
+                            }
+                        }).then(users => {
+                            for(x in users) {
+                                userToRemove = users[i];
+                                User.destroy({
+                                    where: {
+                                        Email: email
+                                    }
+                                });
+                            }
+                        });
                         let accessToken = jwt.sign(
                             { id: user.UserId },
                             authConfig.AUTH_SECRET,
