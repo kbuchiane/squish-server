@@ -1,14 +1,18 @@
 var start = null;
 
-// Generates data for browseGames page
-exports.browseGamesPage1 = (req, res, next) => {
+// Generates data for browse page
+exports.profilePageStart = (req, res, next) => {
     let username = req.query.username;
+    let profileName = req.query.profileName;
     let readOnlyView = false;
     let url = req.originalUrl || req.url;
 
+    // Required for future workflow step getGamesFollowedByUser
+    req.query.username = req.query.profileName;
+
     start = new Date();
 
-    // console.info("Request BrowseGames [" + url + "]");
+    //  console.info("Request Profile [" + url + "]");
 
     if (!username) {
         // Allows for display only - no JWT token
@@ -21,9 +25,10 @@ exports.browseGamesPage1 = (req, res, next) => {
     return;
 }
 
-// Generates data for browseGames page
-exports.browseGamesPage2 = (req, res) => {
+// Generates data for profile page
+exports.profilePageComplete = (req, res) => {
     let username = req.query.username;
+    let profileName = req.query.profileName;
     let useCache = req.useCache;
     let results = req.results;
     let json = JSON.stringify(results);
@@ -32,5 +37,5 @@ exports.browseGamesPage2 = (req, res) => {
 
     let end = (new Date() - start) / 1000;
 
-    console.info('Request completed %ds  UsedCache: %s  Page: BrowseGames', end, useCache);
+    console.info('Request completed %ds  UsedCache: %s  Page: Profile', end, useCache);
 }

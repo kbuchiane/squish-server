@@ -168,12 +168,12 @@ exports.unfollowGame = (req, res) => {
     }
 
     User.findOne({
-     where: {
-                [Op.and]: [
-                    { Username: followerUsername },
-                    { Active: true }
-                ]
-            }
+        where: {
+            [Op.and]: [
+                { Username: followerUsername },
+                { Active: true }
+            ]
+        }
     }).then(user => {
         if (!user) {
             let msg = "User " + followerUsername + " is unknown.  Please try again.";
@@ -276,14 +276,12 @@ exports.unfollowUser = (req, res) => {
     })
 };
 
-// Generates data for browseGames page
-exports.browseGamesPage1 = (req, res, next) => {
+// Generates data for Browse, BrowseGames, and Profile pages
+exports.getGamesFollowedByUser = (req, res, next) => {
     let readOnlyView = req.readOnlyView;
     let username = req.query.username;
     let results = [];
     let useCache = req.useCache;
-
-    console.log("** Step 6 ** follow.controller.browseGamesPage1  user [" + username + "]  useCache [" + useCache + "]  readOnly [" + readOnlyView + "]");
 
     if (useCache) {
         next();
@@ -296,7 +294,7 @@ exports.browseGamesPage1 = (req, res, next) => {
         return;
     }
 
-    // Previously generated results from previous steps
+    // Get results from previous steps
     results = req.results;
 
     // Get list of gameIds that this user follows
@@ -319,13 +317,12 @@ exports.browseGamesPage1 = (req, res, next) => {
     });
 }
 
-// Generates data for browseGames page
-exports.browseGamesPage2 = (req, res, next) => {
+
+// Generates data for Browse, BrowseGames, and Profile pages
+exports.getGameFollowerCount = (req, res, next) => {
     let readOnlyView = req.readOnlyView;
     let username = req.query.username;
     let useCache = req.useCache;
-
-    console.log("** Step 7 ** follow.controller.browseGamesPage2 user [" + username + "]  useCache [" + useCache + "]  readOnly [" + readOnlyView + "]");
 
     if (useCache) {
         next();
@@ -352,6 +349,7 @@ exports.browseGamesPage2 = (req, res, next) => {
 
     next();
 }
+
 
 // Returns a list of FollowedGameId's  (TODO: change to GameId)
 function getGamesFollowedByUser(username) {

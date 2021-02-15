@@ -1,7 +1,10 @@
-const NodeCache = require( "node-cache" );
+const NodeCache = require("node-cache");
 const logger = require("../utils/logger");
 
-const myCache = new NodeCache( { stdTTL: 100, checkperiod: 120 } );
+// TODO:
+// add method to display metrics
+// verify there isn't a memory leak
+const myCache = new NodeCache({ stdTTL: 100, checkperiod: 120 });
 
 // Determine if cached response is to be used
 check = (req, res, next) => {
@@ -10,14 +13,11 @@ check = (req, res, next) => {
     let useCache = true;
     let hasKey = myCache.has(key);
 
-    if (!hasKey)
-    {
+    if (!hasKey) {
         useCache = false;
     }
 
-    req.useCache = useCache;  
-    
-    console.log("** Step 3 **  CHECK if we should use cache,   user [" + username + "] [" + useCache + "]");
+    req.useCache = useCache;
 
     next();
 };
@@ -39,8 +39,6 @@ get = (req, res, next) => {
             req.results = value;
         }
     }
-    
-    console.log("** Step 4 **   GET  [" + username + "] [" + useCache + "] [" + key + "]");
 
     next();
 };
@@ -53,14 +51,12 @@ set = (req, res, next) => {
     let key = 'squish' + req.originalUrl || req.url;
     let results = req.results;
 
-    if (useCache) {
-        // Already used cache results, no need to save again
-        console.log("** Step 9 **  SET  Already using Cache Results, no SAVE  [" + username + "] [" + key + "]");
-    }
-    else {
-        let success = myCache.set( key, results, 180 ); // TTL 3 mins
-    
-        console.log("** Step 9 **  SET  Cache Results  [" + username + "] [" + key + "]  success:" + success);
+    if (!useCache) {
+        let success = myCache.set(key, results, 180); // TTL 3 mins
+
+        if (!success) {
+            logger.error("Failed to cache results, user [" + username + "]  key [" + key + "]");
+        }
     }
 
     next();

@@ -43,9 +43,9 @@ exports.addGame = (req, res) => {
         if (tag.length > 20) {
             let msg = "Game tags must be 20 characters or less";
             return res.status(400).send({ message: msg });
-        }     
+        }
     });
-    
+
     console.log("addGame  " + title + "  " + iconFilepath + "  " + username);
 
     User.findOne({
@@ -139,7 +139,7 @@ exports.deleteGame = (req, res) => {
 exports.getGame = (req, res) => {
     var url = req.protocol + '://' + req.get('host') + req.originalUrl;
     console.log("URL: " + url);
- 
+
     let gameId = req.query.gameId;
 
     if (!gameId) {
@@ -165,17 +165,11 @@ exports.getGame = (req, res) => {
             IconFilepath: game.IconFilepath,
             ReleaseDate: game.ReleaseDate,
             Tags: game.Tags
-        }; 
+        };
 
         result.push(response);
 
         let json = JSON.stringify(result);
-
-        // TODO remove debug
-        console.log(result);
-        console.log(json);
-        console.log("Is JSON? " + isJson(json));
-
         res.status(200).end(json);
     });
 }
@@ -188,11 +182,6 @@ exports.getGames = (req, res) => {
         }
 
         let json = JSON.stringify(games);
-
-        // TODO remove debug
-        console.log(games);
-        console.log(json);
-        console.log("Is JSON? " + isJson(json));
         res.status(200).end(json);
 
     }).catch(err => {
@@ -203,14 +192,62 @@ exports.getGames = (req, res) => {
     });
 }
 
+// Generates data for Browse, BrowseGames, and Profile pages
+exports.getGameData = (req, res, next) => {
+    let readOnlyView = req.readOnlyView;
+    let username = req.query.username;
+    let useCache = req.useCache;
+
+    if (useCache) {
+        next();
+        return;
+    }
+
+    // Previously generated results from previous steps
+    let results = req.results;
+
+    (async function loop() {
+        for (let i = 0; i < results.length; i++) {
+            await new Promise(resolve => {
+                let gameId = results[i].GameId;
+
+                getGame(gameId).then(game => {
+
+                    let response = {
+                        GameId: game.GameId,
+                        Title: game.Title,
+                        IconFilepath: game.IconFilepath,
+                        ReleaseDate: game.ReleaseDate,
+                        Tags: game.Tags,
+
+                        // Set to default values - will be updated later in the workflow
+                        Followed: false,
+                        FollowerCount: "0",
+                        ClipsTodayCount: "0",
+                        ClipsAllTimeCount: "0"
+                    };
+
+                    results[i].Game = response;
+
+                    resolve();
+                }).catch(err => {
+                    let msg = "Failed to find game for id " + gameId + ", " + err.message;
+                    logger.warn(msg);
+                    //     reject(msg);
+                });
+            });
+        }
+
+        next();
+    })();
+}
+
 // Generates data for browseGames page
 exports.browseGamesPage = (req, res, next) => {
     let readOnlyView = req.readOnlyView;
     let username = req.query.username;
     let useCache = req.useCache;
     let results = [];
-
-    console.log("** Step 5 ** games.controller.browseGamesPage user [" + username + "]  useCache [" + useCache + "]  readOnly [" + readOnlyView + "]"); 
 
     if (useCache) {
         next();
@@ -255,49 +292,78 @@ exports.browseGamesPage = (req, res, next) => {
     });
 }
 
+function getGame(gameId) {
+    return new Promise(function (resolve, reject) {
+        Game.findOne({
+            where: {
+                GameId: gameId
+            }
+        }).then(game => {
+            if (!game) {
+                let msg = "Game was not found.";
+                reject(msg);
+            }
+
+            let response = {
+                GameId: game.GameId,
+                Title: game.Title,
+                IconFilepath: game.IconFilepath,
+                ReleaseDate: game.ReleaseDate,
+                Tags: game.Tags
+            };
+
+            resolve(response);
+        }).catch(err => {
+            let msg = "Get game error, " + err.message;
+            logger.error(msg);
+            reject(msg);
+        });
+    });
+}
+
 function getAllGames() {
     var result = [];
 
     return new Promise(function (resolve, reject) {
         Game.findAll().then(games => {
-    
+
             if (!games || games.length < 1) {
                 let msg = "No games were found.";
                 logger.warn(msg);
                 reject(msg);
-            }              
-                for (let index = 0; index < games.length; index++) {
-                    let game = games[index];
-    
-                    let response = {
-                        GameId: game.GameId,
-                        Title: game.Title,
-                        IconFilepath: game.IconFilepath,
-                        ReleaseDate: game.ReleaseDate,
-                        Tags: game.Tags
-                    };
-    
-                    result.push(response);
-                }            
-    
-            resolve(result);                      
+            }
+            for (let index = 0; index < games.length; index++) {
+                let game = games[index];
+
+                let response = {
+                    GameId: game.GameId,
+                    Title: game.Title,
+                    IconFilepath: game.IconFilepath,
+                    ReleaseDate: game.ReleaseDate,
+                    Tags: game.Tags
+                };
+
+                result.push(response);
+            }
+
+            resolve(result);
         })
-        .catch(err => {
-            let msg = "Failed to find games, " + err.message;
+            .catch(err => {
+                let msg = "Failed to find games, " + err.message;
                 logger.warn(msg);
                 reject(msg);
-          });  
+            });
     });
 }
 
 // TODO move to utility
 function isJson(value) {
     try {
-      let json = JSON.parse(value);
-      return true;
-  
+        let json = JSON.parse(value);
+        return true;
+
     } catch (e) {
-      console.log("Value is not JSON");
-      return false;
+        console.log("Value is not JSON");
+        return false;
     }
-  }
+}

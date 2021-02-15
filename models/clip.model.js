@@ -1,5 +1,10 @@
 const { v4: uuidv4 } = require("uuid");
 
+// TODO:
+//  add TYPE
+//      Filters - array that apply to clip
+// Filters: MostPopular, FollowedUsersOnly, SpecificGames, MostImpressive, Funniest, BestDiscussion
+
 module.exports = (sequelize, Sequelize) => {
     const Clip = sequelize.define('Clip', {
         ClipId: {

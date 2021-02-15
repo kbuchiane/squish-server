@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 
-// TODO update column names such as FollowedGameId to GameId
+// TODO change column names such as FollowedGameId to GameId
 
 module.exports = (sequelize, Sequelize) => {
     const GameFollowing = sequelize.define("GameFollowing", {

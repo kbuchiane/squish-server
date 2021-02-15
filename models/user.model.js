@@ -1,5 +1,8 @@
 const { v4: uuidv4 } = require("uuid");
 
+// TODO:  add the following
+// Image, Badges [4] (allocate space for 4, set to null if empty?)
+
 module.exports = (sequelize, Sequelize) => {
     const User = sequelize.define("User", {
         UserId: {
