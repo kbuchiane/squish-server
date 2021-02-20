@@ -46,11 +46,41 @@ exports.postClip = (req, res) => {
     let video = req.body.video;
     let thumbnail = req.body.thumbnail;
 
-    //Find duration of video file
+    if (!video) {
+        let msg = "Please select a clip to upload";
+        return res.status(400).send({ message: msg });
+    } else if (!thumbnail) {
+        let msg = "Please select a thumbnail to upload";
+        return res.status(400).send({ message: msg });
+    } else if (!title) {
+        let msg = "Please enter a title for the clip";
+        return res.status(400).send({ message: msg });
+    } else if (title.length > 80) {
+        let msg = "The clip title must be 80 characters or less";
+        return res.status(400).send({ message: msg });
+    } else if (!game) {
+        let msg = "Please enter a game for the clip";
+        return res.status(400).send({ message: msg });
+    } else if (game.length > 50) {
+        let msg = "The game must be 80 characters or less";
+        return res.status(400).send({ message: msg });
+    } else if (!username) {
+        let msg = "You must be logged in to post a clip";
+        return res.status(400).send({ message: msg });
+    }
+
+    // TODO: Find duration of video file from the file's metadata
     let duration = req.body.duration;
 
-    //Find date created from file metadata
-    let dateCreated = req.body.date;
+    if (!duration) {
+        let msg = "The duration of the uploaded clip could not be determined. Please try again.";
+        return res.status(400).send({ message: msg });
+    } else if (duration > 30) {
+        let msg = "The duration of the uploaded clip must be 30 seconds or less. Please try again.";
+        return res.status(400).send({ message: msg });
+    }
+
+    let dateCreated = moment(Date.now()).format(appConfig.DB_DATE_FORMAT);
 
     User.findOne({
         where: {
@@ -163,7 +193,7 @@ exports.deleteClip = (req, res) => {
             return res.status(400).send({ message: msg });
         }
         if (!clip.ClipId) {
-            let msg = "Invalid delete request.  Please try again.";
+            let msg = "Invalid delete request. Please try again.";
             return res.status(400).send({ message: msg });
         }
         Clip.destroy({

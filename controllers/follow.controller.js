@@ -30,7 +30,7 @@ exports.followUser = (req, res) => {
             }
         }).then(user => {
             if (!user) {
-                let msg = "User " + followerUsername + " is unknown.  Please try again.";
+                let msg = "User " + followerUsername + " is unknown. Please try again.";
                 return res.status(400).send({ message: msg });
             }
 
@@ -90,7 +90,7 @@ exports.followGame = (req, res) => {
     let requestedGame = req.body.followedGame;
 
     if (!followerUsername || !requestedGame) {
-        let msg = "Invalid request to follow game.  Please try again.";
+        let msg = "Invalid request to follow game. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -103,7 +103,7 @@ exports.followGame = (req, res) => {
         }
     }).then(user => {
         if (!user) {
-            let msg = "User " + followerUsername + " is unknown.  Please try again.";
+            let msg = "User " + followerUsername + " is unknown. Please try again.";
             return res.status(400).send({ message: msg });
         }
 
@@ -163,7 +163,7 @@ exports.unfollowGame = (req, res) => {
     let gameFollowingId = req.body.gameFollowingId;
 
     if (!followerUsername || !gameFollowingId) {
-        let msg = "Invalid request to unfollow game.  Please try again.";
+        let msg = "Invalid request to unfollow game. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -176,7 +176,7 @@ exports.unfollowGame = (req, res) => {
         }
     }).then(user => {
         if (!user) {
-            let msg = "User " + followerUsername + " is unknown.  Please try again.";
+            let msg = "User " + followerUsername + " is unknown. Please try again.";
             return res.status(400).send({ message: msg });
         }
 
@@ -222,7 +222,7 @@ exports.unfollowUser = (req, res) => {
     let userFollowingId = req.body.userFollowingId;
 
     if (!followerUsername || !userFollowingId) {
-        let msg = "Invalid request to unfollow user.  Please try again.";
+        let msg = "Invalid request to unfollow user. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -235,7 +235,7 @@ exports.unfollowUser = (req, res) => {
         }
     }).then(user => {
         if (!user) {
-            let msg = "User " + followerUsername + " is unknown.  Please try again.";
+            let msg = "User " + followerUsername + " is unknown. Please try again.";
             return res.status(400).send({ message: msg });
         }
 

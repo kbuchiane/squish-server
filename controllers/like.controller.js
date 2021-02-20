@@ -17,12 +17,12 @@ exports.likeClip = (req, res) => {
     let clipId = req.body.clipId;
 
     if (!liker || !type || !clipId) {
-        let msg = "Invalid LIKE request.  Please try again.";
+        let msg = "Invalid LIKE request. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
     if (!checkType(type)) {
-        let msg = "Invalid LIKE type.  Please try again.";
+        let msg = "Invalid LIKE type. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -78,12 +78,12 @@ exports.likeComment = (req, res) => {
     let commentId = req.body.commentId;
 
     if (!liker || !type || !commentId) {
-        let msg = "Invalid LIKE request.  Please try again.";
+        let msg = "Invalid LIKE request. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
     if (!checkType(type)) {
-        let msg = "Invalid LIKE type.  Please try again.";
+        let msg = "Invalid LIKE type. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -139,7 +139,7 @@ exports.unlikeClip = (req, res) => {
     let likeId = req.body.likeId;
 
     if (!unliker || !likeId) {
-        let msg = "Invalid unLIKE request.  Please try again.";
+        let msg = "Invalid unLIKE request. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -169,7 +169,7 @@ exports.unlikeClip = (req, res) => {
             }
 
             if (!like.ClipId) {
-                let msg = "Invalid unLIKE request.  Please try again.";
+                let msg = "Invalid unLIKE request. Please try again.";
                 return res.status(400).send({ message: msg });
             }
 
@@ -196,7 +196,7 @@ exports.unlikeComment = (req, res) => {
     let likeId = req.body.likeId;
 
     if (!unliker || !likeId) {
-        let msg = "Invalid unLIKE request.  Please try again.";
+        let msg = "Invalid unLIKE request. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
@@ -226,7 +226,7 @@ exports.unlikeComment = (req, res) => {
             }
 
             if (!like.CommentId) {
-                let msg = "Invalid unLIKE request.  Please try again.";
+                let msg = "Invalid unLIKE request. Please try again.";
                 return res.status(400).send({ message: msg });
             }
 
