@@ -3,6 +3,7 @@ const User = db.user;
 const moment = require("moment");
 const logger = require("../utils/logger");
 const { urlencoded } = require("body-parser");
+const { user } = require("../models");
 
 exports.users = (req, res) => {
     return res.status(200);
@@ -30,7 +31,7 @@ exports.getUser = (req, res) => {
         }
 
         var result = [];
-
+      
         response = {
             UserId: user.UserId,
             Username: user.username,
@@ -39,7 +40,7 @@ exports.getUser = (req, res) => {
             IconFilepath: user.IconFilepath,
             Active: user.Active,
             Admin: user.Admin,
-            Badges: ['badge1.png', 'badge2.png', 'badge3.png', 'badge4.png'] // FIXME
+            Badges: user.Badges
         };
 
         result.push(response);
@@ -60,9 +61,8 @@ exports.getUsers = (req, res) => {
         let json = JSON.stringify(users);
 
         res.status(200).end(json);
-
     }).catch(err => {
-        let msg = "Failed to find games, " + err.message;
+        let msg = "Failed to find users, " + err.message;
         logger.warn(msg);
 
         return res.status(400).send({ message: msg });
@@ -91,6 +91,7 @@ exports.getUserProfileForClips = (req, res, next) => {
 
                 getUser(userId).then(user => {
                     if (user) {
+                        let badges = getBadgesForProfile(user.Badges);
                         let userProfile = {
                             Username: user.Username,
                             DateCreated: user.DateCreated,  // TODO probably needs to be reformatted
@@ -100,14 +101,7 @@ exports.getUserProfileForClips = (req, res, next) => {
                             Followed: true,
                             FollowerCount: "555M",
                             ClipsCount: "777",
-
-                            // FIXME need to check number of Badges or verify badges are allocated
-                            Badges: {
-                                BadgeOne: user.Badges[0],
-                                BadgeTwo: user.Badges[1],
-                                BadgeThree: user.Badges[2],
-                                BadgeFour: user.Badges[3]
-                            }
+                            Badges: badges
                         };
 
                         results[i].UserProfile = userProfile;
@@ -120,6 +114,8 @@ exports.getUserProfileForClips = (req, res, next) => {
                 });
             });
         }
+
+        req.results = results;
 
         next();
     })();
@@ -135,9 +131,10 @@ function getUser(userId) {
             if (!user) {
                 let msg = "User was not found.";
                 reject(msg);
+                return;
             }
 
-            response = {
+            let response = {
                 UserId: user.UserId,
                 Username: user.Username,
                 Email: user.Email,
@@ -145,7 +142,7 @@ function getUser(userId) {
                 IconFilepath: user.IconFilepath,
                 Active: user.Active,
                 Admin: user.Admin,
-                Badges: ['badge1.png', 'badge2.png', 'badge3.png', 'badge4.png'] // FIXME
+                Badges: user.Badges
             };
 
             resolve(response);
@@ -166,19 +163,19 @@ function getAllUsers() {
                 let msg = "No users were found.";
                 logger.warn(msg);
                 reject(msg);
+                return;
             }
             for (let index = 0; index < users.length; index++) {
                 let user = users[index];
-
                 let response = {
                     UserId: user.UserId,
-                    Username: user.username,
+                    Username: user.Username,
                     Email: user.Email,
                     DateCreated: user.DateCreated,
                     IconFilepath: user.IconFilepath,
                     Active: user.Active,
                     Admin: user.Admin,
-                    Badges: ['badge1.png', 'badge2.png', 'badge3.png', 'badge4.png'] // FIXME
+                    Badges: user.Badges
                 };
 
                 result.push(response);
@@ -192,4 +189,25 @@ function getAllUsers() {
                 reject(msg);
             });
     });
+}
+
+// Assumes there will be 4 badges for clip
+function getBadgesForProfile(userBadges) {
+    let defaultBadge = "unknown.png";
+    let badges = [defaultBadge, defaultBadge, defaultBadge, defaultBadge];
+
+    if (userBadges) {
+        for (let index = 0; index < userBadges.length; index++) {
+            badges[index] = userBadges[index];
+        }
+    }
+
+    let badgesForClip = {
+        BadgeOne: badges[0],
+        BadgeTwo: badges[1],
+        BadgeThree: badges[2],
+        BadgeFour: badges[3]
+    }
+
+    return badgesForClip;
 }

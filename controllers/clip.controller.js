@@ -89,7 +89,7 @@ exports.postClip = (req, res) => {
                 let thumbnailFilePath = username + "/" + clipId + "-thumbnail";
                 Clip.update({
                     VideoFilepath: videoFilePath,
-                    ThumbnailFilepath: thumbnailFilePath
+                    Poster: thumbnailFilePath
                 },
                     {
                         where: {
@@ -229,7 +229,7 @@ exports.getClip = (req, res) => {
             GameId: clip.GameId,
             Duration: clip.Duration,
             DateCreated: clip.DateCreated,
-            ThumbnailFilepath: clip.ThumbnailFilepath,
+            Poster: clip.Poster,
             ViewCount: clip.ViewCount
         };
 
@@ -441,18 +441,18 @@ function getAllClips() {
 
                 let response = {
                     ClipId: clip.ClipId,
-                    Type: 'video/mp4',   // FIXME
+                    Type: clip.Type,
                     PosterUserId: clip.PosterUserId,
                     VideoFilepath: clip.VideoFilepath,
                     Title: clip.Title,
                     GameId: clip.GameId,
                     Duration: clip.Duration,
                     DateCreated: clip.DateCreated,
-                    ThumbnailFilepath: clip.ThumbnailFilepath,
+                    Poster: clip.Poster,
                     ViewCount: clip.ViewCount,
 
                     Liked: metricsForClip.Liked,
-                    UserImage: metricsForClip.UserId,
+                    UserImage: metricsForClip.UserImage,
                     BadgeOne: metricsForClip.BadgeOne,
                     BadgeTwo: metricsForClip.BadgeTwo,
                     BadgeThree: metricsForClip.BadgeThree,
@@ -521,18 +521,18 @@ function getAllClipsForUser(username) {
 
                     let response = {
                         ClipId: clip.ClipId,
-                        Type: 'video/mp4',   // FIXME
+                        Type: clip.Type,
                         PosterUserId: clip.PosterUserId,
                         VideoFilepath: clip.VideoFilepath,
                         Title: clip.Title,
                         GameId: clip.GameId,
                         Duration: clip.Duration,
                         DateCreated: clip.DateCreated,
-                        ThumbnailFilepath: clip.ThumbnailFilepath,
+                        Poster: clip.Poster,
                         ViewCount: clip.ViewCount,
 
                         Liked: metricsForClip.Liked,
-                        UserImage: metricsForClip.UserId,
+                        UserImage: metricsForClip.UserImage,
                         BadgeOne: metricsForClip.BadgeOne,
                         BadgeTwo: metricsForClip.BadgeTwo,
                         BadgeThree: metricsForClip.BadgeThree,
@@ -592,18 +592,18 @@ function getAllClipsForGame(gameId) {
 
                 let response = {
                     ClipId: clip.ClipId,
-                    Type: 'video/mp4',   // FIXME
+                    Type: clip.Type,
                     PosterUserId: clip.PosterUserId,
                     VideoFilepath: clip.VideoFilepath,
                     Title: clip.Title,
                     GameId: clip.GameId,
                     Duration: clip.Duration,
                     DateCreated: clip.DateCreated,
-                    ThumbnailFilepath: clip.ThumbnailFilepath,
+                    Poster: clip.Poster,
                     ViewCount: clip.ViewCount,
 
                     Liked: metricsForClip.Liked,
-                    UserImage: metricsForClip.UserId,
+                    UserImage: metricsForClip.UserImage,
                     BadgeOne: metricsForClip.BadgeOne,
                     BadgeTwo: metricsForClip.BadgeTwo,
                     BadgeThree: metricsForClip.BadgeThree,
@@ -716,13 +716,16 @@ function getMetricsForClip(clipId) {
     let response = {
 
         // FIXME need to get remaining params from somewhere?
+
         Liked: true,
+
         // ------------  Are these the same as what is from user above?
         UserImage: 'crown.png',
         BadgeOne: 'badge1.png',
         BadgeTwo: 'badge2.png',
         BadgeThree: 'badge3.png',
         BadgeFour: 'badge4.png',
+
         // ----------- Lets call these clip "metrics"
         ImpressiveLiked: true,
         ImpressiveCount: "70.9k",

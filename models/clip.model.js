@@ -1,10 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
 
-// TODO:
-//  add TYPE
-//      Filters - array that apply to clip
-// Filters: MostPopular, FollowedUsersOnly, SpecificGames, MostImpressive, Funniest, BestDiscussion
-
 module.exports = (sequelize, Sequelize) => {
     const Clip = sequelize.define('Clip', {
         ClipId: {
@@ -20,6 +15,9 @@ module.exports = (sequelize, Sequelize) => {
         VideoFilepath: {
             type: Sequelize.STRING
         },
+        Type: {
+            type: Sequelize.STRING
+        },
         Title: {
             type: Sequelize.STRING
         },
@@ -32,11 +30,28 @@ module.exports = (sequelize, Sequelize) => {
         DateCreated: {
             type: Sequelize.DATE
         },
-        ThumbnailFilepath: {
+        Poster: {
             type: Sequelize.STRING
         },
         ViewCount: {
             type: Sequelize.BIGINT
+        },
+        // TODO update to be specific set of filters?
+        /*
+        Filters: {
+            type: Sequelize.ENUM,
+            values: ['MostPopular', 'FollowedUsersOnly', 'SpecificGames', 'MostImpressive', 'Funniest', 'BestDiscussion']
+        },
+        */
+        Filters: {
+            type: Sequelize.STRING,
+            get() {
+                return this.getDataValue('Filters').split(',');
+            },
+            set(val) {
+                let value = val.toString();
+                this.setDataValue('Filters', value);
+            },
         },
     }, {
         timestamps: false,

@@ -3,6 +3,7 @@ const User = db.user;
 const Game = db.game;
 const moment = require("moment");
 const logger = require("../utils/logger");
+const { relativeTimeRounding } = require("moment");
 
 exports.games = (req, res) => {
     return res.status(200);
@@ -238,6 +239,8 @@ exports.getGameData = (req, res, next) => {
             });
         }
 
+        req.results = results;
+
         next();
     })();
 }
@@ -302,6 +305,7 @@ function getGame(gameId) {
             if (!game) {
                 let msg = "Game was not found.";
                 reject(msg);
+                return;
             }
 
             let response = {
@@ -331,6 +335,7 @@ function getAllGames() {
                 let msg = "No games were found.";
                 logger.warn(msg);
                 reject(msg);
+                return;
             }
             for (let index = 0; index < games.length; index++) {
                 let game = games[index];

@@ -1,8 +1,18 @@
-[{
-    "PosterUserId":1, "VideoFilepath": "/home/games/Frogger.jpeg", "Title": "Frogger Greatest Hits", "GameId":1,
-    "Duration":5, "DateCreated":"12/29/2020", "ThumbnailFilepath": "/tmp/Frogger.thm", "ViewCount":6
+[
+{  "ClipId": 1,
+    "PosterUserId":11111, "VideoFilepath": "snipe1.mp4", "Type": "video/mp4", "Title": "Later, GrndpaGaming", "GameId":1,
+    "Duration":5, "DateCreated":"Dec 22, 2020", "Poster": "snipe1poster.png", "ViewCount":6, "Filters": ["MostPopular", "FollowedUsersOnly", "SpecificGames", "MostImpressive", "Funniest", "BestDiscussion"]
 },
-{
-    "PosterUserId":2, "VideoFilepath": "/home/games/AstroFire.jpeg", "Title": "AstroFire Greatest Hits", "GameId":2,
-    "Duration":55, "DateCreated":"12/31/2020", "ThumbnailFilepath": "/tmp/AstroFire.thm", "ViewCount":22
-}]
+{   "ClipId": 2,
+    "PosterUserId":22222, "VideoFilepath": "snipe2.mp4", "Type": "video/mp4", "Title": "Destroying A Bot", "GameId":2,
+    "Duration":55, "DateCreated":"Dec 20, 2020", "Poster": "snipe2poster.png", "ViewCount":22, "Filters": ["MostPopular", "FollowedUsersOnly", "SpecificGames", "MostImpressive", "Funniest", "BestDiscussion"]
+},
+{  "ClipId": 3,
+    "PosterUserId":11111, "VideoFilepath": "snipe1.mp4", "Type": "video/mp4", "Title": "Frogger Greatest Hits", "GameId":3,
+    "Duration":5, "DateCreated":"12/29/2020", "Poster": "snipe1poster.png", "ViewCount":6, "Filters": ["MostPopular", "FollowedUsersOnly", "SpecificGames", "MostImpressive", "Funniest", "BestDiscussion"]
+},
+{   "ClipId": 4,
+    "PosterUserId":22222, "VideoFilepath": "snipe2.mp4", "Type": "video/mp4", "Title": "AstroFire Greatest Hits", "GameId":4,
+    "Duration":55, "DateCreated":"12/31/2020", "Poster": "snipe2poster.png", "ViewCount":22, "Filters": ["MostPopular", "FollowedUsersOnly", "SpecificGames", "MostImpressive", "Funniest", "BestDiscussion"]
+}
+]

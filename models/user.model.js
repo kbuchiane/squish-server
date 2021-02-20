@@ -1,8 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
 
-// TODO:  add the following
-// Image, Badges [4] (allocate space for 4, set to null if empty?)
-
 module.exports = (sequelize, Sequelize) => {
     const User = sequelize.define("User", {
         UserId: {
@@ -26,6 +23,17 @@ module.exports = (sequelize, Sequelize) => {
         },
         IconFilepath: {
             type: Sequelize.STRING
+        },
+        // TODO: Update to limit Badges [4] (allocate space for 4, set to null if empty?)
+        Badges: {
+            type: Sequelize.STRING,
+            get() {
+                return this.getDataValue('Badges').split(',');
+            },
+            set(val) {
+                let value = val.toString();
+                this.setDataValue('Badges', value);
+            },
         },
         Active: {
             type: Sequelize.TINYINT
