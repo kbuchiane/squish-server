@@ -27,7 +27,6 @@ const argv = yargs
     .argv;
 
 var sequelize = null;
-var db = null;
 var name = "";
 var pw = "";
 var testUserEmail = 'testUser@MyTest.com';
@@ -73,23 +72,19 @@ function dropTables() {
 function checkDataValues() {
     let answer = prompt('Test users will be added to the User table. Would you like to use an operational email account for them? ');
     let answerLower = answer.toLowerCase();
+
     if (answerLower == "yes" || answerLower == "y") {
         testUserEmail = prompt('Enter valid email address: ');
-        userData.forEach(element => {
-            element.Email = testUserEmail;
-        });
     }
 
     answer = prompt('The test user\'s password will default to \"changeme\". Would you like to use a different password? ');
     answerLower = answer.toLowerCase();
+
     if (answerLower == "yes" || answerLower == "y") {
         console.log('Enter NEW password');
         let answer2 = prompt({ echo: '*' });
         let salt = bcrypt.genSaltSync(10);
         testUserPassword = bcrypt.hashSync(answer2, salt);
-        userData.forEach(element => {
-            element.Password = testUserPassword;
-        });
     }
 }
 
@@ -117,6 +112,7 @@ function initialize() {
     db = {};
     db.Sequelize = Sequelize;
     db.sequelize = sequelize;
+    User = db.user;
 }
 
 async function startMaintainer() {
@@ -134,15 +130,20 @@ async function startMaintainer() {
             checkDataValues();
         }
 
-        syncAndLoadTables();
+        syncAndLoadTables().then(() => {
+            console.log(green("Sync and load complete"));
+        }).catch(err => {
+            let msg = "Problem with sync and load, " + err;
+            console.log(red(msg));
+        }).finally(function () {
+            // Gracefully close database
+            sequelize.close();
+            console.log(resetColor("Database Maintainer DONE!"));
+            console.log('***  \x1b[32m%s\x1b[0m  ***', 'Squish');
+        });
     } catch (error) {
         console.log(red("Problem connecting to the database"));
     }
-    //  finally {
-    //      // Gracefully close database
-    //      console.log("DONE, closing DB now");
-    //     sequelize.close();
-    // }
 }
 
 function configureModels() {
@@ -160,128 +161,169 @@ function configureModels() {
 }
 
 function syncAndLoadTables() {
-    let msg = "";
+    return new Promise(async function (resolve, reject) {
+        let msg = "";
 
-    if (forceSync) {
-        msg = "Drop, "
-    }
-
-    msg = msg + "Sync"
-
-    if (argv.load) {
-        msg = msg + ", Load";
-    }
-
-    msg = msg + " tables: ";
-
-    console.log(msg);
-
-    // Clip
-    db.clip.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-        console.log(yellow('Clip'));
-        if (argv.load) {
-            let json = loadData('clip.json');
-            if (json) {
-                db.clip.bulkCreate(json);
-                console.log(green('Added ' + json.length + ' records to Clip'));
-            }
+        if (forceSync) {
+            msg = "Drop, "
         }
-    });
 
-    // Comment
-    db.comment.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-        console.log(yellow('Comment'));
-        if (argv.load) {
-            let json = loadData('comment.json');
-            if (json) {
-                db.comment.bulkCreate(json);
-                console.log(green('Added ' + json.length + ' records to Comment'));
-            }
-        }
-    });
+        msg = msg + "Sync"
 
-    // Game
-    db.game.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-        console.log(yellow('Game'));
         if (argv.load) {
-            let json = loadData('game.json');
-            if (json) {
-                db.game.bulkCreate(json)
-                console.log(green('Added ' + json.length + ' records to Game'));
-            }
+            msg = msg + ", Load";
         }
-    });
 
-    // GameFollowing
-    db.gameFollowing.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-        console.log(yellow('GameFollowing'));
-        if (argv.load) {
-            let json = loadData('gameFollowing.json');
-            if (json) {
-                db.gameFollowing.bulkCreate(json)
-                console.log(green('Added ' + json.length + ' records to GameFollowing'));
-            }
-        }
-    });
+        msg = msg + " tables: ";
 
-    // Like
-    db.like.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-        console.log(yellow('Like'));
-        if (argv.load) {
-            let json = loadData('like.json');
-            if (json) {
-                db.like.bulkCreate(json)
-                console.log(green('Added ' + json.length + ' records to Like'));
-            }
-        }
-    });
+        console.log(msg);
 
-    // RefreshToken
-    db.refreshToken.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-        console.log(yellow('RefreshToken'));
-        if (argv.load) {
-            let json = loadData('refreshToken.json');
-            if (json) {
-                db.refreshToken.bulkCreate(json)
-                console.log(green('Added ' + json.length + ' records to RefreshToken'));
+        //User
+        await db.user.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('User'));
+            if (argv.load) {
+                let json = loadData('user.json');
+                if (json) {
+                    json = setTestUserEmailAndPassword(json);
+                    db.user.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to User'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk Users, " + err;
+                        reject(msg);
+                    })
+                }
             }
-        }
-    });
+        });
 
-    //User
-    db.user.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-        console.log(yellow('User'));
-        if (argv.load) {
-            let json = loadData('user.json');
-            if (json) {
-                db.user.bulkCreate(json);
-                console.log(green('Added ' + json.length + ' records to User'));
+        // Clip
+        await db.clip.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('Clip'));
+            if (argv.load) {
+                let json = loadData('clip.json');
+                if (json) {
+                    db.clip.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to Clip'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk Clips, " + err;
+                        reject(msg);
+                    })
+                }
             }
-        }
-    });
+        });
 
-    // UserFollowing
-    db.userFollowing.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-        console.log(yellow('UserFollowing'));
-        if (argv.load) {
-            let json = loadData('userFollowing.json');
-            if (json) {
-                db.userFollowing.bulkCreate(json)
-                console.log(green('Added ' + json.length + ' records to UserFollowing'));
+        // Comment
+        await db.comment.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('Comment'));
+            if (argv.load) {
+                let json = loadData('comment.json');
+                if (json) {
+                    db.comment.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to Comment'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk Comments, " + err;
+                        reject(msg);
+                    })
+                }
             }
-        }
-    });
+        });
 
-    // Report
-    db.report.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-        console.log(yellow('Report'));
-        if (argv.load) {
-            let json = loadData('report.json');
-            if (json) {
-                db.report.bulkCreate(json)
-                console.log(green('Added ' + json.length + ' records to Report'));
+        // Game
+        await db.game.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('Game'));
+            if (argv.load) {
+                let json = loadData('game.json');
+                if (json) {
+                    db.game.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to Game'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk Games, " + err;
+                        reject(msg);
+                    })
+                }
             }
-        }
+        });
+
+        // GameFollowing
+        await db.gameFollowing.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('GameFollowing'));
+            if (argv.load) {
+                let json = loadData('gameFollowing.json');
+                if (json) {
+                    db.gameFollowing.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to GameFollowing'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk GameFollowings, " + err;
+                        reject(msg);
+                    })
+                }
+            }
+        });
+
+        // Like
+        await db.like.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('Like'));
+            if (argv.load) {
+                let json = loadData('like.json');
+                if (json) {
+                    db.like.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to Like'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk Likes, " + err;
+                        reject(msg);
+                    })
+                }
+            }
+        });
+
+        // RefreshToken
+        await db.refreshToken.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('RefreshToken'));
+            if (argv.load) {
+                let json = loadData('refreshToken.json');
+                if (json) {
+                    db.refreshToken.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to RefreshToken'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk RefreshTokens, " + err;
+                        reject(msg);
+                    })
+                }
+            }
+        });
+
+        // UserFollowing
+        await db.userFollowing.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('UserFollowing'));
+            if (argv.load) {
+                let json = loadData('userFollowing.json');
+                if (json) {
+                    db.userFollowing.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to UserFollowing'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk UserFollowings, " + err;
+                        reject(msg);
+                    })
+                }
+            }
+        });
+
+        // Report
+        await db.report.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('Report'));
+            if (argv.load) {
+                let json = loadData('report.json');
+                if (json) {
+                    db.report.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to Report'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk Reports, " + err;
+                        reject(msg);
+                    })
+                }
+            }
+        });
+
+        resolve();
     });
 }
 
@@ -302,6 +344,15 @@ function loadData(fileName) {
     return json;
 }
 
+function setTestUserEmailAndPassword(userData) {
+    userData.forEach(element => {
+        element.Email = testUserEmail;
+        element.Password = testUserPassword;
+    });
+
+    return (userData);
+}
+
 function red(s) {
     return '\033[31m' + s;
 }
@@ -312,4 +363,8 @@ function green(s) {
 
 function yellow(s) {
     return '\033[33m' + s;
+}
+
+function resetColor(s) {
+    return '\033[0m' + s;
 }

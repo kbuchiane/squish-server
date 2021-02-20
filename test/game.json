@@ -1,8 +1,14 @@
 [
-    {
-        "Title":"Frogger", "IconFilepath": "/home/games/frogger.icon"
+    {   "GameId": 1,
+        "Title":"PLAYERUNKNOWN's BATTLEGROUNDS", "IconFilepath": "pubg.png", "ReleaseDate": "Dec 2017", "Tags": ["Battle Royale", "Shooter"]
     },
-    {
-        "Title":"AstroFire", "IconFilepath":"/home/games/astrofire.icon"
+    {   "GameId": 2,
+        "Title":"GAME2", "IconFilepath":"astrofire.png", "ReleaseDate": "May 1994", "Tags": ["Tag1", "Tag2"]
+    },
+    {   "GameId": 3,
+        "Title":"Frogger", "IconFilepath": "frogger.png", "ReleaseDate": "Late 1997", "Tags": ["Classic", "Boomer"]
+    },
+    {   "GameId": 4,
+        "Title":"AstroFire", "IconFilepath":"astrofire.png", "ReleaseDate": "May 1994", "Tags": ["Ancient", "Classic"]
     }
 ]

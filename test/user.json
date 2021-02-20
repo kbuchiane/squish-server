@@ -1,12 +1,26 @@
 [
-    {
-        "Username": "Freddy", "Email": "testUserEmail", "Password": "testUserPassword", "DateCreated": "7/7/1982",
-        "IconFilepath": "/home/users/freddy/Freddy.ico", "Active":1, "RefreshToken":null, "RefreshTokenExpiration":null,
+    {   "UserId": 11111,
+        "Username": "Bob", "Email": "testUserEmail1", "Password": "testUserPassword", "DateCreated": "7/7/1982",
+        "IconFilepath": "crown.png", "Badges": ["badge1.png", "badge2.png", "badge3.png", "badge4.png"],
+        "Active":1, "RefreshToken":null, "RefreshTokenExpiration":null,
         "ConfirmId":null, "ConfirmIdDateCreated":null, "VerifyAttemptCount":0, "Admin":0
     },
-    {
-        "Username": "Andy", "Email": "testUserEmail", "Password": "testUserPassword", "DateCreated": "8/21/1978",
-        "IconFilepath": "/home/users/andy/Andy.ico", "Active":1, "RefreshToken":null, "RefreshTokenExpiration":null,
+    {   "UserId": 22222,
+        "Username": "Sally", "Email": "testUserEmail2", "Password": "testUserPassword", "DateCreated": "8/21/1978",
+        "IconFilepath": "crown.png", "Badges": ["badge1.png", "badge2.png", "badge3.png", "badge4.png"],
+        "Active":1, "RefreshToken":null, "RefreshTokenExpiration":null,
+        "ConfirmId":null, "ConfirmIdDateCreated":null, "VerifyAttemptCount":0, "Admin":0
+    },
+    {   "UserId": 33333,
+        "Username": "Jane", "Email": "testUserEmail3", "Password": "testUserPassword", "DateCreated": "5/5/1990",
+        "IconFilepath": "crown.png", "Badges": ["badge1.png", "badge2.png", "badge3.png", "badge4.png"],
+        "Active":1, "RefreshToken":null, "RefreshTokenExpiration":null,
+        "ConfirmId":null, "ConfirmIdDateCreated":null, "VerifyAttemptCount":0, "Admin":0
+    },
+    {   "UserId": 44444,
+        "Username": "Joe", "Email": "testUserEmail4", "Password": "testUserPassword", "DateCreated": "2/25/2000",
+        "IconFilepath": "crown.png", "Badges": ["badge1.png", "badge2.png", "badge3.png", "badge4.png"],
+        "Active":1, "RefreshToken":null, "RefreshTokenExpiration":null,
         "ConfirmId":null, "ConfirmIdDateCreated":null, "VerifyAttemptCount":0, "Admin":0
     }
 ]

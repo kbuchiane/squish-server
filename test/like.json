@@ -1,8 +1,8 @@
 [
-    {
-        "Type": "Like", "ClipId":1, "CommentId": null, "UserId":7
+    {   "LikeId": 1,
+        "Type": "Like", "ClipId":1, "CommentId": null, "UserId":11111
     },
-    {
-        "Type": "Funny", "ClipId": null, "CommentId":2, "UserId":7
+    {   "LikeId": 2,
+        "Type": "Funny", "ClipId": null, "CommentId":2, "UserId":22222
     }
 ]
