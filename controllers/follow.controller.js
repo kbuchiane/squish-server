@@ -275,3 +275,169 @@ exports.unfollowUser = (req, res) => {
         });
     })
 };
+
+// Generates data for Browse, BrowseGames, and Profile pages
+exports.getGamesFollowedByUser = (req, res, next) => {
+    let readOnlyView = req.readOnlyView;
+    let username = req.query.username;
+    let results = [];
+    let useCache = req.useCache;
+
+    if (useCache) {
+        next();
+        return;
+    }
+
+    if (readOnlyView) {
+        // requested by non logged in user
+        next();
+        return;
+    }
+
+    // Get results from previous steps
+    results = req.results;
+
+    // Get list of gameIds that this user follows
+    getGamesFollowedByUser(username).then(gamesFollowed => {
+        for (let index = 0; index < results.length; index++) {
+            let gameId = results[index].GameId;
+
+            if (gamesFollowed.includes(gameId)) {
+                results[index].Followed = true;
+            }
+        }
+
+        req.results = results;
+
+        next();
+    }).catch(err => {
+        let msg = "Failed to find games followed by user, " + err.message;
+        logger.warn(msg);
+        return res.status(400).send({ message: msg });
+    });
+}
+
+
+// Generates data for Browse, BrowseGames, and Profile pages
+exports.getGameFollowerCount = (req, res, next) => {
+    let readOnlyView = req.readOnlyView;
+    let username = req.query.username;
+    let useCache = req.useCache;
+
+    if (useCache) {
+        next();
+        return;
+    }
+
+    // Previously generated results from previous steps
+    let results = req.results;
+
+    // Get follower count for each game  
+    for (let index = 0; index < results.length; index++) {
+        let gameId = results[index].GameId;
+
+        getGameFollowerCount(gameId).then(gameFollowerCount => {
+            results[index].FollowerCount = gameFollowerCount;
+        }).catch(err => {
+            let msg = "Failed to find game follower count for game " + gameId + ", " + err.message;
+            logger.warn(msg);
+            // continue getting follower counts
+        });
+    }
+
+    req.results = results;
+
+    next();
+}
+
+
+// Returns a list of FollowedGameId's  (TODO: change to GameId)
+function getGamesFollowedByUser(username) {
+    var results = [];
+
+    return new Promise(function (resolve, reject) {
+        if (!username) {
+            let msg = "Search for games followed by user failed, username is null.";
+            logger.warn(msg);
+            reject(msg);
+        }
+
+        User.findOne({
+            where: {
+                [Op.and]: [
+                    { Username: username },
+                    { Active: true }
+                ]
+            }
+        }).then(user => {
+            if (!user) {
+                let msg = "Search for games followed by user failed, user " + username + " is unknown.";
+                logger.warn(msg);
+                reject(msg);
+            }
+
+            let followerId = user.UserId;
+
+            GameFollowing.findAll({
+                where: {
+                    GameFollowerUserId: followerId
+                }
+            }).then(gameFollowings => {
+                if (gameFollowings) {
+                    gameFollowings.forEach(gameFollowing => {
+                        results.push(gameFollowing.FollowedGameId);
+                    });
+                }
+
+                resolve(results);
+            }).catch(err => {
+                let msg = "Search for games followed by user failed, " + err.message;
+                logger.error(msg);
+                reject(msg);
+            });
+        })
+    });
+}
+
+// Returns number of followers for game
+function getGameFollowerCount(gameId) {
+    var count = 0;
+
+    return new Promise(function (resolve, reject) {
+        if (!gameId) {
+            let msg = "Unable to get game follower count, gameId is null.";
+            logger.warn(msg);
+            reject(msg);
+        }
+
+        // TODO may make sense to make a new table with all the different totals
+
+        Game.findOne({
+            where: {
+                GameId: gameId
+            }
+        }).then(game => {
+            if (!game) {
+                let msg = "Unable to get game follower count, failed to find gameId.";
+                logger.warn(msg);
+                reject(msg);
+            }
+
+            GameFollowing.findAll({
+                where: {
+                    FollowedGameId: gameId
+                }
+            }).then(gameFollowings => {
+                if (gameFollowings) {
+                    count = gameFollowings.length;
+                }
+
+                resolve(count);
+            }).catch(err => {
+                let msg = "Search for games followed by user failed, " + err.message;
+                logger.error(msg);
+                reject(msg);
+            });
+        })
+    });
+}

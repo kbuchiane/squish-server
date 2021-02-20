@@ -15,6 +15,19 @@ module.exports = (sequelize, Sequelize) => {
         IconFilepath: {
             type: Sequelize.STRING
         },
+        ReleaseDate: {
+            type: Sequelize.STRING
+        },
+        Tags: {
+            type: Sequelize.STRING,
+            get() {
+                return this.getDataValue('Tags').split(',');
+            },
+            set(val) {
+                let value = val.toString();
+                this.setDataValue('Tags', value);
+            },
+        }
     }, {
         timestamps: false,
         underscored: false,
