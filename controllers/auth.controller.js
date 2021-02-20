@@ -49,9 +49,9 @@ exports.signup = (req, res) => {
                 ]
             }
         }).then(user => {
-            if(user) {
+            if (user) {
                 return res.status(403).send({
-                    message: "Username or email already in use."
+                    message: "Username or email already in use"
                 })
             } else {
                 User.create({
@@ -382,7 +382,7 @@ exports.confirmUser = (req, res) => {
                                 ]
                             }
                         }).then(users => {
-                            for(i in users) {
+                            for (i in users) {
                                 userToRemove = users[i];
                                 User.destroy({
                                     where: {
@@ -399,7 +399,7 @@ exports.confirmUser = (req, res) => {
                                 ]
                             }
                         }).then(users => {
-                            for(x in users) {
+                            for (x in users) {
                                 userToRemove = users[i];
                                 User.destroy({
                                     where: {

@@ -31,7 +31,7 @@ exports.getUser = (req, res) => {
         }
 
         var result = [];
-      
+
         response = {
             UserId: user.UserId,
             Username: user.username,
