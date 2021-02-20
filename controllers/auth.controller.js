@@ -41,48 +41,63 @@ exports.signup = (req, res) => {
         let salt = bcrypt.genSaltSync(10);
         let passwordHash = bcrypt.hashSync(req.password, salt);
 
-        User.create({
-            Username: req.username,
-            Email: req.email,
-            Password: passwordHash,
-            DateCreated: dateCreated,
-            Active: false,
-            ConfirmId: userConfirmId,
-            ConfirmIdDateCreated: dateCreated,
-            VerifyAttemptCount: 0,
-            Admin: false
+        User.findOne({
+            where: {
+                [Op.or]: [
+                    { Username: req.username },
+                    { Email: req.email }
+                ]
+            }
         }).then(user => {
-            email.sendConfirmation(
-                user.Email,
-                user.ConfirmId
-            ).then(emailSuccess => {
-                if (!emailSuccess) {
-                    deleteNewUser(user.Username).then(deleteSuccess => {
-                        if (!deleteSuccess) {
-                            logger.error("Failed to delete user " + user.Username);
-                            return res.status(500).send({
-                                message: "A rare error occurred (whoops), you may have to try again later using a different username/email or please contact customer service for assistance"
+            if(user) {
+                return res.status(403).send({
+                    message: "Username or email already in use."
+                })
+            } else {
+                User.create({
+                    Username: req.username,
+                    Email: req.email,
+                    Password: passwordHash,
+                    DateCreated: dateCreated,
+                    Active: false,
+                    ConfirmId: userConfirmId,
+                    ConfirmIdDateCreated: dateCreated,
+                    VerifyAttemptCount: 0,
+                    Admin: false
+                }).then(user => {
+                    email.sendConfirmation(
+                        user.Email,
+                        user.ConfirmId
+                    ).then(emailSuccess => {
+                        if (!emailSuccess) {
+                            deleteNewUser(user.Username).then(deleteSuccess => {
+                                if (!deleteSuccess) {
+                                    logger.error("Failed to delete user " + user.Username);
+                                    return res.status(500).send({
+                                        message: "A rare error occurred (whoops), you may have to try again later using a different username/email or please contact customer service for assistance"
+                                    });
+                                } else {
+                                    logger.warn("Failed to send confirmation email for deleting user  " + user.Username);
+                                    return res.status(500).send({
+                                        message: "There was an issue sending a confirmation email, please try again later"
+                                    });
+                                }
                             });
                         } else {
-                            logger.warn("Failed to send confirmation email for deleting user  " + user.Username);
-                            return res.status(500).send({
-                                message: "There was an issue sending a confirmation email, please try again later"
+                            return res.status(200).send({
+                                message: "A verification code has been sent to "
+                                    + user.Email
                             });
                         }
                     });
-                } else {
-                    return res.status(200).send({
-                        message: "A verification code has been sent to "
-                            + user.Email
+                }).catch(err => {
+                    logger.error("Create user error, " + err.message);
+                    return res.status(500).send({
+                        message: "That username or email may already be taken. Please try again."
                     });
-                }
-            });
-        }).catch(err => {
-            logger.error("Create user error, " + err.message);
-            return res.status(500).send({
-                message: "That username or email may already be taken. Please try again."
-            });
-        });
+                })
+            }
+        })
     }
 };
 
