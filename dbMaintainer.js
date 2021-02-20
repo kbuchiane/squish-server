@@ -39,49 +39,6 @@ let dbName = dbConfig.TESTDB;
 let dbNameMatch = '/_test$/';
 let modelsPath = "./models/";
 
-// TODO: Update to read data from file
-let clipData = [
-    {
-        PosterUserId: '1', VideoFilepath: '/home/games/Frogger.jpeg', Title: 'Frogger Greatest Hits', GameId: '1',
-        Duration: '5', DateCreated: '12/29/2020', ThumbnailFilepath: '/tmp/Frogger.thm', ViewCount: '6'
-    },
-    {
-        PosterUserId: '2', VideoFilepath: '/home/games/AstroFire.jpeg', Title: 'AstroFire Clasics', GameId: '2',
-        Duration: '44', DateCreated: '12/31/2020', ThumbnailFilepath: '/tmp/AstroFire.thm', ViewCount: '55'
-    }
-];
-
-let commentData = [
-    {
-        UserId: '1', Text: 'Frogger is such a classic', DateCreated: '12/29/2020', ClipId: '1', ParentCommentId: null
-    },
-    {
-        UserId: '2', Text: 'Give this a try', DateCreated: '12/31/2020', ClipId: '2', ParentCommentId: null
-    }
-];
-
-let gameData = [
-    {
-        Title: 'Frogger', IconFilepath: '/home/games/frogger.icon'
-    },
-    {
-        Title: 'AstroFire', IconFilepath: '/home/games/astrofire.icon'
-    }
-];
-
-let userData = [
-    {
-        Username: 'Freddy', Email: testUserEmail, Password: testUserPassword, DateCreated: '7/7/1982',
-        IconFilepath: '/home/users/freddy/Freddy.ico', Active: '1', RefreshToken: null, RefreshTokenExpiration: null,
-        ConfirmId: null, ConfirmIdDateCreated: null, VerifyAttemptCount: '0', Admin: '0'
-    },
-    {
-        Username: 'Andy', Email: testUserEmail, Password: testUserPassword, DateCreated: '8/21/1978',
-        IconFilepath: '/home/users/andy/Andy.ico', Active: '1', RefreshToken: null, RefreshTokenExpiration: null,
-        ConfirmId: null, ConfirmIdDateCreated: null, VerifyAttemptCount: '0', Admin: '0'
-    }
-];
-
 console.log('\n');
 console.log('***  \x1b[32m%s\x1b[0m  ***', 'Squish');
 console.log('Database Maintainer');
@@ -117,7 +74,7 @@ function checkDataValues() {
     let answer = prompt('Test users will be added to the User table. Would you like to use an operational email account for them? ');
     let answerLower = answer.toLowerCase();
     if (answerLower == "yes" || answerLower == "y") {
-        testUserEmail = prompt('Enter valid email address: ');      
+        testUserEmail = prompt('Enter valid email address: ');
         userData.forEach(element => {
             element.Email = testUserEmail;
         });
@@ -181,8 +138,9 @@ async function startMaintainer() {
     } catch (error) {
         console.log(red("Problem connecting to the database"));
     }
-    // TODO: Update to gracefully close database
-    // } finally {
+    //  finally {
+    //      // Gracefully close database
+    //      console.log("DONE, closing DB now");
     //     sequelize.close();
     // }
 }
@@ -198,17 +156,35 @@ function configureModels() {
     db.refreshToken = require(modelsPath + "refreshToken.model")(sequelize, Sequelize);
     db.user = require(modelsPath + "user.model")(sequelize, Sequelize);
     db.userFollowing = require(modelsPath + "userFollowing.model")(sequelize, Sequelize);
+    db.report = require(modelsPath + "report.model")(sequelize, Sequelize);
 }
 
 function syncAndLoadTables() {
-    console.log('Sync and load tables: ');
+    let msg = "";
+
+    if (forceSync) {
+        msg = "Drop, "
+    }
+
+    msg = msg + "Sync"
+
+    if (argv.load) {
+        msg = msg + ", Load";
+    }
+
+    msg = msg + " tables: ";
+
+    console.log(msg);
 
     // Clip
     db.clip.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('Clip'));
         if (argv.load) {
-            db.clip.bulkCreate(clipData);
-            console.log(green(clipData.length + ' rows added to Clip'));
+            let json = loadData('clip.json');
+            if (json) {
+                db.clip.bulkCreate(json);
+                console.log(green('Added ' + json.length + ' records to Clip'));
+            }
         }
     });
 
@@ -216,8 +192,11 @@ function syncAndLoadTables() {
     db.comment.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('Comment'));
         if (argv.load) {
-            db.comment.bulkCreate(commentData);
-            console.log(green(commentData.length + ' rows added to Comment'));
+            let json = loadData('comment.json');
+            if (json) {
+                db.comment.bulkCreate(json);
+                console.log(green('Added ' + json.length + ' records to Comment'));
+            }
         }
     });
 
@@ -225,39 +204,102 @@ function syncAndLoadTables() {
     db.game.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('Game'));
         if (argv.load) {
-            db.game.bulkCreate(gameData)
-            console.log(green(gameData.length + ' rows added to Game'));
+            let json = loadData('game.json');
+            if (json) {
+                db.game.bulkCreate(json)
+                console.log(green('Added ' + json.length + ' records to Game'));
+            }
         }
     });
 
     // GameFollowing
     db.gameFollowing.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('GameFollowing'));
+        if (argv.load) {
+            let json = loadData('gameFollowing.json');
+            if (json) {
+                db.gameFollowing.bulkCreate(json)
+                console.log(green('Added ' + json.length + ' records to GameFollowing'));
+            }
+        }
     });
 
     // Like
     db.like.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('Like'));
+        if (argv.load) {
+            let json = loadData('like.json');
+            if (json) {
+                db.like.bulkCreate(json)
+                console.log(green('Added ' + json.length + ' records to Like'));
+            }
+        }
     });
 
     // RefreshToken
     db.refreshToken.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('RefreshToken'));
+        if (argv.load) {
+            let json = loadData('refreshToken.json');
+            if (json) {
+                db.refreshToken.bulkCreate(json)
+                console.log(green('Added ' + json.length + ' records to RefreshToken'));
+            }
+        }
     });
 
     //User
     db.user.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('User'));
         if (argv.load) {
-            db.user.bulkCreate(userData);
-            console.log(green(userData.length + ' rows added to User'));
+            let json = loadData('user.json');
+            if (json) {
+                db.user.bulkCreate(json);
+                console.log(green('Added ' + json.length + ' records to User'));
+            }
         }
     });
 
     // UserFollowing
     db.userFollowing.sync({ force: forceSync, match: dbNameMatch }).then(() => {
         console.log(yellow('UserFollowing'));
+        if (argv.load) {
+            let json = loadData('userFollowing.json');
+            if (json) {
+                db.userFollowing.bulkCreate(json)
+                console.log(green('Added ' + json.length + ' records to UserFollowing'));
+            }
+        }
     });
+
+    // Report
+    db.report.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+        console.log(yellow('Report'));
+        if (argv.load) {
+            let json = loadData('report.json');
+            if (json) {
+                db.report.bulkCreate(json)
+                console.log(green('Added ' + json.length + ' records to Report'));
+            }
+        }
+    });
+}
+
+function loadData(fileName) {
+    const fs = require('fs');
+    let dataFilePath = __dirname + '/test/' + fileName;
+    let json = null;
+
+    try {
+        if (fs.existsSync(dataFilePath)) {
+            let data = fs.readFileSync(dataFilePath, 'utf8')
+            json = JSON.parse(data);
+        }
+    } catch (err) {
+        console.error(err)
+    }
+
+    return json;
 }
 
 function red(s) {

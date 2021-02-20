@@ -1,16 +1,20 @@
 const { v4: uuidv4 } = require("uuid");
 
 module.exports = (sequelize, Sequelize) => {
-    const Comment = sequelize.define('Comment', {
-        CommentId: {
+    const Report = sequelize.define('Report', {
+        ReportId: {
             type: Sequelize.UUID,
             defaultValue: Sequelize.UUIDV4,
             allowNull: false,
             unique: true,
             primaryKey: true
         },
-        UserId: {
+        ReporterId: {
             type: Sequelize.UUID,
+        },
+        Reason: {
+            type: Sequelize.ENUM,
+            values: ['Content', 'Language', 'Quality', 'Off-Topic', 'Offensive', 'Inappropriate']
         },
         Text: {
             type: Sequelize.TEXT('medium')
@@ -18,10 +22,16 @@ module.exports = (sequelize, Sequelize) => {
         DateCreated: {
             type: Sequelize.DATE
         },
+        Resolved: {
+            type: Sequelize.TINYINT
+        },
+        DateResolved: {
+            type: Sequelize.DATE
+        },
         ClipId: {
             type: Sequelize.UUID,
         },
-        ParentCommentId: {
+        CommentId: {
             type: Sequelize.UUID,
         }
     }, {
@@ -30,5 +40,5 @@ module.exports = (sequelize, Sequelize) => {
         freezeTableName: true
     });
 
-    return Comment;
+    return Report;
 };

@@ -1,0 +1,12 @@
+[
+    {
+        "Username": "Freddy", "Email": "testUserEmail", "Password": "testUserPassword", "DateCreated": "7/7/1982",
+        "IconFilepath": "/home/users/freddy/Freddy.ico", "Active":1, "RefreshToken":null, "RefreshTokenExpiration":null,
+        "ConfirmId":null, "ConfirmIdDateCreated":null, "VerifyAttemptCount":0, "Admin":0
+    },
+    {
+        "Username": "Andy", "Email": "testUserEmail", "Password": "testUserPassword", "DateCreated": "8/21/1978",
+        "IconFilepath": "/home/users/andy/Andy.ico", "Active":1, "RefreshToken":null, "RefreshTokenExpiration":null,
+        "ConfirmId":null, "ConfirmIdDateCreated":null, "VerifyAttemptCount":0, "Admin":0
+    }
+]

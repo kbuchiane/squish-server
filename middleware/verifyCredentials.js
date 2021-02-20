@@ -57,9 +57,9 @@ checkCredentials = (req, res, next) => {
             return res.status(400).send({
                 message: "Username can not include special characters"
             });
-        } else if (username.length > 45) {
+        } else if (username.length > 30) {
             return res.status(400).send({
-                message: "Username can not exceed 45 characters"
+                message: "Username can not exceed 30 characters"
             });
         }
 

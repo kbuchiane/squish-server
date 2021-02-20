@@ -5,6 +5,7 @@ const User = db.user;
 const Comment = db.comment;
 const Clip = db.clip;
 const Like = db.like;
+const Op = db.Sequelize.Op;
 
 exports.likes = (req, res) => {
     return res.status(200);
@@ -12,17 +13,26 @@ exports.likes = (req, res) => {
 
 exports.likeClip = (req, res) => {
     let liker = req.body.username;
+    let type = req.body.type;
     let clipId = req.body.clipId;
 
-    if (!liker || !clipId) {
-        let msg = "Invalid LIKE request.  Please try again.";
+    if (!liker || !type || !clipId) {
+        let msg = "Invalid LIKE request. Please try again.";
+        return res.status(400).send({ message: msg });
+    }
+
+    if (!checkType(type)) {
+        let msg = "Invalid LIKE type. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
     // Get id of liker
     User.findOne({
         where: {
-            Username: liker
+            [Op.and]: [
+                { Username: liker },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -32,7 +42,7 @@ exports.likeClip = (req, res) => {
 
         let userId = user.UserId;
 
-        // Verify clip exists
+        // Verify clipId exists
         Clip.findOne({
             where: {
                 ClipId: clipId
@@ -45,6 +55,7 @@ exports.likeClip = (req, res) => {
 
             // Add new clip LIKE
             Like.create({
+                Type: type,
                 ClipId: clipId,
                 CommentId: null,
                 UserId: userId
@@ -63,17 +74,26 @@ exports.likeClip = (req, res) => {
 
 exports.likeComment = (req, res) => {
     let liker = req.body.username;
+    let type = req.body.type;
     let commentId = req.body.commentId;
 
-    if (!liker || !commentId) {
-        let msg = "Invalid LIKE request.  Please try again.";
+    if (!liker || !type || !commentId) {
+        let msg = "Invalid LIKE request. Please try again.";
         return res.status(400).send({ message: msg });
     }
-    
+
+    if (!checkType(type)) {
+        let msg = "Invalid LIKE type. Please try again.";
+        return res.status(400).send({ message: msg });
+    }
+
     // Get id of liker
     User.findOne({
         where: {
-            Username: liker
+            [Op.and]: [
+                { Username: liker },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -96,6 +116,7 @@ exports.likeComment = (req, res) => {
 
             // Add new comment LIKE
             Like.create({
+                Type: type,
                 ClipId: null,
                 CommentId: commentId,
                 UserId: userId
@@ -118,14 +139,17 @@ exports.unlikeClip = (req, res) => {
     let likeId = req.body.likeId;
 
     if (!unliker || !likeId) {
-        let msg = "Invalid unLIKE request.  Please try again.";
+        let msg = "Invalid unLIKE request. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
     // Get id of unliker
     User.findOne({
         where: {
-            Username: unliker
+            [Op.and]: [
+                { Username: unliker },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -145,7 +169,7 @@ exports.unlikeClip = (req, res) => {
             }
 
             if (!like.ClipId) {
-                let msg = "Invalid unLIKE request.  Please try again.";
+                let msg = "Invalid unLIKE request. Please try again.";
                 return res.status(400).send({ message: msg });
             }
 
@@ -172,14 +196,17 @@ exports.unlikeComment = (req, res) => {
     let likeId = req.body.likeId;
 
     if (!unliker || !likeId) {
-        let msg = "Invalid unLIKE request.  Please try again.";
+        let msg = "Invalid unLIKE request. Please try again.";
         return res.status(400).send({ message: msg });
     }
 
     // Get id of unliker
     User.findOne({
         where: {
-            Username: unliker
+            [Op.and]: [
+                { Username: unliker },
+                { Active: true }
+            ]
         }
     }).then(user => {
         if (!user) {
@@ -199,7 +226,7 @@ exports.unlikeComment = (req, res) => {
             }
 
             if (!like.CommentId) {
-                let msg = "Invalid unLIKE request.  Please try again.";
+                let msg = "Invalid unLIKE request. Please try again.";
                 return res.status(400).send({ message: msg });
             }
 
@@ -219,3 +246,14 @@ exports.unlikeComment = (req, res) => {
         })
     })
 };
+
+function checkType(type) {
+    let found = false;
+    Like.rawAttributes.Type.values.forEach(element => {
+        if (type == element) {
+            found = true;
+        }
+    });
+
+    return found;
+}

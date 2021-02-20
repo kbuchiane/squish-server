@@ -1,12 +1,16 @@
+const { v4: uuidv4 } = require("uuid");
+
 module.exports = (sequelize, Sequelize) => {
     const Clip = sequelize.define('Clip', {
         ClipId: {
-            type: Sequelize.BIGINT,
-            autoIncrement: true,
+            type: Sequelize.UUID,
+            defaultValue: Sequelize.UUIDV4,
+            allowNull: false,
+            unique: true,
             primaryKey: true
         },
         PosterUserId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         VideoFilepath: {
             type: Sequelize.STRING
@@ -15,7 +19,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING
         },
         GameId: {
-            type: Sequelize.BIGINT
+            type: Sequelize.UUID,
         },
         Duration: {
             type: Sequelize.TIME
@@ -33,7 +37,6 @@ module.exports = (sequelize, Sequelize) => {
         timestamps: false,
         underscored: false,
         freezeTableName: true
-
     });
 
     return Clip;
