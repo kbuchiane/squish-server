@@ -9,10 +9,7 @@ exports.profilePageStart = (req, res, next) => {
 
     // Required for future workflow step getGamesFollowedByUser
     req.query.username = req.query.profileName;
-
     start = new Date();
-
-    //  console.info("Request Profile [" + url + "]");
 
     if (!username) {
         // Allows for display only - no JWT token
