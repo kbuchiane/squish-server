@@ -2,6 +2,7 @@ const db = require("../models");
 const User = db.user;
 const moment = require("moment");
 const logger = require("../utils/logger");
+const dateUtil = require("../utils/dateUtil");
 const { urlencoded } = require("body-parser");
 const { user } = require("../models");
 
@@ -31,12 +32,14 @@ exports.getUser = (req, res) => {
         }
 
         var result = [];
+        let displayDate = dateUtil.getDisplayDbDate(user.DateCreated);
 
         response = {
             UserId: user.UserId,
             Username: user.username,
             Email: user.Email,
             DateCreated: user.DateCreated,
+            DisplayDate: displayDate,
             IconFilepath: user.IconFilepath,
             Active: user.Active,
             Admin: user.Admin,
@@ -92,9 +95,11 @@ exports.getUserProfileForClips = (req, res, next) => {
                 getUser(userId).then(user => {
                     if (user) {
                         let badges = getBadgesForProfile(user.Badges);
+                        let displayDate = dateUtil.getDisplayDbDate(user.DateCreated);
                         let userProfile = {
                             Username: user.Username,
-                            DateCreated: user.DateCreated,  // TODO probably needs to be reformatted
+                            DateCreated: user.DateCreated,
+                            DisplayDate: displayDate,
                             IconFilepath: user.IconFilepath,
 
                             // FIXME:  Next 3 are hard-coded
@@ -133,12 +138,13 @@ function getUser(userId) {
                 reject(msg);
                 return;
             }
-
+            let displayDate = dateUtil.getDisplayDbDate(user.DateCreated);
             let response = {
                 UserId: user.UserId,
                 Username: user.Username,
                 Email: user.Email,
                 DateCreated: user.DateCreated,
+                DisplayDate: displayDate,
                 IconFilepath: user.IconFilepath,
                 Active: user.Active,
                 Admin: user.Admin,
@@ -167,11 +173,13 @@ function getAllUsers() {
             }
             for (let index = 0; index < users.length; index++) {
                 let user = users[index];
+                let displayDate = dateUtil.getDisplayDbDate(user.DateCreated);
                 let response = {
                     UserId: user.UserId,
                     Username: user.Username,
                     Email: user.Email,
                     DateCreated: user.DateCreated,
+                    DisplayDate: displayDate,
                     IconFilepath: user.IconFilepath,
                     Active: user.Active,
                     Admin: user.Admin,

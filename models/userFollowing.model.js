@@ -16,7 +16,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.UUID,
         },
         DateFollowed: {
-            type: Sequelize.STRING
+            type: Sequelize.DATE
         }
     }, {
         timestamps: false,

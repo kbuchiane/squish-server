@@ -10,8 +10,6 @@ exports.browsePage1 = (req, res, next) => {
 
     start = new Date();
 
-    //  console.info("Request Browse [" + url + "]");
-
     if (!username) {
         // Allows for display only - no JWT token
         readOnlyView = true;
@@ -28,10 +26,7 @@ exports.browsePage2 = (req, res) => {
     let username = req.query.username;
     let useCache = req.useCache;
     let results = req.results;
-
     let json = JSON.stringify(results);
-
-    // console.log(results);
 
     res.status(200).end(json);
 

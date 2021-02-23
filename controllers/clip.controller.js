@@ -1,5 +1,6 @@
 const db = require("../models");
 const logger = require("../utils/logger");
+const dateUtil = require("../utils/dateUtil");
 const fs = require("fs");
 const moment = require("moment");
 
@@ -250,6 +251,8 @@ exports.getClip = (req, res) => {
             return res.status(400).send({ message: msg });
         }
 
+        let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
+
         // NOTE: response contains only fields from clip table
         response = {
             ClipId: clip.ClipId,
@@ -259,6 +262,7 @@ exports.getClip = (req, res) => {
             GameId: clip.GameId,
             Duration: clip.Duration,
             DateCreated: clip.DateCreated,
+            DisplayDate: displayDate,
             Poster: clip.Poster,
             ViewCount: clip.ViewCount
         };
@@ -468,6 +472,7 @@ function getAllClips() {
                 let commentsForClip = getCommentsForClip(clip.ClipId);
                 let metricsForClip = getMetricsForClip(clip.ClipId);
                 let filtersForClip = getFiltersForClip(clip.ClipId);
+                let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
 
                 let response = {
                     ClipId: clip.ClipId,
@@ -478,6 +483,7 @@ function getAllClips() {
                     GameId: clip.GameId,
                     Duration: clip.Duration,
                     DateCreated: clip.DateCreated,
+                    DisplayDate: displayDate,
                     Poster: clip.Poster,
                     ViewCount: clip.ViewCount,
 
@@ -548,6 +554,7 @@ function getAllClipsForUser(username) {
                     let commentsForClip = getCommentsForClip(clip.ClipId);
                     let metricsForClip = getMetricsForClip(clip.ClipId);
                     let filtersForClip = getFiltersForClip(clip.ClipId);
+                    let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
 
                     let response = {
                         ClipId: clip.ClipId,
@@ -558,6 +565,7 @@ function getAllClipsForUser(username) {
                         GameId: clip.GameId,
                         Duration: clip.Duration,
                         DateCreated: clip.DateCreated,
+                        DisplayDate: displayDate,
                         Poster: clip.Poster,
                         ViewCount: clip.ViewCount,
 
@@ -619,6 +627,7 @@ function getAllClipsForGame(gameId) {
                 let commentsForClip = getCommentsForClip(clip.ClipId);
                 let metricsForClip = getMetricsForClip(clip.ClipId);
                 let filtersForClip = getFiltersForClip(clip.ClipId);
+                let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
 
                 let response = {
                     ClipId: clip.ClipId,
@@ -629,6 +638,7 @@ function getAllClipsForGame(gameId) {
                     GameId: clip.GameId,
                     Duration: clip.Duration,
                     DateCreated: clip.DateCreated,
+                    DisplayDate: displayDate,
                     Poster: clip.Poster,
                     ViewCount: clip.ViewCount,
 

@@ -3,6 +3,7 @@ const User = db.user;
 const Game = db.game;
 const moment = require("moment");
 const logger = require("../utils/logger");
+const dateUtil = require("../utils/dateUtil")
 const { relativeTimeRounding } = require("moment");
 
 exports.games = (req, res) => {
@@ -31,6 +32,9 @@ exports.addGame = (req, res) => {
         return res.status(400).send({ message: msg });
     } else if (!releaseDate) {
         let msg = "Please enter a release date for the game";
+        return res.status(400).send({ message: msg });
+    } else if (!dateUtil.isDateValid(releaseDate)) {
+        let msg = "Game release date format is incorrect.";
         return res.status(400).send({ message: msg });
     } else if (!tags) {
         let msg = "Please enter up to 2 game tags";
@@ -159,12 +163,14 @@ exports.getGame = (req, res) => {
         }
 
         var result = [];
+        let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
 
         response = {
             GameId: game.GameId,
             Title: game.Title,
             IconFilepath: game.IconFilepath,
             ReleaseDate: game.ReleaseDate,
+            DisplayDate: displayDate,
             Tags: game.Tags
         };
 
@@ -213,12 +219,14 @@ exports.getGameData = (req, res, next) => {
                 let gameId = results[i].GameId;
 
                 getGame(gameId).then(game => {
+                    let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
 
                     let response = {
                         GameId: game.GameId,
                         Title: game.Title,
                         IconFilepath: game.IconFilepath,
                         ReleaseDate: game.ReleaseDate,
+                        DisplayDate: displayDate,
                         Tags: game.Tags,
 
                         // Set to default values - will be updated later in the workflow
@@ -266,12 +274,14 @@ exports.browseGamesPage = (req, res, next) => {
 
         for (let index = 0; index < games.length; index++) {
             let game = games[index];
+            let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
 
             let response = {
                 GameId: game.GameId,
                 Title: game.Title,
                 IconFilepath: game.IconFilepath,
                 ReleaseDate: game.ReleaseDate,
+                DisplayDate: displayDate,
                 Tags: game.Tags,
 
                 // Set to default values - will be updated later in the workflow
@@ -307,12 +317,13 @@ function getGame(gameId) {
                 reject(msg);
                 return;
             }
-
+            let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
             let response = {
                 GameId: game.GameId,
                 Title: game.Title,
                 IconFilepath: game.IconFilepath,
                 ReleaseDate: game.ReleaseDate,
+                DisplayDate: displayDate,
                 Tags: game.Tags
             };
 
@@ -339,12 +350,13 @@ function getAllGames() {
             }
             for (let index = 0; index < games.length; index++) {
                 let game = games[index];
-
+                let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
                 let response = {
                     GameId: game.GameId,
                     Title: game.Title,
                     IconFilepath: game.IconFilepath,
                     ReleaseDate: game.ReleaseDate,
+                    DisplayDate: displayDate,
                     Tags: game.Tags
                 };
 

@@ -124,8 +124,8 @@ exports.followGame = (req, res) => {
             GameFollowing.findOne({
                 where: {
                     [Op.and]: [
-                        { GameFollowerUserId: followerId },
-                        { FollowedGameId: requestedGameId }
+                        { FollowerUserId: followerId },
+                        { GameId: requestedGameId }
                     ]
                 }
             }).then(gameFollowing => {
@@ -133,9 +133,9 @@ exports.followGame = (req, res) => {
                     let dateFollowed = moment(Date.now()).format(appConfig.DB_DATE_FORMAT);
 
                     GameFollowing.create({
-                        GameFollowerUserId: followerId,
-                        FollowedGameId: requestedGameId,
-                        DateGameFollowed: dateFollowed
+                        FollowerUserId: followerId,
+                        GameId: requestedGameId,
+                        DateFollowed: dateFollowed
                     }).then(gameFollowing => {
                         return res.status(200);
                     }).catch(err => {
@@ -187,7 +187,7 @@ exports.unfollowGame = (req, res) => {
             where: {
                 [Op.and]: [
                     { GameFollowingId: gameFollowingId },
-                    { GameFollowerUserId: followerId }
+                    { FollowerUserId: followerId }
                 ]
             }
         }).then(gameFollowing => {
@@ -351,7 +351,7 @@ exports.getGameFollowerCount = (req, res, next) => {
 }
 
 
-// Returns a list of FollowedGameId's  (TODO: change to GameId)
+// Returns a list of GameId's
 function getGamesFollowedByUser(username) {
     var results = [];
 
@@ -380,12 +380,12 @@ function getGamesFollowedByUser(username) {
 
             GameFollowing.findAll({
                 where: {
-                    GameFollowerUserId: followerId
+                    FollowerUserId: followerId
                 }
             }).then(gameFollowings => {
                 if (gameFollowings) {
                     gameFollowings.forEach(gameFollowing => {
-                        results.push(gameFollowing.FollowedGameId);
+                        results.push(gameFollowing.GameId);
                     });
                 }
 
@@ -425,7 +425,7 @@ function getGameFollowerCount(gameId) {
 
             GameFollowing.findAll({
                 where: {
-                    FollowedGameId: gameId
+                    GameId: gameId
                 }
             }).then(gameFollowings => {
                 if (gameFollowings) {
