@@ -335,7 +335,7 @@ exports.confirmUser = (req, res) => {
                 updateAndEmailCode(user.Email).then(updateAndEmailCodeRet => {
                     if (updateAndEmailCodeRet.status === 500) {
                         return res.status(500).send({
-                            message: "Maximum attempts reached<br />"
+                            message: "Maximum attempts reached. >"
                                 + updateAndEmailCodeRet.message
                         });
                     } else {
@@ -349,7 +349,7 @@ exports.confirmUser = (req, res) => {
                 updateAndEmailCode(user.Email).then(updateAndEmailCodeRet => {
                     if (updateAndEmailCodeRet.status === 500) {
                         return res.status(500).send({
-                            message: "Verification code has expired<br />"
+                            message: "Verification code has expired. "
                                 + updateAndEmailCodeRet.message
                         });
                     } else {
@@ -931,7 +931,7 @@ exports.confirmResetPassword = (req, res) => {
                 updateAndEmailResetCode(user.Email).then(updateAndEmailResetCodeRet => {
                     if (updateAndEmailResetCodeRet.status === 500) {
                         return res.status(500).send({
-                            message: "Maximum attempts reached<br />"
+                            message: "Maximum attempts reached. "
                                 + updateAndEmailResetCodeRet.message
                         });
                     } else {
@@ -945,7 +945,7 @@ exports.confirmResetPassword = (req, res) => {
                 updateAndEmailResetCode(user.Email).then(updateAndEmailResetCodeRet => {
                     if (updateAndEmailResetCodeRet.status === 500) {
                         return res.status(500).send({
-                            message: "Reset password code has expired<br />"
+                            message: "Reset password code has expired. "
                                 + updateAndEmailResetCodeRet.message
                         });
                     } else {
