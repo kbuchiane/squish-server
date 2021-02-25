@@ -8,26 +8,26 @@ const { caching } = require("../middleware");
 
 // Controllers
 const gameController = require("../controllers/game.controller");
-const singleGameController = require("../controllers/singleGame.controller");
-const followController = require("../controllers/follow.controller");
+const singleClipController = require("../controllers/singleClip.controller");
 const clipController = require("../controllers/clip.controller");
 const userController = require("../controllers/user.controller");
 
-// FIXME update so page is /singleGame/gameId
+// FIXME update so page is /singleClip/clipId
 
-// Generate data for singleGame page
-router.get("/singleGame",
+// Generate data for singleClip page
+router.get("/singleClip",
   [
     verifyCredentials.checkCredentials,
-    singleGameController.singleGamePage1,
+    singleClipController.singleClipPage1,
     auth.verifyToken,
     caching.check,
     caching.get
   ],
-  clipController.singleGamePage,
+  clipController.singleClipPage,
   userController.getUserProfileForClips,
+  gameController.getGameData,
   caching.set,
-  singleGameController.singleGamePage2
+  singleClipController.singleClipPage2
 );
 
 module.exports = router;
