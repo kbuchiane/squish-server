@@ -25,6 +25,7 @@ const browseGamesRouter = require("./routes/browseGames.route");
 const browseRouter = require("./routes/browse.route");
 const profileRouter = require("./routes/profile.route");
 const singleGameRouter = require("./routes/singleGame.route");
+const singleClipRouter = require("./routes/singleClip.route");
 
 const app = express();
 
@@ -88,6 +89,7 @@ app.use("/browseGames", cors(corsOptions), browseGamesRouter);
 app.use("/browse", cors(corsOptions), browseRouter);
 app.use("/profile", cors(corsOptions), profileRouter);
 app.use("/singleGame", cors(corsOptions), singleGameRouter);
+app.use("/singleClip", cors(corsOptions), singleClipRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

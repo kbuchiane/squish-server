@@ -241,6 +241,8 @@ exports.getClip = (req, res) => {
         return res.status(400).send({ message: msg });
     }
 
+    // TODO update to call getClip function below
+
     Clip.findOne({
         where: {
             ClipId: clipId
@@ -286,6 +288,25 @@ exports.profilePage = (req, res, next) => {
 
     // Get clips for profile name
     getAllClipsForUser(profileName).then(results => {
+        req.results = results;
+        next();
+    });
+}
+
+// Generates data for singleClip page
+exports.singleClipPage = (req, res, next) => {
+    let readOnlyView = req.readOnlyView;
+    let useCache = req.useCache;
+    let username = req.query.username;
+    let clipId = req.query.clipId;
+
+    if (useCache) {
+        next();
+        return;
+    }
+
+    // Get clip for clip id
+    getClip(clipId).then(results => {
         req.results = results;
         next();
     });
@@ -455,6 +476,79 @@ function getAllClipsForFilterAndTimeframe(filter, timeframe) {
         });
     });
 }
+
+function getClip(clipId) {
+    var results = [];
+
+    return new Promise(function (resolve, reject) {
+
+        if (!clipId) {
+            let msg = "Unable to get clip, ID is undefined.";
+            reject(msg);
+            return;
+        }
+
+        Clip.findOne({
+            where: {
+                ClipId: clipId
+            }
+        }).then(clip => {
+            if (!clip) {
+                let msg = "Clip was not found.";
+                reject(msg);
+                return;
+            }
+
+            let commentsForClip = getCommentsForClip(clip.ClipId);
+            let metricsForClip = getMetricsForClip(clip.ClipId);
+            let filtersForClip = getFiltersForClip(clip.ClipId);
+            let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
+
+            response = {
+                ClipId: clip.ClipId,
+                PosterUserId: clip.PosterUserId,
+                VideoFilepath: clip.VideoFilepath,
+                Title: clip.Title,
+                GameId: clip.GameId,
+                Duration: clip.Duration,
+                DateCreated: clip.DateCreated,
+                DisplayDate: displayDate,
+                Poster: clip.Poster,
+                ViewCount: clip.ViewCount,
+
+                
+                Liked: metricsForClip.Liked,
+                UserImage: metricsForClip.UserImage,
+                BadgeOne: metricsForClip.BadgeOne,
+                BadgeTwo: metricsForClip.BadgeTwo,
+                BadgeThree: metricsForClip.BadgeThree,
+                BadgeFour: metricsForClip.BadgeFour,
+                ImpressiveLiked: metricsForClip.ImpressiveLiked,
+                ImpressiveCount: metricsForClip.ImpressiveCount,
+                FunnyLiked: metricsForClip.FunnyLiked,
+                FunnyCount: metricsForClip.FunnyCount,
+                DiscussionLiked: metricsForClip.DiscussionLiked,
+                DiscussionCount: metricsForClip.DiscussionCount,
+                ViewCount: metricsForClip.ViewCount,
+                LikeCount: metricsForClip.LikeCount,
+                CommentCount: commentsForClip.CommentCount,
+                Comments: commentsForClip.Comments,
+                Filters: filtersForClip
+            };
+
+            results.push(response);
+
+            resolve(results);
+        })
+            .catch(err => {
+                let msg = "Failed to find clip, " + err.message;
+                logger.warn(msg);
+                reject(msg);
+            });
+    });
+}
+
+// TODO this should possibly be combined with above function
 
 function getAllClips() {
     var results = [];

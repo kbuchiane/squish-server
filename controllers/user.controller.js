@@ -72,7 +72,7 @@ exports.getUsers = (req, res) => {
     });
 }
 
-// Generates data for Browse, Profile and SingleGame pages
+// Generates data for Browse, Profile, SingleClip, and SingleGame pages
 exports.getUserProfileForClips = (req, res, next) => {
     let readOnlyView = req.readOnlyView;
     let username = req.query.username;
