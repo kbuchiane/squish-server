@@ -9,7 +9,7 @@ exports.singleClipPage1 = (req, res, next) => {
 
     start = new Date();
 
-    //  console.info("Request SingleClip [" + url + "]");
+    // console.info("Request SingleClip [" + url + "]");
 
     if (!username) {
         // Allows for display only - no JWT token

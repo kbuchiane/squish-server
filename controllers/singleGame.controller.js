@@ -9,7 +9,7 @@ exports.singleGamePage1 = (req, res, next) => {
 
     start = new Date();
 
-    //  console.info("Request SingleGame [" + url + "]");
+   // console.info("Request SingleGame [" + url + "]");
 
     if (!username) {
         // Allows for display only - no JWT token

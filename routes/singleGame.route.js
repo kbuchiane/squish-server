@@ -9,11 +9,8 @@ const { caching } = require("../middleware");
 // Controllers
 const gameController = require("../controllers/game.controller");
 const singleGameController = require("../controllers/singleGame.controller");
-const followController = require("../controllers/follow.controller");
 const clipController = require("../controllers/clip.controller");
 const userController = require("../controllers/user.controller");
-
-// FIXME update so page is /singleGame/gameId
 
 // Generate data for singleGame page
 router.get("/singleGame",
@@ -25,6 +22,7 @@ router.get("/singleGame",
     caching.get
   ],
   clipController.singleGamePage,
+  gameController.getGameData,
   userController.getUserProfileForClips,
   caching.set,
   singleGameController.singleGamePage2
