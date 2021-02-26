@@ -29,7 +29,7 @@ exports.profilePageComplete = (req, res) => {
     let useCache = req.useCache;
     let results = req.results;
     let json = JSON.stringify(results);
-
+    
     res.status(200).end(json);
 
     let end = (new Date() - start) / 1000;

@@ -12,8 +12,6 @@ const singleClipController = require("../controllers/singleClip.controller");
 const clipController = require("../controllers/clip.controller");
 const userController = require("../controllers/user.controller");
 
-// FIXME update so page is /singleClip/clipId
-
 // Generate data for singleClip page
 router.get("/singleClip",
   [

@@ -13,8 +13,6 @@ const followController = require("../controllers/follow.controller");
 const clipController = require("../controllers/clip.controller");
 const userController = require("../controllers/user.controller");
 
-// FIXME update so page is /profile/username (when user is logged in)
-
 // Generates data for Profile page
 router.get("/profile",
   [
