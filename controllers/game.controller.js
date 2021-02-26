@@ -1,10 +1,8 @@
 const db = require("../models");
 const User = db.user;
 const Game = db.game;
-const moment = require("moment");
 const logger = require("../utils/logger");
 const dateUtil = require("../utils/dateUtil")
-const { relativeTimeRounding } = require("moment");
 
 exports.games = (req, res) => {
     return res.status(200);
@@ -51,8 +49,6 @@ exports.addGame = (req, res) => {
         }
     });
 
-    console.log("addGame  " + title + "  " + iconFilepath + "  " + username);
-
     User.findOne({
         where: {
             [Op.and]: [
@@ -66,9 +62,7 @@ exports.addGame = (req, res) => {
             return res.status(400).send({ message: msg });
         }
 
-        // Probably want to add check for administrative user (not everyone should be able to add a game)
-
-        let userId = user.UserId;
+        // Add check for administrative user (not everyone should be able to add a game)
 
         Game.create({
             Title: title,
@@ -80,16 +74,12 @@ exports.addGame = (req, res) => {
         }).catch(err => {
             let msg = "Add game error, " + err.message;
             logger.error(msg);
-            return res.status(400).send({
-                message: msg
-            });
+            return res.status(400).send({ message: msg });
         });
     }).catch(err => {
         let msg = "Add game error, " + err.message;
         logger.error(msg);
-        return res.status(400).send({
-            message: msg
-        });
+        return res.status(400).send({ message: msg });
     });
 }
 
@@ -117,9 +107,7 @@ exports.deleteGame = (req, res) => {
             return res.status(400).send({ message: msg });
         }
 
-        // Probably want to add check for administrative user (not everyone should be able to delete a game)
-
-        let userId = user.UserId;
+        // Add check for administrative user (not everyone should be able to delete a game)
 
         Game.destroy({
             GameId: gameId
@@ -128,23 +116,16 @@ exports.deleteGame = (req, res) => {
         }).catch(err => {
             let msg = "Delete game error, " + err.message;
             logger.error(msg);
-            return res.status(400).send({
-                message: msg
-            });
+            return res.status(400).send({ message: msg });
         });
     }).catch(err => {
         let msg = "Delete game error, " + err.message;
         logger.error(msg);
-        return res.status(400).send({
-            message: msg
-        });
+        return res.status(400).send({ message: msg });
     });
 }
 
 exports.getGame = (req, res) => {
-    var url = req.protocol + '://' + req.get('host') + req.originalUrl;
-    console.log("URL: " + url);
-
     let gameId = req.query.gameId;
 
     if (!gameId) {
@@ -152,32 +133,18 @@ exports.getGame = (req, res) => {
         return res.status(400).send({ message: msg });
     }
 
-    Game.findOne({
-        where: {
-            GameId: gameId
-        }
-    }).then(game => {
+    getOneGame(gameId).then(game => {
         if (!game) {
             let msg = "Game was not found.";
             return res.status(400).send({ message: msg });
         }
 
-        var result = [];
-        let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
-
-        response = {
-            GameId: game.GameId,
-            Title: game.Title,
-            IconFilepath: game.IconFilepath,
-            ReleaseDate: game.ReleaseDate,
-            DisplayDate: displayDate,
-            Tags: game.Tags
-        };
-
-        result.push(response);
-
-        let json = JSON.stringify(result);
+        let json = JSON.stringify(game);
         res.status(200).end(json);
+    }).catch(err => {
+        let msg = "Failed to find game, " + err.message;
+        logger.warn(msg);
+        return res.status(400).send({ message: msg });
     });
 }
 
@@ -189,8 +156,7 @@ exports.getGames = (req, res) => {
         }
 
         let json = JSON.stringify(games);
-        res.status(200).end(json);
-
+        return res.status(200).end(json);
     }).catch(err => {
         let msg = "Failed to find games, " + err.message;
         logger.warn(msg);
@@ -201,8 +167,6 @@ exports.getGames = (req, res) => {
 
 // Generates data for Browse, BrowseGames, and Profile pages
 exports.getGameData = (req, res, next) => {
-    let readOnlyView = req.readOnlyView;
-    let username = req.query.username;
     let useCache = req.useCache;
 
     if (useCache) {
@@ -218,31 +182,14 @@ exports.getGameData = (req, res, next) => {
             await new Promise(resolve => {
                 let gameId = results[i].GameId;
 
-                getGame(gameId).then(game => {
-                    let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
-
-                    let response = {
-                        GameId: game.GameId,
-                        Title: game.Title,
-                        IconFilepath: game.IconFilepath,
-                        ReleaseDate: game.ReleaseDate,
-                        DisplayDate: displayDate,
-                        Tags: game.Tags,
-
-                        // Set to default values - will be updated later in the workflow
-                        Followed: false,
-                        FollowerCount: "0",
-                        ClipsTodayCount: "0",
-                        ClipsAllTimeCount: "0"
-                    };
-
-                    results[i].Game = response;
+                getOneGame(gameId).then(game => {
+                    let values = getGameValues(game);
+                    results[i].Game = values;
 
                     resolve();
                 }).catch(err => {
                     let msg = "Failed to find game for id " + gameId + ", " + err.message;
                     logger.warn(msg);
-                    //     reject(msg);
                 });
             });
         }
@@ -255,8 +202,6 @@ exports.getGameData = (req, res, next) => {
 
 // Generates data for browseGames page
 exports.browseGamesPage = (req, res, next) => {
-    let readOnlyView = req.readOnlyView;
-    let username = req.query.username;
     let useCache = req.useCache;
     let results = [];
 
@@ -266,7 +211,6 @@ exports.browseGamesPage = (req, res, next) => {
     }
 
     getAllGames().then(games => {
-
         if (!games || games.length < 1) {
             let msg = "No games were found.";
             return res.status(400).send({ message: msg });
@@ -274,24 +218,9 @@ exports.browseGamesPage = (req, res, next) => {
 
         for (let index = 0; index < games.length; index++) {
             let game = games[index];
-            let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
+            let values = getGameValues(game);
 
-            let response = {
-                GameId: game.GameId,
-                Title: game.Title,
-                IconFilepath: game.IconFilepath,
-                ReleaseDate: game.ReleaseDate,
-                DisplayDate: displayDate,
-                Tags: game.Tags,
-
-                // Set to default values - will be updated later in the workflow
-                Followed: false,
-                FollowerCount: "0",
-                ClipsTodayCount: "0",
-                ClipsAllTimeCount: "0"
-            }
-
-            results.push(response);
+            results.push(values);
         }
 
         req.results = results;
@@ -305,7 +234,7 @@ exports.browseGamesPage = (req, res, next) => {
     });
 }
 
-function getGame(gameId) {
+function getOneGame(gameId) {
     return new Promise(function (resolve, reject) {
         Game.findOne({
             where: {
@@ -317,17 +246,10 @@ function getGame(gameId) {
                 reject(msg);
                 return;
             }
-            let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
-            let response = {
-                GameId: game.GameId,
-                Title: game.Title,
-                IconFilepath: game.IconFilepath,
-                ReleaseDate: game.ReleaseDate,
-                DisplayDate: displayDate,
-                Tags: game.Tags
-            };
 
-            resolve(response);
+            let values = getGameValues(game);
+
+            resolve(values);
         }).catch(err => {
             let msg = "Get game error, " + err.message;
             logger.error(msg);
@@ -350,37 +272,37 @@ function getAllGames() {
             }
             for (let index = 0; index < games.length; index++) {
                 let game = games[index];
-                let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
-                let response = {
-                    GameId: game.GameId,
-                    Title: game.Title,
-                    IconFilepath: game.IconFilepath,
-                    ReleaseDate: game.ReleaseDate,
-                    DisplayDate: displayDate,
-                    Tags: game.Tags
-                };
+                let values = getGameValues(game);
 
-                result.push(response);
+                result.push(values);
             }
 
             resolve(result);
-        })
-            .catch(err => {
-                let msg = "Failed to find games, " + err.message;
-                logger.warn(msg);
-                reject(msg);
-            });
+        }).catch(err => {
+            let msg = "Failed to find games, " + err.message;
+            logger.warn(msg);
+            reject(msg);
+        });
     });
 }
 
-// TODO move to utility
-function isJson(value) {
-    try {
-        let json = JSON.parse(value);
-        return true;
+function getGameValues(game) {
+    let displayDate = dateUtil.getDisplayDateForFormat(game.ReleaseDate, dateUtil.GAME_DATE_FORMAT);
 
-    } catch (e) {
-        console.log("Value is not JSON");
-        return false;
+    let values = {
+        GameId: game.GameId,
+        Title: game.Title,
+        IconFilepath: game.IconFilepath,
+        ReleaseDate: game.ReleaseDate,
+        DisplayDate: displayDate,
+        Tags: game.Tags,
+
+        // Use default values for the following - these will be updated in later workflow steps
+        Followed: false,
+        FollowerCount: "0",
+        ClipsTodayCount: "0",
+        ClipsAllTimeCount: "0"
     }
+
+    return values;
 }
