@@ -62,7 +62,7 @@ exports.getUserProfileForClips = (req, res, next) => {
     (async function loop() {
         for (let i = 0; i < results.length; i++) {
             await new Promise(resolve => {
-                let userId = results[i].PosterUserId;
+                let userId = results[i].UserId;
 
                 getOneUser(userId).then(user => {
                     if (user) {

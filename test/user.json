@@ -7,7 +7,7 @@
     },
     {   "UserId": 22222,
         "Username": "Sally", "Email": "testUserEmail2", "Password": "testUserPassword", "DateCreated": "8/21/1978",
-        "IconFilepath": "frogger.png", "Badges": ["badge1.png", "badge2.png", "badge3.png", "badge4.png"],
+        "IconFilepath": "astrofire.png", "Badges": ["badge1.png", "badge2.png", "badge3.png", "badge4.png"],
         "Active":1, "RefreshToken":null, "RefreshTokenExpiration":null,
         "ConfirmId":null, "ConfirmIdDateCreated":null, "VerifyAttemptCount":0, "Admin":0
     },
