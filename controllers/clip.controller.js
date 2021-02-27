@@ -96,7 +96,7 @@ exports.postClip = (req, res) => {
             return res.status(400).send({ message: msg });
         }
 
-        let posterId = user.UserId;
+        let userId = user.UserId;
         Game.findOne({
             where: {
                 Title: game
@@ -108,7 +108,7 @@ exports.postClip = (req, res) => {
             }
             let gameId = game.GameId;
             Clip.create({
-                PosterUserId: posterId,
+                UserId: userId,
                 Title: title,
                 GameId: gameId,
                 Duration: duration,
@@ -120,7 +120,7 @@ exports.postClip = (req, res) => {
                 let thumbnailFilePath = username + "/" + clipId + "-thumbnail";
                 Clip.update({
                     VideoFilepath: videoFilePath,
-                    Poster: thumbnailFilePath
+                    thumbnail: thumbnailFilePath
                 },
                     {
                         where: {
@@ -533,10 +533,10 @@ function getAllClipsForUser(username) {
                 reject(msg);
             }
 
-            let posterUserId = user.UserId;
+            let userId = user.UserId;
             Clip.findAll({
                 where: {
-                    PosterUserId: posterUserId
+                    UserId: userId
                 }
             }).then(clips => {
                 if (!clips) {
@@ -685,7 +685,7 @@ function getMetricsForClip(clipId) {
         Liked: true,
 
         // ------------  Are these the same as what is from user above?
-        UserImage: 'crown.png',
+        UserImage: 'frogger.png',
         BadgeOne: 'badge1.png',
         BadgeTwo: 'badge2.png',
         BadgeThree: 'badge3.png',
@@ -759,14 +759,14 @@ function getClipValues(clip) {
 
     let values = {
         ClipId: clip.ClipId,
-        PosterUserId: clip.PosterUserId,
+        UserId: clip.UserId,
         VideoFilepath: clip.VideoFilepath,
         Title: clip.Title,
         GameId: clip.GameId,
         Duration: clip.Duration,
         DateCreated: clip.DateCreated,
         DisplayDate: displayDate,
-        Poster: clip.Poster,
+        Thumbnail: clip.Thumbnail,
         ViewCount: clip.ViewCount
     };
 
@@ -782,14 +782,14 @@ function getClipValuesWithMetrics(clip) {
     let values = {
         ClipId: clip.ClipId,
         Type: clip.Type,
-        PosterUserId: clip.PosterUserId,
+        UserId: clip.UserId,
         VideoFilepath: clip.VideoFilepath,
         Title: clip.Title,
         GameId: clip.GameId,
         Duration: clip.Duration,
         DateCreated: clip.DateCreated,
         DisplayDate: displayDate,
-        Poster: clip.Poster,
+        Thumbnail: clip.Thumbnail,
         ViewCount: clip.ViewCount,
 
         Liked: metricsForClip.Liked,
