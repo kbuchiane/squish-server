@@ -1,7 +1,3 @@
-const { v4: uuidv4 } = require("uuid");
-
-// TODO change column names such as FollowedGameId to GameId
-
 module.exports = (sequelize, Sequelize) => {
     const GameFollowing = sequelize.define("GameFollowing", {
         GameFollowingId: {
@@ -11,13 +7,13 @@ module.exports = (sequelize, Sequelize) => {
             unique: true,
             primaryKey: true
         },
-        GameFollowerUserId: {
+        FollowerUserId: {
             type: Sequelize.UUID,
         },
-        FollowedGameId: {
+        GameId: {
             type: Sequelize.UUID,
         },
-        DateGameFollowed: {
+        DateFollowed: {
             type: Sequelize.DATE
         }
     }, {

@@ -1,5 +1,6 @@
 const db = require("../models");
 const logger = require("../utils/logger");
+const dateUtil = require("../utils/dateUtil");
 const fs = require("fs");
 const moment = require("moment");
 
@@ -95,7 +96,7 @@ exports.postClip = (req, res) => {
             return res.status(400).send({ message: msg });
         }
 
-        let posterId = user.UserId;
+        let userId = user.UserId;
         Game.findOne({
             where: {
                 Title: game
@@ -107,7 +108,7 @@ exports.postClip = (req, res) => {
             }
             let gameId = game.GameId;
             Clip.create({
-                PosterUserId: posterId,
+                UserId: userId,
                 Title: title,
                 GameId: gameId,
                 Duration: duration,
@@ -119,7 +120,7 @@ exports.postClip = (req, res) => {
                 let thumbnailFilePath = username + "/" + clipId + "-thumbnail";
                 Clip.update({
                     VideoFilepath: videoFilePath,
-                    Poster: thumbnailFilePath
+                    thumbnail: thumbnailFilePath
                 },
                     {
                         where: {
@@ -240,40 +241,25 @@ exports.getClip = (req, res) => {
         return res.status(400).send({ message: msg });
     }
 
-    Clip.findOne({
-        where: {
-            ClipId: clipId
-        }
-    }).then(clip => {
+    getOneClip(clipId, false).then(clip => {
         if (!clip) {
             let msg = "Clip was not found.";
             return res.status(400).send({ message: msg });
         }
 
-        // NOTE: response contains only fields from clip table
-        response = {
-            ClipId: clip.ClipId,
-            PosterUserId: clip.PosterUserId,
-            VideoFilepath: clip.VideoFilepath,
-            Title: clip.Title,
-            GameId: clip.GameId,
-            Duration: clip.Duration,
-            DateCreated: clip.DateCreated,
-            Poster: clip.Poster,
-            ViewCount: clip.ViewCount
-        };
-
-        res.status(200).end(JSON.stringify(response));
+        let json = JSON.stringify(clip);
+        res.status(200).end(json);
+    }).catch(err => {
+        let msg = "Failed to find clip, " + err.message;
+        logger.warn(msg);
+        return res.status(400).send({ message: msg });
     });
 }
 
-
 // Generates data for profile page
 exports.profilePage = (req, res, next) => {
-    let readOnlyView = req.readOnlyView;
     let profileName = req.query.profileName;
     let useCache = req.useCache;
-    let username = req.query.username;
 
     if (useCache) {
         next();
@@ -287,11 +273,26 @@ exports.profilePage = (req, res, next) => {
     });
 }
 
+// Generates data for singleClip page
+exports.singleClipPage = (req, res, next) => {
+    let useCache = req.useCache;
+    let clipId = req.query.clipId;
+
+    if (useCache) {
+        next();
+        return;
+    }
+
+    // Get clip for clip id
+    getOneClip(clipId, true).then(results => {
+        req.results = results;
+        next();
+    });
+}
+
 // Generates data for singleGame page
 exports.singleGamePage = (req, res, next) => {
-    let readOnlyView = req.readOnlyView;
     let useCache = req.useCache;
-    let username = req.query.username;
     let gameId = req.query.gameId;
 
     if (useCache) {
@@ -308,9 +309,7 @@ exports.singleGamePage = (req, res, next) => {
 
 // Generates data for browse page
 exports.browsePage = (req, res, next) => {
-    let readOnlyView = req.readOnlyView;
     let useCache = req.useCache;
-    let username = req.query.username;
     let filter = req.query.filter;
     let timeframe = req.query.timeframe;
 
@@ -328,8 +327,6 @@ exports.browsePage = (req, res, next) => {
 
 // Generates data for Browse and BrowseGames pages
 exports.getClipCountsforGames = (req, res, next) => {
-    let readOnlyView = req.readOnlyView;
-    let username = req.query.username;
     let useCache = req.useCache;
 
     if (useCache) {
@@ -414,7 +411,6 @@ function getAllClipsForFilterAndTimeframe(filter, timeframe) {
     var results = [];
 
     return new Promise(function (resolve, reject) {
-
         // TODO: Add filter field to Clip table (array containing filters that apply for this clip)
         // TODO: Timeframe needs to be implementd (will default to all-time)
 
@@ -424,7 +420,6 @@ function getAllClipsForFilterAndTimeframe(filter, timeframe) {
          */
 
         getAllClips().then(clips => {
-
             if (!clips || clips.length < 1) {
                 let msg = "No clips were found.";
                 reject(msg);
@@ -452,6 +447,47 @@ function getAllClipsForFilterAndTimeframe(filter, timeframe) {
     });
 }
 
+function getOneClip(clipId, includeMetrics) {
+    var results = [];
+
+    return new Promise(function (resolve, reject) {
+        if (!clipId) {
+            let msg = "Unable to get clip, ID is undefined.";
+            reject(msg);
+            return;
+        }
+
+        Clip.findOne({
+            where: {
+                ClipId: clipId
+            }
+        }).then(clip => {
+            if (!clip) {
+                let msg = "Clip was not found.";
+                reject(msg);
+                return;
+            }
+
+            let values = null;
+
+            if (includeMetrics) {
+                values = getClipValuesWithMetrics(clip);
+            }
+            else {
+                values = getClipValues(clip);
+            }
+
+            results.push(values);
+
+            resolve(results);
+        }).catch(err => {
+            let msg = "Failed to find clip, " + err.message;
+            logger.warn(msg);
+            reject(msg);
+        });
+    });
+}
+
 function getAllClips() {
     var results = [];
 
@@ -462,54 +498,20 @@ function getAllClips() {
                 logger.warn(msg);
                 reject(msg);
             }
+
             for (let index = 0; index < clips.length; index++) {
                 let clip = clips[index];
+                let values = getClipValuesWithMetrics(clip);
 
-                let commentsForClip = getCommentsForClip(clip.ClipId);
-                let metricsForClip = getMetricsForClip(clip.ClipId);
-                let filtersForClip = getFiltersForClip(clip.ClipId);
-
-                let response = {
-                    ClipId: clip.ClipId,
-                    Type: clip.Type,
-                    PosterUserId: clip.PosterUserId,
-                    VideoFilepath: clip.VideoFilepath,
-                    Title: clip.Title,
-                    GameId: clip.GameId,
-                    Duration: clip.Duration,
-                    DateCreated: clip.DateCreated,
-                    Poster: clip.Poster,
-                    ViewCount: clip.ViewCount,
-
-                    Liked: metricsForClip.Liked,
-                    UserImage: metricsForClip.UserImage,
-                    BadgeOne: metricsForClip.BadgeOne,
-                    BadgeTwo: metricsForClip.BadgeTwo,
-                    BadgeThree: metricsForClip.BadgeThree,
-                    BadgeFour: metricsForClip.BadgeFour,
-                    ImpressiveLiked: metricsForClip.ImpressiveLiked,
-                    ImpressiveCount: metricsForClip.ImpressiveCount,
-                    FunnyLiked: metricsForClip.FunnyLiked,
-                    FunnyCount: metricsForClip.FunnyCount,
-                    DiscussionLiked: metricsForClip.DiscussionLiked,
-                    DiscussionCount: metricsForClip.DiscussionCount,
-                    ViewCount: metricsForClip.ViewCount,
-                    LikeCount: metricsForClip.LikeCount,
-                    CommentCount: commentsForClip.CommentCount,
-                    Comments: commentsForClip.Comments,
-                    Filters: filtersForClip
-                };
-
-                results.push(response);
+                results.push(values);
             }
 
             resolve(results);
-        })
-            .catch(err => {
-                let msg = "Failed to find clips, " + err.message;
-                logger.warn(msg);
-                reject(msg);
-            });
+        }).catch(err => {
+            let msg = "Failed to find clips, " + err.message;
+            logger.warn(msg);
+            reject(msg);
+        });
     });
 }
 
@@ -531,10 +533,10 @@ function getAllClipsForUser(username) {
                 reject(msg);
             }
 
-            let posterUserId = user.UserId;
+            let userId = user.UserId;
             Clip.findAll({
                 where: {
-                    PosterUserId: posterUserId
+                    UserId: userId
                 }
             }).then(clips => {
                 if (!clips) {
@@ -545,42 +547,9 @@ function getAllClipsForUser(username) {
 
                 for (let index = 0; index < clips.length; index++) {
                     let clip = clips[index];
-                    let commentsForClip = getCommentsForClip(clip.ClipId);
-                    let metricsForClip = getMetricsForClip(clip.ClipId);
-                    let filtersForClip = getFiltersForClip(clip.ClipId);
+                    let values = getClipValuesWithMetrics(clip);
 
-                    let response = {
-                        ClipId: clip.ClipId,
-                        Type: clip.Type,
-                        PosterUserId: clip.PosterUserId,
-                        VideoFilepath: clip.VideoFilepath,
-                        Title: clip.Title,
-                        GameId: clip.GameId,
-                        Duration: clip.Duration,
-                        DateCreated: clip.DateCreated,
-                        Poster: clip.Poster,
-                        ViewCount: clip.ViewCount,
-
-                        Liked: metricsForClip.Liked,
-                        UserImage: metricsForClip.UserImage,
-                        BadgeOne: metricsForClip.BadgeOne,
-                        BadgeTwo: metricsForClip.BadgeTwo,
-                        BadgeThree: metricsForClip.BadgeThree,
-                        BadgeFour: metricsForClip.BadgeFour,
-                        ImpressiveLiked: metricsForClip.ImpressiveLiked,
-                        ImpressiveCount: metricsForClip.ImpressiveCount,
-                        FunnyLiked: metricsForClip.FunnyLiked,
-                        FunnyCount: metricsForClip.FunnyCount,
-                        DiscussionLiked: metricsForClip.DiscussionLiked,
-                        DiscussionCount: metricsForClip.DiscussionCount,
-                        ViewCount: metricsForClip.ViewCount,
-                        LikeCount: metricsForClip.LikeCount,
-                        CommentCount: commentsForClip.CommentCount,
-                        Comments: commentsForClip.Comments,
-                        Filters: filtersForClip
-                    };
-
-                    results.push(response);
+                    results.push(values);
                 }
 
                 resolve(results);
@@ -615,43 +584,9 @@ function getAllClipsForGame(gameId) {
 
             for (let index = 0; index < clips.length; index++) {
                 let clip = clips[index];
+                let values = getClipValuesWithMetrics(clip);
 
-                let commentsForClip = getCommentsForClip(clip.ClipId);
-                let metricsForClip = getMetricsForClip(clip.ClipId);
-                let filtersForClip = getFiltersForClip(clip.ClipId);
-
-                let response = {
-                    ClipId: clip.ClipId,
-                    Type: clip.Type,
-                    PosterUserId: clip.PosterUserId,
-                    VideoFilepath: clip.VideoFilepath,
-                    Title: clip.Title,
-                    GameId: clip.GameId,
-                    Duration: clip.Duration,
-                    DateCreated: clip.DateCreated,
-                    Poster: clip.Poster,
-                    ViewCount: clip.ViewCount,
-
-                    Liked: metricsForClip.Liked,
-                    UserImage: metricsForClip.UserImage,
-                    BadgeOne: metricsForClip.BadgeOne,
-                    BadgeTwo: metricsForClip.BadgeTwo,
-                    BadgeThree: metricsForClip.BadgeThree,
-                    BadgeFour: metricsForClip.BadgeFour,
-                    ImpressiveLiked: metricsForClip.ImpressiveLiked,
-                    ImpressiveCount: metricsForClip.ImpressiveCount,
-                    FunnyLiked: metricsForClip.FunnyLiked,
-                    FunnyCount: metricsForClip.FunnyCount,
-                    DiscussionLiked: metricsForClip.DiscussionLiked,
-                    DiscussionCount: metricsForClip.DiscussionCount,
-                    ViewCount: metricsForClip.ViewCount,
-                    LikeCount: metricsForClip.LikeCount,
-                    CommentCount: commentsForClip.CommentCount,
-                    Comments: commentsForClip.Comments,
-                    Filters: filtersForClip
-                };
-
-                results.push(response);
+                results.push(values);
             }
 
             resolve(results);
@@ -750,7 +685,7 @@ function getMetricsForClip(clipId) {
         Liked: true,
 
         // ------------  Are these the same as what is from user above?
-        UserImage: 'crown.png',
+        UserImage: 'frogger.png',
         BadgeOne: 'badge1.png',
         BadgeTwo: 'badge2.png',
         BadgeThree: 'badge3.png',
@@ -815,4 +750,66 @@ function checkChipFilters(filter, clipFilters) {
     }
 
     return hasFilter;
+}
+
+function getClipValues(clip) {
+    let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
+
+    // NOTE: contains only fields from clip table
+
+    let values = {
+        ClipId: clip.ClipId,
+        UserId: clip.UserId,
+        VideoFilepath: clip.VideoFilepath,
+        Title: clip.Title,
+        GameId: clip.GameId,
+        Duration: clip.Duration,
+        DateCreated: clip.DateCreated,
+        DisplayDate: displayDate,
+        Thumbnail: clip.Thumbnail,
+        ViewCount: clip.ViewCount
+    };
+
+    return values;
+}
+
+function getClipValuesWithMetrics(clip) {
+    let commentsForClip = getCommentsForClip(clip.ClipId);
+    let metricsForClip = getMetricsForClip(clip.ClipId);
+    let filtersForClip = getFiltersForClip(clip.ClipId);
+    let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
+
+    let values = {
+        ClipId: clip.ClipId,
+        Type: clip.Type,
+        UserId: clip.UserId,
+        VideoFilepath: clip.VideoFilepath,
+        Title: clip.Title,
+        GameId: clip.GameId,
+        Duration: clip.Duration,
+        DateCreated: clip.DateCreated,
+        DisplayDate: displayDate,
+        Thumbnail: clip.Thumbnail,
+        ViewCount: clip.ViewCount,
+
+        Liked: metricsForClip.Liked,
+        UserImage: metricsForClip.UserImage,
+        BadgeOne: metricsForClip.BadgeOne,
+        BadgeTwo: metricsForClip.BadgeTwo,
+        BadgeThree: metricsForClip.BadgeThree,
+        BadgeFour: metricsForClip.BadgeFour,
+        ImpressiveLiked: metricsForClip.ImpressiveLiked,
+        ImpressiveCount: metricsForClip.ImpressiveCount,
+        FunnyLiked: metricsForClip.FunnyLiked,
+        FunnyCount: metricsForClip.FunnyCount,
+        DiscussionLiked: metricsForClip.DiscussionLiked,
+        DiscussionCount: metricsForClip.DiscussionCount,
+        ViewCount: metricsForClip.ViewCount,
+        LikeCount: metricsForClip.LikeCount,
+        CommentCount: commentsForClip.CommentCount,
+        Comments: commentsForClip.Comments,
+        Filters: filtersForClip
+    };
+
+    return values;
 }

@@ -1,15 +1,15 @@
 var start = null;
 
-// Generates data for singleGame page
-exports.singleGamePage1 = (req, res, next) => {
+// Generates data for singleClip page
+exports.singleClipPage1 = (req, res, next) => {
     let username = req.query.username;
-    let gameId = req.query.gameId;
+    let clipId = req.query.clipId;
     let readOnlyView = false;
     let url = req.originalUrl || req.url;
 
     start = new Date();
 
-   // console.info("Request SingleGame [" + url + "]");
+    // console.info("Request SingleClip [" + url + "]");
 
     if (!username) {
         // Allows for display only - no JWT token
@@ -22,17 +22,17 @@ exports.singleGamePage1 = (req, res, next) => {
     return;
 }
 
-// Generates data for profile page
-exports.singleGamePage2 = (req, res) => {
+// Generates data for singleClip page
+exports.singleClipPage2 = (req, res) => {
     let username = req.query.username;
-    let gameId = req.query.gameId;
+    let clipId = req.query.clipId;
     let useCache = req.useCache;
-    let results = req.results;
+    let results = req.results[0];
     let json = JSON.stringify(results);
 
     res.status(200).end(json);
 
     let end = (new Date() - start) / 1000;
 
-    console.info('Request completed %ds  UsedCache: %s  Page: SingleGame', end, useCache);
+    console.info('Request completed %ds  UsedCache: %s  Page: SingleClip', end, useCache);
 }

@@ -1,5 +1,3 @@
-const { v4: uuidv4 } = require("uuid");
-
 module.exports = (sequelize, Sequelize) => {
     const User = sequelize.define("User", {
         UserId: {
@@ -28,7 +26,13 @@ module.exports = (sequelize, Sequelize) => {
         Badges: {
             type: Sequelize.STRING,
             get() {
-                return this.getDataValue('Badges').split(',');
+                let badges = this.getDataValue('Badges');
+                if (badges) {
+                    return this.getDataValue('Badges').split(',');
+                }
+                else {
+                    return [];
+                }
             },
             set(val) {
                 let value = val.toString();

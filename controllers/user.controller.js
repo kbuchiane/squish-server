@@ -2,17 +2,13 @@ const db = require("../models");
 const User = db.user;
 const moment = require("moment");
 const logger = require("../utils/logger");
-const { urlencoded } = require("body-parser");
-const { user } = require("../models");
+const dateUtil = require("../utils/dateUtil");
 
 exports.users = (req, res) => {
     return res.status(200);
 }
 
 exports.getUser = (req, res) => {
-    var url = req.protocol + '://' + req.get('host') + req.originalUrl;
-    console.log("URL: " + url);
-
     let userId = req.query.userId;
 
     if (!userId) {
@@ -20,34 +16,18 @@ exports.getUser = (req, res) => {
         return res.status(400).send({ message: msg });
     }
 
-    User.findOne({
-        where: {
-            UserId: userId
-        }
-    }).then(user => {
+    getOneUser(userId).then(user => {
         if (!user) {
             let msg = "User was not found.";
             return res.status(400).send({ message: msg });
         }
 
-        var result = [];
-      
-        response = {
-            UserId: user.UserId,
-            Username: user.username,
-            Email: user.Email,
-            DateCreated: user.DateCreated,
-            IconFilepath: user.IconFilepath,
-            Active: user.Active,
-            Admin: user.Admin,
-            Badges: user.Badges
-        };
-
-        result.push(response);
-
-        let json = JSON.stringify(result);
-
+        let json = JSON.stringify(user);
         res.status(200).end(json);
+    }).catch(err => {
+        let msg = "Failed to find user, " + err.message;
+        logger.warn(msg);
+        return res.status(400).send({ message: msg });
     });
 }
 
@@ -59,21 +39,16 @@ exports.getUsers = (req, res) => {
         }
 
         let json = JSON.stringify(users);
-
         res.status(200).end(json);
     }).catch(err => {
         let msg = "Failed to find users, " + err.message;
         logger.warn(msg);
-
         return res.status(400).send({ message: msg });
     });
 }
 
-// Generates data for Browse, Profile and SingleGame pages
+// Generates data for Browse, Profile, SingleClip, and SingleGame pages
 exports.getUserProfileForClips = (req, res, next) => {
-    let readOnlyView = req.readOnlyView;
-    let username = req.query.username;
-    let profileName = req.query.profileName;
     let useCache = req.useCache;
 
     if (useCache) {
@@ -81,29 +56,17 @@ exports.getUserProfileForClips = (req, res, next) => {
         return;
     }
 
-    // Previously generated results from previous steps
+    // Start with results from previous steps
     let results = req.results;
 
     (async function loop() {
         for (let i = 0; i < results.length; i++) {
             await new Promise(resolve => {
-                let userId = results[i].PosterUserId;
+                let userId = results[i].UserId;
 
-                getUser(userId).then(user => {
+                getOneUser(userId).then(user => {
                     if (user) {
-                        let badges = getBadgesForProfile(user.Badges);
-                        let userProfile = {
-                            Username: user.Username,
-                            DateCreated: user.DateCreated,  // TODO probably needs to be reformatted
-                            IconFilepath: user.IconFilepath,
-
-                            // FIXME:  Next 3 are hard-coded
-                            Followed: true,
-                            FollowerCount: "555M",
-                            ClipsCount: "777",
-                            Badges: badges
-                        };
-
+                        let userProfile = getUserProfile(user);
                         results[i].UserProfile = userProfile;
                     }
 
@@ -121,7 +84,7 @@ exports.getUserProfileForClips = (req, res, next) => {
     })();
 }
 
-function getUser(userId) {
+function getOneUser(userId) {
     return new Promise(function (resolve, reject) {
         User.findOne({
             where: {
@@ -134,18 +97,9 @@ function getUser(userId) {
                 return;
             }
 
-            let response = {
-                UserId: user.UserId,
-                Username: user.Username,
-                Email: user.Email,
-                DateCreated: user.DateCreated,
-                IconFilepath: user.IconFilepath,
-                Active: user.Active,
-                Admin: user.Admin,
-                Badges: user.Badges
-            };
+            let values = getUserValues(user);
 
-            resolve(response);
+            resolve(values);
         }).catch(err => {
             let msg = "Get user error, " + err.message;
             logger.error(msg);
@@ -165,30 +119,57 @@ function getAllUsers() {
                 reject(msg);
                 return;
             }
+
             for (let index = 0; index < users.length; index++) {
                 let user = users[index];
-                let response = {
-                    UserId: user.UserId,
-                    Username: user.Username,
-                    Email: user.Email,
-                    DateCreated: user.DateCreated,
-                    IconFilepath: user.IconFilepath,
-                    Active: user.Active,
-                    Admin: user.Admin,
-                    Badges: user.Badges
-                };
-
-                result.push(response);
+                let values = getUserValues(user);
+                result.push(values);
             }
 
             resolve(result);
-        })
-            .catch(err => {
-                let msg = "Failed to find users, " + err.message;
-                logger.warn(msg);
-                reject(msg);
-            });
+        }).catch(err => {
+            let msg = "Failed to find users, " + err.message;
+            logger.warn(msg);
+            reject(msg);
+        });
     });
+}
+
+function getUserValues(user) {
+    let displayDate = dateUtil.getDisplayDbDate(user.DateCreated);
+
+    let values = {
+        UserId: user.UserId,
+        Username: user.Username,
+        Email: user.Email,
+        DateCreated: user.DateCreated,
+        DisplayDate: displayDate,
+        IconFilepath: user.IconFilepath,
+        Active: user.Active,
+        Admin: user.Admin,
+        Badges: user.Badges
+    };
+
+    return values;
+}
+
+function getUserProfile(user) {
+    let badges = getBadgesForProfile(user.Badges);
+    let userMetrics = getUserMetrics(user.UserId);
+    let displayDate = dateUtil.getDisplayDbDate(user.DateCreated);
+
+    let userProfile = {
+        Username: user.Username,
+        DateCreated: user.DateCreated,
+        DisplayDate: displayDate,
+        IconFilepath: user.IconFilepath,
+        Badges: badges,
+        Followed: userMetrics.Followed,
+        FollowerCount: userMetrics.FollowerCount,
+        ClipsCount: userMetrics.ClipsCount,
+    };
+
+    return userProfile;
 }
 
 // Assumes there will be 4 badges for clip
@@ -202,12 +183,23 @@ function getBadgesForProfile(userBadges) {
         }
     }
 
-    let badgesForClip = {
+    let badgesForProfile = {
         BadgeOne: badges[0],
         BadgeTwo: badges[1],
         BadgeThree: badges[2],
         BadgeFour: badges[3]
     }
 
-    return badgesForClip;
+    return badgesForProfile;
+}
+
+// TODO fully implement me
+function getUserMetrics(userId) {
+    let response = {
+        Followed: true,
+        FollowerCount: "555M",
+        ClipsCount: "777",
+    };
+
+    return response;
 }

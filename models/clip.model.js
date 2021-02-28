@@ -1,5 +1,3 @@
-const { v4: uuidv4 } = require("uuid");
-
 module.exports = (sequelize, Sequelize) => {
     const Clip = sequelize.define('Clip', {
         ClipId: {
@@ -9,7 +7,7 @@ module.exports = (sequelize, Sequelize) => {
             unique: true,
             primaryKey: true
         },
-        PosterUserId: {
+        UserId: {
             type: Sequelize.UUID,
         },
         VideoFilepath: {
@@ -30,7 +28,7 @@ module.exports = (sequelize, Sequelize) => {
         DateCreated: {
             type: Sequelize.DATE
         },
-        Poster: {
+        Thumbnail: {
             type: Sequelize.STRING
         },
         ViewCount: {

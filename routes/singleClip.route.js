@@ -8,28 +8,24 @@ const { caching } = require("../middleware");
 
 // Controllers
 const gameController = require("../controllers/game.controller");
-const profileController = require("../controllers/profile.controller");
-const followController = require("../controllers/follow.controller");
+const singleClipController = require("../controllers/singleClip.controller");
 const clipController = require("../controllers/clip.controller");
 const userController = require("../controllers/user.controller");
 
-// Generates data for Profile page
-router.get("/profile",
+// Generate data for singleClip page
+router.get("/singleClip",
   [
     verifyCredentials.checkCredentials,
-    profileController.profilePageStart,
+    singleClipController.singleClipPage1,
     auth.verifyToken,
     caching.check,
     caching.get
   ],
-
-  clipController.profilePage,
+  clipController.singleClipPage,
   userController.getUserProfileForClips,
   gameController.getGameData,
-  followController.getGamesFollowedByUser,
-  followController.getGameFollowerCount,
   caching.set,
-  profileController.profilePageComplete
+  singleClipController.singleClipPage2
 );
 
 module.exports = router;

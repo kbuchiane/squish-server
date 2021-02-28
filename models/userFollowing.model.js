@@ -1,5 +1,3 @@
-const { v4: uuidv4 } = require("uuid");
-
 module.exports = (sequelize, Sequelize) => {
     const UserFollowing = sequelize.define("UserFollowing", {
         UserFollowingId: {
@@ -16,7 +14,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.UUID,
         },
         DateFollowed: {
-            type: Sequelize.STRING
+            type: Sequelize.DATE
         }
     }, {
         timestamps: false,
