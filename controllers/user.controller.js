@@ -16,7 +16,7 @@ exports.getUser = (req, res) => {
         return res.status(400).send({ message: msg });
     }
 
-    getOneUser(userId).then(user => {
+    getOneUserForId(userId).then(user => {
         if (!user) {
             let msg = "User was not found.";
             return res.status(400).send({ message: msg });
@@ -47,6 +47,40 @@ exports.getUsers = (req, res) => {
     });
 }
 
+// Currently called by browse.route - but not really used yet (actually like.controller will use UserId)
+// Gets data for logged on user. The thought is that this date can be used anywhere in the workflow
+exports.setLoggedOnUserData = (req, res, next) => {
+    let useCache = req.useCache;
+    let username = req.query.username;
+
+    if (useCache) {
+        next();
+        return;
+    }
+
+    if (!username) {
+        next();
+        return;
+     }    
+
+
+  //  if (username) {
+        getOneUserForName(username).then(user => {
+            if (!user) {
+                let msg = "Unable to set logged on user data. User was not found.";
+                return res.status(400).send({ message: msg });
+            }
+
+            req.loggedOnUser = user;
+            next();
+        }).catch(err => {
+            let msg = "Unable to set logged on user data. Failed to find user, " + err.message;
+            logger.warn(msg);
+        });
+  //  }
+}
+
+
 // Generates data for Browse, Profile, SingleClip, and SingleGame pages
 exports.getUserProfileForClips = (req, res, next) => {
     let useCache = req.useCache;
@@ -64,10 +98,17 @@ exports.getUserProfileForClips = (req, res, next) => {
             await new Promise(resolve => {
                 let userId = results[i].UserId;
 
-                getOneUser(userId).then(user => {
+                getOneUserForId(userId).then(user => {
                     if (user) {
                         let userProfile = getUserProfile(user);
+                        let badges = getBadgesForUser(user.Badges);
+
                         results[i].UserProfile = userProfile;
+                        results[i].UserImage = user.IconFilepath,
+                        results[i].BadgeOne = badges.BadgeOne;
+                        results[i].BadgeTwo = badges.BadgeTwo;
+                        results[i].BadgeThree = badges.BadgeThree;
+                        results[i].BadgeFour = badges.BadgeFour;
                     }
 
                     resolve();
@@ -84,11 +125,36 @@ exports.getUserProfileForClips = (req, res, next) => {
     })();
 }
 
-function getOneUser(userId) {
+function getOneUserForId(userId) {
     return new Promise(function (resolve, reject) {
         User.findOne({
             where: {
                 UserId: userId
+            }
+        }).then(user => {
+            if (!user) {
+                let msg = "User was not found.";
+                reject(msg);
+                return;
+            }
+
+            let values = getUserValues(user);
+
+            resolve(values);
+        }).catch(err => {
+            let msg = "Get user error, " + err.message;
+            logger.error(msg);
+            reject(msg);
+        });
+    });
+}
+
+
+function getOneUserForName(username) {
+    return new Promise(function (resolve, reject) {
+        User.findOne({
+            where: {
+                Username: username
             }
         }).then(user => {
             if (!user) {
@@ -154,7 +220,7 @@ function getUserValues(user) {
 }
 
 function getUserProfile(user) {
-    let badges = getBadgesForProfile(user.Badges);
+    let badges = getBadgesForUser(user.Badges);
     let userMetrics = getUserMetrics(user.UserId);
     let displayDate = dateUtil.getDisplayDbDate(user.DateCreated);
 
@@ -172,9 +238,11 @@ function getUserProfile(user) {
     return userProfile;
 }
 
+// FIXME there could be 0-4 badges
+//
 // Assumes there will be 4 badges for clip
-function getBadgesForProfile(userBadges) {
-    let defaultBadge = "unknown.png";
+function getBadgesForUser(userBadges) {
+    let defaultBadge = "unknown.png";  // TODO change to null/empty
     let badges = [defaultBadge, defaultBadge, defaultBadge, defaultBadge];
 
     if (userBadges) {
@@ -183,14 +251,14 @@ function getBadgesForProfile(userBadges) {
         }
     }
 
-    let badgesForProfile = {
+    let badgesForUser = {
         BadgeOne: badges[0],
         BadgeTwo: badges[1],
         BadgeThree: badges[2],
         BadgeFour: badges[3]
     }
 
-    return badgesForProfile;
+    return badgesForUser;
 }
 
 // TODO fully implement me

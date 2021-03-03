@@ -28,6 +28,8 @@ exports.browsePage2 = (req, res) => {
     let results = req.results;
     let json = JSON.stringify(results);
 
+   console.log(results);
+
     res.status(200).end(json);
 
     let end = (new Date() - start) / 1000;

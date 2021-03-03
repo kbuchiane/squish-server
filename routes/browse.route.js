@@ -12,8 +12,7 @@ const browseController = require("../controllers/browse.controller");
 const followController = require("../controllers/follow.controller");
 const clipController = require("../controllers/clip.controller");
 const userController = require("../controllers/user.controller");
-
-// FIXME update so page is /browse/username (when user is logged in)
+const likeClipController = require("../controllers/likeClip.controller");
 
 // Generate data for browse page
 router.get("/browse",
@@ -24,7 +23,10 @@ router.get("/browse",
         caching.check,
         caching.get
     ],
-    clipController.browsePage,
+    userController.setLoggedOnUserData,
+    clipController.getClipsForFilterAndTimeframe,
+    likeClipController.getUserLikesForClips,
+    likeClipController.getLikeCountsForClips,
     userController.getUserProfileForClips,
     gameController.getGameData,
     followController.getGamesFollowedByUser,

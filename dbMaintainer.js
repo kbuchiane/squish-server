@@ -153,7 +153,8 @@ function configureModels() {
     db.comment = require(modelsPath + "comment.model")(sequelize, Sequelize);
     db.game = require(modelsPath + "game.model")(sequelize, Sequelize);
     db.gameFollowing = require(modelsPath + "gameFollowing.model")(sequelize, Sequelize);
-    db.like = require(modelsPath + "like.model")(sequelize, Sequelize);
+    db.likeComment = require(modelsPath + "likeComment.model")(sequelize, Sequelize);
+    db.likeClip = require(modelsPath + "likeClip.model")(sequelize, Sequelize);
     db.refreshToken = require(modelsPath + "refreshToken.model")(sequelize, Sequelize);
     db.user = require(modelsPath + "user.model")(sequelize, Sequelize);
     db.userFollowing = require(modelsPath + "userFollowing.model")(sequelize, Sequelize);
@@ -259,16 +260,32 @@ function syncAndLoadTables() {
             }
         });
 
-        // Like
-        await db.like.sync({ force: forceSync, match: dbNameMatch }).then(() => {
-            console.log(yellow('Like'));
+        // LikeComment
+        await db.likeComment.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('LikeComment'));
             if (argv.load) {
-                let json = loadData('like.json');
+                let json = loadData('likeComment.json');
                 if (json) {
-                    db.like.bulkCreate(json).then(() => {
-                        console.log(green('Added ' + json.length + ' records to Like'));
+                    db.likeComment.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to LikeComment'));
                     }).catch(err => {
-                        let msg = "Failed to add bulk Likes, " + err;
+                        let msg = "Failed to add bulk LikeComments, " + err;
+                        reject(msg);
+                    })
+                }
+            }
+        });
+
+         // LikeClip
+         await db.likeClip.sync({ force: forceSync, match: dbNameMatch }).then(() => {
+            console.log(yellow('LikeClip'));
+            if (argv.load) {
+                let json = loadData('likeClip.json');
+                if (json) {
+                    db.likeClip.bulkCreate(json).then(() => {
+                        console.log(green('Added ' + json.length + ' records to LikeClip'));
+                    }).catch(err => {
+                        let msg = "Failed to add bulk LikeClips, " + err;
                         reject(msg);
                     })
                 }

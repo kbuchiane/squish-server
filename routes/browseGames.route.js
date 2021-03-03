@@ -12,8 +12,6 @@ const browseGamesController = require("../controllers/browseGames.controller");
 const followController = require("../controllers/follow.controller");
 const clipController = require("../controllers/clip.controller");
 
-// FIXME update so page is /browseGame/username
-
 // Generate data for browseGames page
 router.get("/browseGames",
     [

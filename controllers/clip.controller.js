@@ -308,7 +308,7 @@ exports.singleGamePage = (req, res, next) => {
 }
 
 // Generates data for browse page
-exports.browsePage = (req, res, next) => {
+exports.getClipsForFilterAndTimeframe = (req, res, next) => {
     let useCache = req.useCache;
     let filter = req.query.filter;
     let timeframe = req.query.timeframe;
@@ -676,33 +676,26 @@ function getCommentsForClip(clipId) {
     return response;
 }
 
-// TODO fully implement me
-function getMetricsForClip(clipId) {
-    let response = {
+// TODO use or remove
+function getLoggedOnUserData(user) {
 
-        // FIXME need to get remaining params from somewhere?
-
-        Liked: true,
-
-        // ------------  Are these the same as what is from user above?
-        UserImage: 'frogger.png',
-        BadgeOne: 'badge1.png',
-        BadgeTwo: 'badge2.png',
-        BadgeThree: 'badge3.png',
-        BadgeFour: 'badge4.png',
-
-        // ----------- Lets call these clip "metrics"
-        ImpressiveLiked: true,
-        ImpressiveCount: "70.9k",
+    let values = {
+        Liked: false,
+        ImpressiveLiked: false,
         FunnyLiked: false,
-        FunnyCount: "12.4k",
-        DiscussionLiked: true,
-        DiscussionCount: "30.6k",
-        ViewCount: "8.64M",
-        LikeCount: "1.21M",
+        DiscussionLiked: false,
     };
 
-    return response;
+    return values;
+}
+
+// TODO implement me
+function getClipViewCount(clipId) {
+    let value = {
+        ViewCount: "99.9B"
+    }
+
+    return value;
 }
 
 // TODO implement me
@@ -775,7 +768,7 @@ function getClipValues(clip) {
 
 function getClipValuesWithMetrics(clip) {
     let commentsForClip = getCommentsForClip(clip.ClipId);
-    let metricsForClip = getMetricsForClip(clip.ClipId);
+    let clipViewCount = getClipViewCount(clip.ClipId);
     let filtersForClip = getFiltersForClip(clip.ClipId);
     let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
 
@@ -792,22 +785,11 @@ function getClipValuesWithMetrics(clip) {
         Thumbnail: clip.Thumbnail,
         ViewCount: clip.ViewCount,
 
-        Liked: metricsForClip.Liked,
-        UserImage: metricsForClip.UserImage,
-        BadgeOne: metricsForClip.BadgeOne,
-        BadgeTwo: metricsForClip.BadgeTwo,
-        BadgeThree: metricsForClip.BadgeThree,
-        BadgeFour: metricsForClip.BadgeFour,
-        ImpressiveLiked: metricsForClip.ImpressiveLiked,
-        ImpressiveCount: metricsForClip.ImpressiveCount,
-        FunnyLiked: metricsForClip.FunnyLiked,
-        FunnyCount: metricsForClip.FunnyCount,
-        DiscussionLiked: metricsForClip.DiscussionLiked,
-        DiscussionCount: metricsForClip.DiscussionCount,
-        ViewCount: metricsForClip.ViewCount,
-        LikeCount: metricsForClip.LikeCount,
+        ViewCount: clipViewCount.ViewCount,
+        
         CommentCount: commentsForClip.CommentCount,
         Comments: commentsForClip.Comments,
+
         Filters: filtersForClip
     };
 

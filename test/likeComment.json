@@ -1,0 +1,8 @@
+[
+    {   "LikeId": 1,
+        "Type": "Like", "CommentId": 1, "UserId":11111
+    },
+    {   "LikeId": 2,
+        "Type": "Like", "CommentId":2, "UserId":22222
+    }
+]
