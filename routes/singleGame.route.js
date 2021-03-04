@@ -11,6 +11,7 @@ const gameController = require("../controllers/game.controller");
 const singleGameController = require("../controllers/singleGame.controller");
 const clipController = require("../controllers/clip.controller");
 const userController = require("../controllers/user.controller");
+const likeClipController = require("../controllers/likeClip.controller");
 
 // Generate data for singleGame page
 router.get("/singleGame",
@@ -21,8 +22,11 @@ router.get("/singleGame",
     caching.check,
     caching.get
   ],
+  userController.setLoggedOnUserData,
   clipController.singleGamePage,
   gameController.getGameData,
+  likeClipController.getUserLikesForClips,
+  likeClipController.getLikeCountsForClips,
   userController.getUserProfileForClips,
   caching.set,
   singleGameController.singleGamePage2

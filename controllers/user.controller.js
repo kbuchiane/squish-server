@@ -47,7 +47,6 @@ exports.getUsers = (req, res) => {
     });
 }
 
-// Currently called by browse.route - but not really used yet (actually like.controller will use UserId)
 // Gets data for logged on user. The thought is that this date can be used anywhere in the workflow
 exports.setLoggedOnUserData = (req, res, next) => {
     let useCache = req.useCache;
@@ -61,23 +60,21 @@ exports.setLoggedOnUserData = (req, res, next) => {
     if (!username) {
         next();
         return;
-     }    
+    }
 
+    getOneUserForName(username).then(user => {
+        if (!user) {
+            let msg = "Unable to set logged on user data. User was not found.";
+            return res.status(400).send({ message: msg });
+        }
 
-  //  if (username) {
-        getOneUserForName(username).then(user => {
-            if (!user) {
-                let msg = "Unable to set logged on user data. User was not found.";
-                return res.status(400).send({ message: msg });
-            }
-
-            req.loggedOnUser = user;
-            next();
-        }).catch(err => {
-            let msg = "Unable to set logged on user data. Failed to find user, " + err.message;
-            logger.warn(msg);
-        });
-  //  }
+        req.loggedOnUser = user;
+        console.log("--- Logged on user set to " + user.Username);
+        next();
+    }).catch(err => {
+        let msg = "Unable to set logged on user data. Failed to find user, " + err.message;
+        logger.warn(msg);
+    });
 }
 
 
@@ -92,6 +89,11 @@ exports.getUserProfileForClips = (req, res, next) => {
 
     // Start with results from previous steps
     let results = req.results;
+    
+    let clipsCount = 0;
+    if (req.clipsCount) {
+        clipsCount = req.clipsCount;
+    }
 
     (async function loop() {
         for (let i = 0; i < results.length; i++) {
@@ -100,7 +102,7 @@ exports.getUserProfileForClips = (req, res, next) => {
 
                 getOneUserForId(userId).then(user => {
                     if (user) {
-                        let userProfile = getUserProfile(user);
+                        let userProfile = getUserProfile(user, clipsCount);
                         let badges = getBadgesForUser(user.Badges);
 
                         results[i].UserProfile = userProfile;
@@ -219,9 +221,9 @@ function getUserValues(user) {
     return values;
 }
 
-function getUserProfile(user) {
+function getUserProfile(user, clipsCount) {
     let badges = getBadgesForUser(user.Badges);
-    let userMetrics = getUserMetrics(user.UserId);
+//    let userMetrics = getUserMetrics(user.UserId);
     let displayDate = dateUtil.getDisplayDbDate(user.DateCreated);
 
     let userProfile = {
@@ -230,9 +232,10 @@ function getUserProfile(user) {
         DisplayDate: displayDate,
         IconFilepath: user.IconFilepath,
         Badges: badges,
-        Followed: userMetrics.Followed,
-        FollowerCount: userMetrics.FollowerCount,
-        ClipsCount: userMetrics.ClipsCount,
+
+      //  Followed: userMetrics.Followed,
+       // FollowerCount: userMetrics.FollowerCount,
+        ClipsCount: clipsCount,
     };
 
     return userProfile;
@@ -264,9 +267,9 @@ function getBadgesForUser(userBadges) {
 // TODO fully implement me
 function getUserMetrics(userId) {
     let response = {
-        Followed: true,
-        FollowerCount: "555M",
-        ClipsCount: "777",
+ //       Followed: true,   // logged in user follows this user (what if they are the same?) - followController
+ //       FollowerCount: "555M",  // number of followers for user  - followController
+        ClipsCount: "777", // clips from user - clipController
     };
 
     return response;

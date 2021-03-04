@@ -3,6 +3,7 @@ const logger = require("../utils/logger");
 const dateUtil = require("../utils/dateUtil");
 const fs = require("fs");
 const moment = require("moment");
+const { getUserProfileForClips } = require("./user.controller");
 
 const Op = db.Sequelize.Op;
 const User = db.user;
@@ -266,11 +267,42 @@ exports.profilePage = (req, res, next) => {
         return;
     }
 
-    // Get clips for profile name
-    getAllClipsForUser(profileName).then(results => {
+
+        // Get clips for profile name
+        getClipsForUser(profileName).then(clips => {
+
+            if (clips) {
+
+                // retain for later use in Profile page workflow 
+                        req.clipsCount = clips.length;
+
+
+                // Get clips for profile name
+    buildPageforUser(clips).then(results => {
         req.results = results;
+
         next();
     });
+    
+            }
+
+        }).catch(err => {
+            let msg = "Get clips for user error, " + err;
+            logger.error(msg);
+    
+            // TODO what's the best way to handle this?  Similar updates need to be made elsewhere
+    
+        });
+    
+    
+/*
+    // Get clips for profile name
+    getAllClipsForUserXxx(profileName).then(results => {
+        req.results = results;
+
+        next();
+    });
+    */
 }
 
 // Generates data for singleClip page
@@ -515,7 +547,46 @@ function getAllClips() {
     });
 }
 
-function getAllClipsForUser(username) {
+// TODO just retrun array of clips
+function getClipsForUser(username) {
+    return new Promise(function (resolve, reject) {
+        User.findOne({
+            where: {
+                [Op.and]: [
+                    { Username: username },
+                    { Active: true }
+                ]
+            }
+        }).then(user => {
+            if (!user) {
+                let msg = "Unable to get clips, user " + username + " was not found or inactive";
+                logger.warn(msg);
+                reject(msg);
+            }
+
+            Clip.findAll({
+                where: {
+                    UserId: user.UserId
+                }
+            }).then(clips => {
+                resolve(clips);
+            }).catch(err => {
+                let msg = "Failed to get clips for user " + username + ", " + err.message;
+                logger.error(msg);
+                reject(msg);
+            });
+        }).catch(err => {
+            let msg = "Failed to get clips for user " + username + ", " + err.message;
+            logger.error(msg);
+            reject(msg);
+        });
+    });
+}
+
+
+
+// TODO rename - seperate getting all clips from setting other values like metrics
+function getAllClipsForUserXxx(username) {
     var results = [];
 
     return new Promise(function (resolve, reject) {
@@ -539,9 +610,14 @@ function getAllClipsForUser(username) {
                     UserId: userId
                 }
             }).then(clips => {
+
+                let clipsCount = 0;
+                
+
                 if (!clips) {
                     let msg = "No clips found for user " + username + ".";
                     logger.warn(msg);
+                    // FIXME should we reject? - probably not - should review all rejects
                     reject(msg);
                 }
 
@@ -549,8 +625,13 @@ function getAllClipsForUser(username) {
                     let clip = clips[index];
                     let values = getClipValuesWithMetrics(clip);
 
+                    
+
                     results.push(values);
                 }
+
+                // TODO Not sure if this will work???????   Ugh! I don't like this - kludge!!!
+                //resul
 
                 resolve(results);
             }).catch(err => {
@@ -565,6 +646,49 @@ function getAllClipsForUser(username) {
         });
     });
 }
+
+
+
+// TODO rename - seperate getting all clips from setting other values like metrics
+function buildPageforUser(clips) {
+    var results = [];
+
+    return new Promise(function (resolve, reject) {
+  //      let clipsCount = clips.length;
+
+
+        // if (!clips) {
+        //     let msg = "No clips found for user " + username + ".";
+        //     logger.warn(msg);
+        //     // FIXME should we reject? - probably not - should review all rejects
+        //     reject(msg);
+        // }
+
+        for (let index = 0; index < clips.length; index++) {
+            let clip = clips[index];
+            let values = getClipValuesWithMetrics(clip);
+
+            results.push(values);
+        }
+
+        // Now set the clipCounts for each profile
+        // for (let index = 0; index < results.length; index++) {
+
+        //     results[index].UserProfile.ClipsCount = clipsCount;
+            
+        // }
+
+    //    console.log(results);
+
+        resolve(results);
+    });
+}
+
+
+
+
+
+
 
 // TODO possibly pass Title too for better error messages
 function getAllClipsForGame(gameId) {
@@ -690,15 +814,6 @@ function getLoggedOnUserData(user) {
 }
 
 // TODO implement me
-function getClipViewCount(clipId) {
-    let value = {
-        ViewCount: "99.9B"
-    }
-
-    return value;
-}
-
-// TODO implement me
 function getFiltersForClip(clipId) {
     let filters = ['MostPopular', 'FollowedUsersOnly', 'SpecificGames', 'MostImpressive', 'Funniest', 'BestDiscussion'];
 
@@ -766,9 +881,9 @@ function getClipValues(clip) {
     return values;
 }
 
+
 function getClipValuesWithMetrics(clip) {
     let commentsForClip = getCommentsForClip(clip.ClipId);
-    let clipViewCount = getClipViewCount(clip.ClipId);
     let filtersForClip = getFiltersForClip(clip.ClipId);
     let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
 
@@ -784,13 +899,13 @@ function getClipValuesWithMetrics(clip) {
         DisplayDate: displayDate,
         Thumbnail: clip.Thumbnail,
         ViewCount: clip.ViewCount,
-
-        ViewCount: clipViewCount.ViewCount,
         
         CommentCount: commentsForClip.CommentCount,
         Comments: commentsForClip.Comments,
 
         Filters: filtersForClip
+
+
     };
 
     return values;
