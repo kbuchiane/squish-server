@@ -3,6 +3,7 @@ const User = db.user;
 const moment = require("moment");
 const logger = require("../utils/logger");
 const dateUtil = require("../utils/dateUtil");
+const workflowUtil = require("../utils/workflowUtil");
 
 exports.users = (req, res) => {
     return res.status(200);
@@ -67,16 +68,15 @@ exports.setLoggedOnUserData = (req, res, next) => {
             let msg = "Unable to set logged on user data. User was not found.";
             return res.status(400).send({ message: msg });
         }
+        // Retain clipsCount in user for use later in workflow
+        req.workflow = workflowUtil.setValue(workflowUtil.LOGGED_ON_USER_KEY, user, req.workflow);
 
-        req.loggedOnUser = user;
-        console.log("--- Logged on user set to " + user.Username);
         next();
     }).catch(err => {
         let msg = "Unable to set logged on user data. Failed to find user, " + err.message;
         logger.warn(msg);
     });
 }
-
 
 // Generates data for Browse, Profile, SingleClip, and SingleGame pages
 exports.getUserProfileForClips = (req, res, next) => {
@@ -91,8 +91,10 @@ exports.getUserProfileForClips = (req, res, next) => {
     let results = req.results;
     
     let clipsCount = 0;
-    if (req.clipsCount) {
-        clipsCount = req.clipsCount;
+
+    if (workflowUtil.hasKey(workflowUtil.CLIPS_COUNT_KEY, req.workflow))
+    {
+       clipsCount = workflowUtil.getValue(workflowUtil.CLIPS_COUNT_KEY, req.workflow);
     }
 
     (async function loop() {
@@ -150,7 +152,6 @@ function getOneUserForId(userId) {
         });
     });
 }
-
 
 function getOneUserForName(username) {
     return new Promise(function (resolve, reject) {
@@ -223,18 +224,15 @@ function getUserValues(user) {
 
 function getUserProfile(user, clipsCount) {
     let badges = getBadgesForUser(user.Badges);
-//    let userMetrics = getUserMetrics(user.UserId);
     let displayDate = dateUtil.getDisplayDbDate(user.DateCreated);
 
     let userProfile = {
+        UserId: user.UserId,
         Username: user.Username,
         DateCreated: user.DateCreated,
         DisplayDate: displayDate,
         IconFilepath: user.IconFilepath,
         Badges: badges,
-
-      //  Followed: userMetrics.Followed,
-       // FollowerCount: userMetrics.FollowerCount,
         ClipsCount: clipsCount,
     };
 
@@ -242,7 +240,6 @@ function getUserProfile(user, clipsCount) {
 }
 
 // FIXME there could be 0-4 badges
-//
 // Assumes there will be 4 badges for clip
 function getBadgesForUser(userBadges) {
     let defaultBadge = "unknown.png";  // TODO change to null/empty
@@ -262,15 +259,4 @@ function getBadgesForUser(userBadges) {
     }
 
     return badgesForUser;
-}
-
-// TODO fully implement me
-function getUserMetrics(userId) {
-    let response = {
- //       Followed: true,   // logged in user follows this user (what if they are the same?) - followController
- //       FollowerCount: "555M",  // number of followers for user  - followController
-        ClipsCount: "777", // clips from user - clipController
-    };
-
-    return response;
 }

@@ -23,7 +23,6 @@ exports.browsePage1 = (req, res, next) => {
 
 // Generates data for browse page
 exports.browsePage2 = (req, res) => {
-    let username = req.query.username;
     let useCache = req.useCache;
     let results = req.results;
     let json = JSON.stringify(results);

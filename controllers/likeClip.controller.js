@@ -1,6 +1,7 @@
 const db = require("../models");
 const logger = require("../utils/logger");
 const clipUtil = require("../utils/clipUtil");
+const workflowUtil = require("../utils/workflowUtil");
 const User = db.user;
 const Clip = db.clip;
 const LikeClip = db.likeClip;
@@ -133,7 +134,7 @@ exports.unlikeClip = (req, res) => {
 // Generates data for Browse, SingleClip pages
 exports.getUserLikesForClips = (req, res, next) => {
     let useCache = req.useCache;
-    let loggedOnUser = req.loggedOnUser;
+    let loggedOnUser = workflowUtil.getValue(workflowUtil.LOGGED_ON_USER_KEY, req.workflow);
 
     if (useCache) {
         next();
@@ -159,8 +160,6 @@ exports.getUserLikesForClips = (req, res, next) => {
                         let impressive = clipUtil.hasType(clipUtil.LikeClipType.Impressive, likeClip.Types);
                         let funny = clipUtil.hasType(clipUtil.LikeClipType.Funny, likeClip.Types);
                         let discussion = clipUtil.hasType(clipUtil.LikeClipType.Discussion, likeClip.Types);
-
-                        console.log("user:" + userId + " clipId:" + results[i].ClipId + " liked:" + liked + " impressive:" + impressive + " funny:" + funny + " discussion:" + discussion);
 
                         results[i].Liked = liked;
                         results[i].ImpressiveLiked = impressive;
@@ -205,8 +204,6 @@ exports.getLikeCountsForClips = (req, res, next) => {
                     let funnyCount = 0;
                     let discussionCount = 0;
 
-                    // TODO create utility to make numbers more readable - possibly miscUtil
-
                     if (likes && likes.length > 0) {
 
                         likeCount = clipUtil.getLikesCount(clipUtil.LikeClipType.Like, likes);
@@ -214,8 +211,6 @@ exports.getLikeCountsForClips = (req, res, next) => {
                         funnyCount = clipUtil.getLikesCount(clipUtil.LikeClipType.Funny, likes);
                         discussionCount = clipUtil.getLikesCount(clipUtil.LikeClipType.Discussion, likes);
                     }
-
-                    console.log("clipId:" + clipId + " liked:" + likeCount + " impressive:" + impressiveCount + " funny:" + funnyCount + " discussion:" + discussionCount);
 
                     results[i].LikeCount = likeCount;
                     results[i].ImpressiveCount = impressiveCount;

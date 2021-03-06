@@ -11,6 +11,8 @@ const gameController = require("../controllers/game.controller");
 const browseGamesController = require("../controllers/browseGames.controller");
 const followController = require("../controllers/follow.controller");
 const clipController = require("../controllers/clip.controller");
+const userController = require("../controllers/user.controller");
+
 
 // Generate data for browseGames page
 router.get("/browseGames",
@@ -21,6 +23,7 @@ router.get("/browseGames",
         caching.check,
         caching.get
     ],
+    userController.setLoggedOnUserData,
     gameController.browseGamesPage,
     followController.getGamesFollowedByUser,
     followController.getGameFollowerCount,

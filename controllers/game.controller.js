@@ -87,7 +87,7 @@ exports.deleteGame = (req, res) => {
     let gameId = req.body.gameId;
     let username = req.body.user;
 
-    console.log("deleteGame  " + gameId + "  " + username);
+    // console.log("deleteGame  " + gameId + "  " + username);
 
     if (!username || !gameId) {
         let msg = "Invalid delete GAME request.  Please try again.";
@@ -219,8 +219,11 @@ exports.browseGamesPage = (req, res, next) => {
         for (let index = 0; index < games.length; index++) {
             let game = games[index];
             let values = getGameValues(game);
+            let gameValues = {
+                Game: values
+            };
 
-            results.push(values);
+            results.push(gameValues);
         }
 
         req.results = results;

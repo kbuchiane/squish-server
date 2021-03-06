@@ -1,6 +1,7 @@
 const db = require("../models");
 const appConfig = require("../config/app.config");
 const logger = require("../utils/logger");
+const workflowUtil = require("../utils/workflowUtil");
 const UserFollowing = db.userFollowing;
 const User = db.user;
 const GameFollowing = db.gameFollowing;
@@ -317,7 +318,6 @@ exports.getGamesFollowedByUser = (req, res, next) => {
     });
 }
 
-
 // Generates data for Browse, BrowseGames, and Profile pages
 exports.getGameFollowerCount = (req, res, next) => {
     let readOnlyView = req.readOnlyView;
@@ -329,27 +329,34 @@ exports.getGameFollowerCount = (req, res, next) => {
         return;
     }
 
-    // Previously generated results from previous steps
+    // Start with results from previous steps
     let results = req.results;
 
-    // Get follower count for each game  
-    for (let index = 0; index < results.length; index++) {
-        let gameId = results[index].GameId;
+    (async function loop() {
+        // Get follower count for each game  
+        for (let index = 0; index < results.length; index++) {
+            await new Promise(resolve => {
+                let gameId = results[index].Game.GameId;
+                let count = 0;
 
-        getGameFollowerCount(gameId).then(gameFollowerCount => {
-            results[index].FollowerCount = gameFollowerCount;
-        }).catch(err => {
-            let msg = "Failed to find game follower count for game " + gameId + ", " + err.message;
-            logger.warn(msg);
-            // continue getting follower counts
-        });
-    }
+                getGameFollowerCount(gameId).then(gameFollowerCount => {
+                    if (gameFollowerCount) {
+                        count = gameFollowerCount;
+                    }
+                    results[index].Game.FollowerCount = count;
 
-    req.results = results;
 
-    next();
+                    resolve();
+                }).catch(err => {
+                    let msg = "Failed to find game follower count for game " + gameId + ", " + err.message;
+                    logger.warn(msg);
+                    // currently no reject
+                });
+            });
+        }
+        next();
+    })();
 }
-
 
 // Generates data for Profile pages
 exports.getUserFollowerCount = (req, res, next) => {
@@ -362,42 +369,43 @@ exports.getUserFollowerCount = (req, res, next) => {
         return;
     }
 
-    // Previously generated results from previous steps
+    // Start with results from previous steps
     let results = req.results;
 
-    // Get follower count for each user  
-    for (let index = 0; index < results.length; index++) {
-        let userId = results[index].UserId;
-
-        getUserFollowerCount(userId).then(userFollowerCount => {
-            results[index].FollowerCount = userFollowerCount;
-        }).catch(err => {
-            let msg = "Failed to get user follower count for user " + userId + ", " + err.message;
-            logger.warn(msg);
-            // continue getting follower counts
-        });
-    }
-
-    req.results = results;
-
-    next();
+    (async function loop() {
+        // Get follower count for each user  
+        for (let index = 0; index < results.length; index++) {
+            await new Promise(resolve => {
+                let userId = results[index].UserProfile.UserId;
+                let count = 0;
+                getUserFollowerCount(userId).then(userFollowerCount => {
+                    if (userFollowerCount) {
+                        count = userFollowerCount;
+                    }
+                    results[index].UserProfile.FollowerCount = count;
+                    resolve();
+                }).catch(err => {
+                    let msg = "Failed to get user follower count for user " + userId + ", " + err.message;
+                    logger.warn(msg);
+                    // currently no reject
+                });
+            });
+        }
+        next();
+    })();
 }
-
-
-
 
 // Sets Followed field in UserProfile, which is TRUE if current logged in user follows profile user
 // Generates data for Profile page
 exports.getUserFollowingForUser = (req, res, next) => {
     let useCache = req.useCache;
-    let loggedOnUser = req.loggedOnUser;
+    let loggedOnUser = workflowUtil.getValue(workflowUtil.LOGGED_ON_USER_KEY, req.workflow);
 
     if (useCache) {
         next();
         return;
     }
 
-    console.log("logged on user:" + loggedOnUser);
     if (!loggedOnUser) {
         next();
         return;
@@ -412,13 +420,8 @@ exports.getUserFollowingForUser = (req, res, next) => {
                 let followerUserId = loggedOnUser.UserId;
                 let followedUserId = results[i].UserId;
 
-                console.log("*** followerUserId:" + followerUserId + "  followedUserId:" + followedUserId);
-
                 getUserFollowingForUser(followerUserId, followedUserId).then(followed => {
-                    console.log("Logged on user:" + followerUserId + " followed:" + followedUserId + "   " + followed);
-
                     results[i].UserProfile.Followed = followed;
-
                     resolve();
                 }).catch(err => {
                     let msg = "Failed to find follows for user " + followedUserId + ", " + err.message;
@@ -432,7 +435,6 @@ exports.getUserFollowingForUser = (req, res, next) => {
         next();
     })();
 }
-
 
 function getUserFollowingForUser(followerUserId, followedUserId) {
     return new Promise(function (resolve, reject) {
@@ -451,8 +453,6 @@ function getUserFollowingForUser(followerUserId, followedUserId) {
                 ]
             }
         }).then(userFollowing => {
-
-            console.log("$$$ " + userFollowing);
             if (userFollowing) {
                 resolve(true);
                 return;
@@ -527,8 +527,6 @@ function getGameFollowerCount(gameId) {
             reject(msg);
         }
 
-        // TODO may make sense to make a new table with all the different totals
-
         Game.findOne({
             where: {
                 GameId: gameId
@@ -571,8 +569,6 @@ function getUserFollowerCount(userId) {
             reject(msg);
         }
 
-        // TODO may make sense to make a new table with all the different totals
-
         User.findOne({
             where: {
                 UserId: userId
@@ -602,5 +598,3 @@ function getUserFollowerCount(userId) {
         })
     });
 }
-
-

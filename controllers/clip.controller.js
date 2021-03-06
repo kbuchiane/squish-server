@@ -1,9 +1,9 @@
 const db = require("../models");
-const logger = require("../utils/logger");
 const dateUtil = require("../utils/dateUtil");
+const workflowUtil = require("../utils/workflowUtil");
+const logger = require("../utils/logger");
 const fs = require("fs");
 const moment = require("moment");
-const { getUserProfileForClips } = require("./user.controller");
 
 const Op = db.Sequelize.Op;
 const User = db.user;
@@ -242,7 +242,7 @@ exports.getClip = (req, res) => {
         return res.status(400).send({ message: msg });
     }
 
-    getOneClip(clipId, false).then(clip => {
+    getValuesForClip(clipId, false).then(clip => {
         if (!clip) {
             let msg = "Clip was not found.";
             return res.status(400).send({ message: msg });
@@ -267,42 +267,24 @@ exports.profilePage = (req, res, next) => {
         return;
     }
 
-
-        // Get clips for profile name
-        getClipsForUser(profileName).then(clips => {
-
-            if (clips) {
-
-                // retain for later use in Profile page workflow 
-                        req.clipsCount = clips.length;
-
-
-                // Get clips for profile name
-    buildPageforUser(clips).then(results => {
-        req.results = results;
-
-        next();
-    });
-    
-            }
-
-        }).catch(err => {
-            let msg = "Get clips for user error, " + err;
-            logger.error(msg);
-    
-            // TODO what's the best way to handle this?  Similar updates need to be made elsewhere
-    
-        });
-    
-    
-/*
     // Get clips for profile name
-    getAllClipsForUserXxx(profileName).then(results => {
-        req.results = results;
+    getClipsForUser(profileName).then(clips => {
+        if (clips) {
+            // Retain clipsCount in workflow for use later in Profile page workflow
+            req.workflow = workflowUtil.setValue(workflowUtil.CLIPS_COUNT_KEY, clips.length, req.workflow);
 
-        next();
+            // Builds out profile page with clip vlues
+            buildProfileForClips(clips).then(results => {
+                req.results = results;
+
+                next();
+            });
+        }
+    }).catch(err => {
+        let msg = "Failed to get data for Profile page, " + err;
+        logger.error(msg);
+        // TODO what's the best way to handle this?  Implement solution everywhere
     });
-    */
 }
 
 // Generates data for singleClip page
@@ -315,8 +297,8 @@ exports.singleClipPage = (req, res, next) => {
         return;
     }
 
-    // Get clip for clip id
-    getOneClip(clipId, true).then(results => {
+    // Get values for clip and include extended values
+    getValuesForClip(clipId, true).then(results => {
         req.results = results;
         next();
     });
@@ -333,7 +315,7 @@ exports.singleGamePage = (req, res, next) => {
     }
 
     // Get clips for game id
-    getAllClipsForGame(gameId).then(results => {
+    getClipValuesForGame(gameId).then(results => {
         req.results = results;
         next();
     });
@@ -350,8 +332,8 @@ exports.getClipsForFilterAndTimeframe = (req, res, next) => {
         return;
     }
 
-    // Get clips for filter and timeframe
-    getAllClipsForFilterAndTimeframe(filter, timeframe).then(results => {
+    // Get clip values based on filter and timeframe settings
+    getClipValuesForFilterAndTimeframe(filter, timeframe).then(results => {
         req.results = results;
         next();
     });
@@ -372,7 +354,7 @@ exports.getClipCountsforGames = (req, res, next) => {
     (async function loop() {
         for (let i = 0; i < results.length; i++) {
             await new Promise(resolve => {
-                let gameId = results[i].GameId;
+                let gameId = results[i].Game.GameId;
 
                 getClipsTodayAndAllTimeCount(gameId).then(clipTodayAndAllTimeCount => {
                     let counts = clipTodayAndAllTimeCount.split(":");
@@ -388,7 +370,7 @@ exports.getClipCountsforGames = (req, res, next) => {
                 }).catch(err => {
                     let msg = "Failed to find today and all-time clip count for game " + gameId + ", " + err.message;
                     logger.warn(msg);
-                    reject(msg);
+                    // Currently no reject
                 });
             });
         }
@@ -406,8 +388,6 @@ function getClipsTodayAndAllTimeCount(gameId) {
             logger.warn(msg);
             reject(msg);
         }
-
-        // TODO may make sense to make a new table with all the different totals
 
         Clip.findAll({
             where: {
@@ -439,7 +419,7 @@ function getClipsTodayAndAllTimeCount(gameId) {
     });
 }
 
-function getAllClipsForFilterAndTimeframe(filter, timeframe) {
+function getClipValuesForFilterAndTimeframe(filter, timeframe) {
     var results = [];
 
     return new Promise(function (resolve, reject) {
@@ -451,7 +431,7 @@ function getAllClipsForFilterAndTimeframe(filter, timeframe) {
          all-clips array and remove those that do not apply.  Going with second option for now.
          */
 
-        getAllClips().then(clips => {
+        getAllClipValues().then(clips => {
             if (!clips || clips.length < 1) {
                 let msg = "No clips were found.";
                 reject(msg);
@@ -479,7 +459,7 @@ function getAllClipsForFilterAndTimeframe(filter, timeframe) {
     });
 }
 
-function getOneClip(clipId, includeMetrics) {
+function getValuesForClip(clipId, extendedValues) {
     var results = [];
 
     return new Promise(function (resolve, reject) {
@@ -502,8 +482,8 @@ function getOneClip(clipId, includeMetrics) {
 
             let values = null;
 
-            if (includeMetrics) {
-                values = getClipValuesWithMetrics(clip);
+            if (extendedValues) {
+                values = getClipValuesExtended(clip);
             }
             else {
                 values = getClipValues(clip);
@@ -520,7 +500,7 @@ function getOneClip(clipId, includeMetrics) {
     });
 }
 
-function getAllClips() {
+function getAllClipValues() {
     var results = [];
 
     return new Promise(function (resolve, reject) {
@@ -533,7 +513,7 @@ function getAllClips() {
 
             for (let index = 0; index < clips.length; index++) {
                 let clip = clips[index];
-                let values = getClipValuesWithMetrics(clip);
+                let values = getClipValuesExtended(clip);
 
                 results.push(values);
             }
@@ -547,7 +527,7 @@ function getAllClips() {
     });
 }
 
-// TODO just retrun array of clips
+// Returns array of clips for active user
 function getClipsForUser(username) {
     return new Promise(function (resolve, reject) {
         User.findOne({
@@ -586,112 +566,23 @@ function getClipsForUser(username) {
 
 
 // TODO rename - seperate getting all clips from setting other values like metrics
-function getAllClipsForUserXxx(username) {
+function buildProfileForClips(clips) {
     var results = [];
 
     return new Promise(function (resolve, reject) {
-        User.findOne({
-            where: {
-                [Op.and]: [
-                    { Username: username },
-                    { Active: true }
-                ]
-            }
-        }).then(user => {
-            if (!user) {
-                let msg = "Unable to get all clips, user " + username + " was not found.";
-                logger.warn(msg);
-                reject(msg);
-            }
-
-            let userId = user.UserId;
-            Clip.findAll({
-                where: {
-                    UserId: userId
-                }
-            }).then(clips => {
-
-                let clipsCount = 0;
-                
-
-                if (!clips) {
-                    let msg = "No clips found for user " + username + ".";
-                    logger.warn(msg);
-                    // FIXME should we reject? - probably not - should review all rejects
-                    reject(msg);
-                }
-
-                for (let index = 0; index < clips.length; index++) {
-                    let clip = clips[index];
-                    let values = getClipValuesWithMetrics(clip);
-
-                    
-
-                    results.push(values);
-                }
-
-                // TODO Not sure if this will work???????   Ugh! I don't like this - kludge!!!
-                //resul
-
-                resolve(results);
-            }).catch(err => {
-                let msg = "Failed to find clips for user " + username + ", " + err.message;
-                logger.error(msg);
-                reject(msg);
-            });
-        }).catch(err => {
-            let msg = "Failed to find clips for user " + username + ", " + err.message;
-            logger.error(msg);
-            reject(msg);
-        });
-    });
-}
-
-
-
-// TODO rename - seperate getting all clips from setting other values like metrics
-function buildPageforUser(clips) {
-    var results = [];
-
-    return new Promise(function (resolve, reject) {
-  //      let clipsCount = clips.length;
-
-
-        // if (!clips) {
-        //     let msg = "No clips found for user " + username + ".";
-        //     logger.warn(msg);
-        //     // FIXME should we reject? - probably not - should review all rejects
-        //     reject(msg);
-        // }
-
         for (let index = 0; index < clips.length; index++) {
             let clip = clips[index];
-            let values = getClipValuesWithMetrics(clip);
+            let values = getClipValuesExtended(clip);
 
             results.push(values);
         }
-
-        // Now set the clipCounts for each profile
-        // for (let index = 0; index < results.length; index++) {
-
-        //     results[index].UserProfile.ClipsCount = clipsCount;
-            
-        // }
-
-    //    console.log(results);
 
         resolve(results);
     });
 }
 
-
-
-
-
-
-
 // TODO possibly pass Title too for better error messages
-function getAllClipsForGame(gameId) {
+function getClipValuesForGame(gameId) {
     var results = [];
 
     return new Promise(function (resolve, reject) {
@@ -708,7 +599,7 @@ function getAllClipsForGame(gameId) {
 
             for (let index = 0; index < clips.length; index++) {
                 let clip = clips[index];
-                let values = getClipValuesWithMetrics(clip);
+                let values = getClipValuesExtended(clip);
 
                 results.push(values);
             }
@@ -800,19 +691,6 @@ function getCommentsForClip(clipId) {
     return response;
 }
 
-// TODO use or remove
-function getLoggedOnUserData(user) {
-
-    let values = {
-        Liked: false,
-        ImpressiveLiked: false,
-        FunnyLiked: false,
-        DiscussionLiked: false,
-    };
-
-    return values;
-}
-
 // TODO implement me
 function getFiltersForClip(clipId) {
     let filters = ['MostPopular', 'FollowedUsersOnly', 'SpecificGames', 'MostImpressive', 'Funniest', 'BestDiscussion'];
@@ -881,8 +759,7 @@ function getClipValues(clip) {
     return values;
 }
 
-
-function getClipValuesWithMetrics(clip) {
+function getClipValuesExtended(clip) {
     let commentsForClip = getCommentsForClip(clip.ClipId);
     let filtersForClip = getFiltersForClip(clip.ClipId);
     let displayDate = dateUtil.getDisplayDbDate(clip.DateCreated);
@@ -899,13 +776,11 @@ function getClipValuesWithMetrics(clip) {
         DisplayDate: displayDate,
         Thumbnail: clip.Thumbnail,
         ViewCount: clip.ViewCount,
-        
+
         CommentCount: commentsForClip.CommentCount,
         Comments: commentsForClip.Comments,
 
         Filters: filtersForClip
-
-
     };
 
     return values;
