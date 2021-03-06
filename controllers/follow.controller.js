@@ -1,6 +1,7 @@
 const db = require("../models");
 const appConfig = require("../config/app.config");
 const logger = require("../utils/logger");
+const workflowUtil = require("../utils/workflowUtil");
 const UserFollowing = db.userFollowing;
 const User = db.user;
 const GameFollowing = db.gameFollowing;
@@ -317,7 +318,6 @@ exports.getGamesFollowedByUser = (req, res, next) => {
     });
 }
 
-
 // Generates data for Browse, BrowseGames, and Profile pages
 exports.getGameFollowerCount = (req, res, next) => {
     let readOnlyView = req.readOnlyView;
@@ -329,25 +329,142 @@ exports.getGameFollowerCount = (req, res, next) => {
         return;
     }
 
-    // Previously generated results from previous steps
+    // Start with results from previous steps
     let results = req.results;
 
-    // Get follower count for each game  
-    for (let index = 0; index < results.length; index++) {
-        let gameId = results[index].GameId;
+    (async function loop() {
+        // Get follower count for each game  
+        for (let index = 0; index < results.length; index++) {
+            await new Promise(resolve => {
+                let gameId = results[index].Game.GameId;
+                let count = 0;
 
-        getGameFollowerCount(gameId).then(gameFollowerCount => {
-            results[index].FollowerCount = gameFollowerCount;
-        }).catch(err => {
-            let msg = "Failed to find game follower count for game " + gameId + ", " + err.message;
-            logger.warn(msg);
-            // continue getting follower counts
-        });
+                getGameFollowerCount(gameId).then(gameFollowerCount => {
+                    if (gameFollowerCount) {
+                        count = gameFollowerCount;
+                    }
+                    results[index].Game.FollowerCount = count;
+
+
+                    resolve();
+                }).catch(err => {
+                    let msg = "Failed to find game follower count for game " + gameId + ", " + err.message;
+                    logger.warn(msg);
+                    // currently no reject
+                });
+            });
+        }
+        next();
+    })();
+}
+
+// Generates data for Profile pages
+exports.getUserFollowerCount = (req, res, next) => {
+    let readOnlyView = req.readOnlyView;
+    let username = req.query.username;
+    let useCache = req.useCache;
+
+    if (useCache) {
+        next();
+        return;
     }
 
-    req.results = results;
+    // Start with results from previous steps
+    let results = req.results;
 
-    next();
+    (async function loop() {
+        // Get follower count for each user  
+        for (let index = 0; index < results.length; index++) {
+            await new Promise(resolve => {
+                let userId = results[index].UserProfile.UserId;
+                let count = 0;
+                getUserFollowerCount(userId).then(userFollowerCount => {
+                    if (userFollowerCount) {
+                        count = userFollowerCount;
+                    }
+                    results[index].UserProfile.FollowerCount = count;
+                    resolve();
+                }).catch(err => {
+                    let msg = "Failed to get user follower count for user " + userId + ", " + err.message;
+                    logger.warn(msg);
+                    // currently no reject
+                });
+            });
+        }
+        next();
+    })();
+}
+
+// Sets Followed field in UserProfile, which is TRUE if current logged in user follows profile user
+// Generates data for Profile page
+exports.getUserFollowingForUser = (req, res, next) => {
+    let useCache = req.useCache;
+    let loggedOnUser = workflowUtil.getValue(workflowUtil.LOGGED_ON_USER_KEY, req.workflow);
+
+    if (useCache) {
+        next();
+        return;
+    }
+
+    if (!loggedOnUser) {
+        next();
+        return;
+    }
+
+    // Start with results from previous steps
+    let results = req.results;
+
+    (async function loop() {
+        for (let i = 0; i < results.length; i++) {
+            await new Promise(resolve => {
+                let followerUserId = loggedOnUser.UserId;
+                let followedUserId = results[i].UserId;
+
+                getUserFollowingForUser(followerUserId, followedUserId).then(followed => {
+                    results[i].UserProfile.Followed = followed;
+                    resolve();
+                }).catch(err => {
+                    let msg = "Failed to find follows for user " + followedUserId + ", " + err.message;
+                    logger.warn(msg);
+                });
+            });
+        }
+
+        req.results = results;
+
+        next();
+    })();
+}
+
+function getUserFollowingForUser(followerUserId, followedUserId) {
+    return new Promise(function (resolve, reject) {
+        if (!followerUserId || !followedUserId) {
+            let msg = "Unable to get UserFollowing for user, passed in parameters are invalid.";
+            logger.warn(msg);
+            resolve(false);
+            return;
+        }
+
+        UserFollowing.findOne({
+            where: {
+                [Op.and]: [
+                    { FollowerUserId: followerUserId },
+                    { FollowedUserId: followedUserId }
+                ]
+            }
+        }).then(userFollowing => {
+            if (userFollowing) {
+                resolve(true);
+                return;
+            }
+
+            resolve(false);
+        }).catch(err => {
+            let msg = "Search for UserFollowing failed, " + err.message;
+            logger.error(msg);
+            reject(msg);
+        });
+    });
 }
 
 
@@ -410,8 +527,6 @@ function getGameFollowerCount(gameId) {
             reject(msg);
         }
 
-        // TODO may make sense to make a new table with all the different totals
-
         Game.findOne({
             where: {
                 GameId: gameId
@@ -435,6 +550,48 @@ function getGameFollowerCount(gameId) {
                 resolve(count);
             }).catch(err => {
                 let msg = "Search for games followed by user failed, " + err.message;
+                logger.error(msg);
+                reject(msg);
+            });
+        })
+    });
+}
+
+
+// Returns number of followers for user
+function getUserFollowerCount(userId) {
+    var count = 0;
+
+    return new Promise(function (resolve, reject) {
+        if (!userId) {
+            let msg = "Unable to get user follower count, userId is null.";
+            logger.warn(msg);
+            reject(msg);
+        }
+
+        User.findOne({
+            where: {
+                UserId: userId
+            }
+        }).then(user => {
+            if (!user) {
+                let msg = "Unable to get user follower count, failed to find userId.";
+                logger.warn(msg);
+                reject(msg);
+            }
+
+            UserFollowing.findAll({
+                where: {
+                    FollowedUserId: userId
+                }
+            }).then(userFollowings => {
+                if (userFollowings) {
+                    count = userFollowings.length;
+                }
+
+                resolve(count);
+            }).catch(err => {
+                let msg = "Search for users following user failed, " + err.message;
                 logger.error(msg);
                 reject(msg);
             });

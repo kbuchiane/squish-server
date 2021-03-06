@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-    const Like = sequelize.define('Like', {
+    const LikeComment = sequelize.define('LikeComment', {
         LikeId: {
             type: Sequelize.UUID,
             defaultValue: Sequelize.UUIDV4,
@@ -7,12 +7,10 @@ module.exports = (sequelize, Sequelize) => {
             unique: true,
             primaryKey: true
         },
+        // TODO the Type field can probably be removed
         Type: {
             type: Sequelize.ENUM,
             values: ['Like', 'Impressive', 'Funny', 'Discussion']
-        },
-        ClipId: {
-            type: Sequelize.UUID,
         },
         CommentId: {
             type: Sequelize.UUID,
@@ -26,5 +24,5 @@ module.exports = (sequelize, Sequelize) => {
         freezeTableName: true
     });
 
-    return Like;
+    return LikeComment;
 };

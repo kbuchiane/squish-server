@@ -7,8 +7,6 @@ exports.profilePageStart = (req, res, next) => {
     let readOnlyView = false;
     let url = req.originalUrl || req.url;
 
-    // Required for future workflow step getGamesFollowedByUser
-    req.query.username = req.query.profileName;
     start = new Date();
 
     if (!username) {
@@ -29,6 +27,8 @@ exports.profilePageComplete = (req, res) => {
     let useCache = req.useCache;
     let results = req.results;
     let json = JSON.stringify(results);
+
+//    console.log(results);
     
     res.status(200).end(json);
 
