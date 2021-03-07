@@ -364,7 +364,7 @@ function loadData(fileName) {
 function setTestUserEmailAndPassword(userData) {
     userData.forEach(element => {
         if (testUserEmail) {
-            // A valid email address has been entered
+            // Use valid email address that has been entered (identical email addresses needs to be fixed)
             element.Email = testUserEmail;
         }
         else {
