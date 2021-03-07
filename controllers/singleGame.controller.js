@@ -9,8 +9,6 @@ exports.singleGamePage1 = (req, res, next) => {
 
     start = new Date();
 
-   // console.info("Request SingleGame [" + url + "]");
-
     if (!username) {
         // Allows for display only - no JWT token
         readOnlyView = true;
@@ -29,6 +27,8 @@ exports.singleGamePage2 = (req, res) => {
     let useCache = req.useCache;
     let results = req.results;
     let json = JSON.stringify(results);
+
+    // console.log(results);
 
     res.status(200).end(json);
 

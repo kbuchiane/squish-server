@@ -3,6 +3,13 @@
         "FollowerUserId": 11111, "FollowedUserId":33333, "DateFollowed": "2021-01-13"
     },
     {   "UserFollowingId": 2,
-        "FollowerUserId": 222222, "FollowedUserId":44444, "DateFollowed": "2021-01-12"
+        "FollowerUserId": 22222, "FollowedUserId":44444, "DateFollowed": "2021-01-12"
+    },
+    {   "UserFollowingId": 3,
+        "FollowerUserId": 11111, "FollowedUserId":33333, "DateFollowed": "2021-01-13"
+    },
+    {   "UserFollowingId": 4,
+        "FollowerUserId": 11111, "FollowedUserId":44444, "DateFollowed": "2021-01-12"
     }
+
 ]
