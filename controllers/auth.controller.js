@@ -408,6 +408,7 @@ exports.confirmUser = (req, res) => {
                                 });
                             }
                         });
+
                         let accessToken = jwt.sign(
                             { id: user.UserId },
                             authConfig.AUTH_SECRET,
@@ -427,6 +428,7 @@ exports.confirmUser = (req, res) => {
 
                                 return res.status(200).send({
                                     username: user.Username,
+                                    icon: user.IconFilepath,
                                     accessToken: accessToken
                                 });
                             }
@@ -536,6 +538,7 @@ exports.login = (req, res) => {
 
                             return res.status(200).send({
                                 username: user.Username,
+                                icon: user.IconFilepath,
                                 accessToken: accessToken
                             });
                         }
@@ -615,6 +618,7 @@ exports.refreshToken = (req, res) => {
 
                                     return res.status(200).send({
                                         username: user.Username,
+                                        icon: user.IconFilepath,
                                         accessToken: accessToken
                                     });
                                 }

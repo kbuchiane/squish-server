@@ -29,7 +29,7 @@ const argv = yargs
 var sequelize = null;
 var name = "";
 var pw = "";
-var testUserEmail = 'testUser@MyTest.com';
+var testUserEmail = '';
 var testUserPassword = '$2a$10$jXWVrWoWDLRW5TJDNcrI7O/2QU5m9ViKymIHFgVqBk/6dH.UsuR7u'; // equates to changeme
 
 let platform = 'TEST';
@@ -363,7 +363,16 @@ function loadData(fileName) {
 
 function setTestUserEmailAndPassword(userData) {
     userData.forEach(element => {
-        element.Email = testUserEmail;
+        if (testUserEmail) {
+            // Use valid email address that has been entered (identical email addresses needs to be fixed)
+            element.Email = testUserEmail;
+        }
+        else {
+            // Build fake email address
+            let email = element.Username + '@MyTest.com';
+            element.Email = email;
+        }
+
         element.Password = testUserPassword;
     });
 
