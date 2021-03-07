@@ -242,8 +242,6 @@ function updateVerifiedUser(emailAddr) {
     });
 };
 
-// FIXME:  
-//         When someone logs out, all tokens with same UserId should be removed
 function createRefreshToken(emailAddr) {
     return new Promise(function (resolve, reject) {
         let refreshToken = uuidv4();
