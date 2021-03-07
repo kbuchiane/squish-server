@@ -242,10 +242,8 @@ function updateVerifiedUser(emailAddr) {
     });
 };
 
-// FIXME:  Can users have the same emailAddr?  When they do, an incorrect UserId in put into the RefreshToken table
-//         dbMaintainer currently adds 4 users with the same email address.
-//
-//         Also, when someone logs out, all tokens with same UserId should be removed
+// FIXME:  
+//         When someone logs out, all tokens with same UserId should be removed
 function createRefreshToken(emailAddr) {
     return new Promise(function (resolve, reject) {
         let refreshToken = uuidv4();
@@ -260,10 +258,6 @@ function createRefreshToken(emailAddr) {
                 ]
             }
         }).then(user => {
-
-            console.log("Creating RefreshToken  userId:" + user.UserId + "  username:" + user.Username);
-
-
             RefreshToken.create({
                 RefreshTokenId: refreshToken,
                 RefreshTokenUserId: user.UserId,
@@ -417,11 +411,6 @@ exports.confirmUser = (req, res) => {
                             }
                         });
 
-                        // let icon = 'astrofire.png';
-                        // //    icon: user.IconFilepath,
-                        // console.log("HERE3  icon:" + icon);
-
-
                         let accessToken = jwt.sign(
                             { id: user.UserId },
                             authConfig.AUTH_SECRET,
@@ -438,14 +427,6 @@ exports.confirmUser = (req, res) => {
                                     httpOnly: true,
                                     signed: true
                                 });
-
-                               // let icon = 'astrofire.png';
-                                //    icon: user.IconFilepath,
-                               // console.log("HERE4  icon:" + user.IconFilepath);
-                                console.log("HERE4  icon:" + user.IconFilepath + "  user:" + user.Username);
-
-        
-        
 
                                 return res.status(200).send({
                                     username: user.Username,
@@ -557,11 +538,6 @@ exports.login = (req, res) => {
                                 signed: true
                             });
 
-                        //   let icon = 'astrofire.png';
-                        //    icon: user.IconFilepath,
-                        console.log("HERE1  icon:" + user.IconFilepath + "  user:" + user.Username);
-
-
                             return res.status(200).send({
                                 username: user.Username,
                                 icon: user.IconFilepath,
@@ -641,14 +617,6 @@ exports.refreshToken = (req, res) => {
                                         httpOnly: true,
                                         signed: true
                                     });
-
-                                    // let icon = 'astrofire.png';
-                                    //    icon: user.IconFilepath,
-                                    //console.log("HERE2  icon:" + user.IconFilepath);
-                                    console.log("HERE2  icon:" + user.IconFilepath + "  user:" + user.Username);
-
-            
-            
 
                                     return res.status(200).send({
                                         username: user.Username,
